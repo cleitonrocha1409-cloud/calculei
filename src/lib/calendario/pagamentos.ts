@@ -17,17 +17,24 @@ export type FaixaINSS = "piso" | "acima";
  * Datas do INSS no ano. Acima do piso, os finais pagam em pares (1 e 6, 2 e 7…),
  * na mesma data em que o piso paga os finais 6 a 0.
  */
-export function datasINSS(final: number, faixa: FaixaINSS, ano = 2026): Pagamento[] {
-  const tabela = CALENDARIOS.inss[ano as 2026];
-  if (!tabela) return [];
+export function datasINSS(final: number, faixa: FaixaINSS): Pagamento[] {
   const f = faixa === "acima" && final >= 1 && final <= 5 ? final + 5 : final;
-  return Object.entries(tabela).map(([m, datas]) => ({ rotulo: `Benefício de ${MESES[Number(m) - 1]}`, data: datas[indiceFinal(f)] }));
+  return juntarAnos(CALENDARIOS.inss as unknown as Record<string, unknown>, "Benefício", f);
 }
 
-export function datasBolsa(final: number, ano = 2026): Pagamento[] {
-  const tabela = CALENDARIOS.bolsa[ano as 2026];
-  if (!tabela) return [];
-  return Object.entries(tabela).map(([m, datas]) => ({ rotulo: `Parcela de ${MESES[Number(m) - 1]}`, data: datas[indiceFinal(final)] }));
+/** Junta todos os anos cadastrados (2026, 2027…), em ordem. O ano aparece no rótulo a partir do segundo. */
+function juntarAnos(fonte: Record<string, unknown>, nome: string, final: number): Pagamento[] {
+  const anos = Object.keys(fonte).filter((k) => /^\d{4}$/.test(k)).sort();
+  return anos.flatMap((ano, i) =>
+    Object.entries(fonte[ano] as Record<number, string[]>).map(([m, datas]) => ({
+      rotulo: `${nome} de ${MESES[Number(m) - 1]}${i > 0 ? `/${ano}` : ""}`,
+      data: datas[indiceFinal(final)],
+    })),
+  );
+}
+
+export function datasBolsa(final: number): Pagamento[] {
+  return juntarAnos(CALENDARIOS.bolsa as unknown as Record<string, unknown>, "Parcela", final);
 }
 
 export function dataPIS(mesNascimento: number, ano: 2026 | 2027): string {
