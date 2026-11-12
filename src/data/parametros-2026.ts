@@ -47,3 +47,14 @@ export const FGTS = {
   multaAcordo: 0.2,
   saqueAcordo: 0.8,
 };
+
+/** Seguro-desemprego — tabela do MTE vigente desde 11/01/2026 (reajuste pelo INPC). */
+export const SEGURO_DESEMPREGO_2026 = {
+  vigencia: "2026-01-11",
+  piso: 1621.0,
+  teto: 2518.65,
+  limite1: 2222.17, // até aqui: média × 0,8
+  limite2: 3703.99, // até aqui: excedente × 0,5 + 1.777,74; acima: teto
+  fixoFaixa2: 1777.74,
+  fonte: "Ministério do Trabalho e Emprego, tabela vigente desde 11/01/2026",
+};

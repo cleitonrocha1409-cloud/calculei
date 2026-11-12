@@ -39,7 +39,7 @@ export const CATEGORIAS: Categoria[] = [
       { titulo: "13º salário", resumo: "Primeira e segunda parcela", url: "/trabalhista/calculo-decimo-terceiro/", busca: ["decimo terceiro", "13", "primeira parcela", "segunda parcela"] },
       { titulo: "Salário líquido", resumo: "Do bruto ao líquido, e do líquido ao bruto", url: "/trabalhista/salario-liquido/", busca: ["inss", "irrf", "imposto de renda", "holerite", "bruto"] },
       { titulo: "Hora extra", resumo: "50%, 100% e DSR, com a nova jornada", url: "/trabalhista/calculo-hora-extra/", busca: ["horas extras", "dsr", "adicional"] },
-      { titulo: "Seguro-desemprego", resumo: "Número de parcelas e valor", busca: ["seguro desemprego"] },
+      { titulo: "Seguro-desemprego", resumo: "Valor e número de parcelas em 2026", url: "/trabalhista/seguro-desemprego/", busca: ["seguro desemprego", "parcelas", "demitido"] },
     ],
   },
   {
@@ -80,7 +80,7 @@ export const CATEGORIAS: Categoria[] = [
     nome: "Aluguel",
     descricao: "Reajustes e multas com os índices oficiais do Banco Central.",
     calculadoras: [
-      { titulo: "Reajuste de aluguel", resumo: "IGP-M, IPCA ou INPC acumulado", busca: ["igpm", "igp-m", "ipca", "reajuste"] },
+      { titulo: "Reajuste de aluguel", resumo: "IGP-M, IPCA ou INPC acumulado", url: "/aluguel/reajuste-de-aluguel/", busca: ["igpm", "igp-m", "ipca", "inpc", "reajuste", "aluguel"] },
       { titulo: "Multa por quebra de contrato", resumo: "Proporcional aos meses restantes", busca: ["multa", "rescisão aluguel"] },
     ],
   },

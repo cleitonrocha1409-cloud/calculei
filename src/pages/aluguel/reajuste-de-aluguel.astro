@@ -1,0 +1,156 @@
+---
+import CalcPagina from "../../components/CalcPagina.astro";
+import { buscarSeries, SERIES } from "../../lib/aluguel/indices";
+
+// Os índices são buscados no Banco Central a cada publicação do site.
+const series = await buscarSeries(36);
+const temSeries = Object.keys(series).length > 0;
+const atualizado = new Date().toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
+
+const perguntas = [
+  {
+    p: "Como calcular o reajuste do aluguel?",
+    r: "Multiplique o aluguel atual pelo índice acumulado nos 12 meses anteriores ao mês do reajuste. Se o IGP-M acumulado for de 4%, um aluguel de R$ 2.000 passa para R$ 2.080.",
+  },
+  {
+    p: "Qual índice usar: IGP-M ou IPCA?",
+    r: "O que estiver no contrato. O IGP-M é o mais comum em contratos antigos, mas oscila mais por causa do dólar e das commodities. Muitos contratos novos usam o IPCA, a inflação oficial, que costuma ser mais estável.",
+  },
+  {
+    p: "O aluguel pode diminuir se o IGP-M for negativo?",
+    r: "Depende do contrato. Alguns preveem que o valor não diminui; em outros, a aplicação do índice negativo reduz o aluguel. A calculadora permite escolher as duas formas.",
+  },
+  {
+    p: "De quanto em quanto tempo o aluguel pode ser reajustado?",
+    r: "Uma vez a cada 12 meses, no aniversário do contrato (Lei 10.192/2001). Fora disso, só por acordo entre as partes ou ação revisional depois de 3 anos.",
+  },
+];
+---
+
+<CalcPagina
+  titulo="Reajuste de aluguel: calculadora com IGP-M, IPCA e INPC atualizados"
+  descricao="Calcule o reajuste do aluguel pelo IGP-M, IPCA ou INPC acumulado em 12 meses, com os índices oficiais do Banco Central, e compare os três."
+  h1="Reajuste de aluguel"
+  categoria="aluguel"
+  caminho="/aluguel/reajuste-de-aluguel/"
+  nomeApp="Calculadora de reajuste de aluguel"
+  perguntas={perguntas}
+>
+  <Fragment slot="form">
+    <script type="application/json" id="series" set:html={JSON.stringify(series)} />
+    <div class="campo">
+      <label for="aluguel">Aluguel atual</label>
+      <div class="moeda"><span aria-hidden="true">R$</span><input id="aluguel" inputmode="decimal" autocomplete="off" placeholder="2.000,00" /></div>
+    </div>
+    <div class="campo">
+      <label for="mes">Mês do reajuste (aniversário do contrato)</label>
+      <input id="mes" type="month" />
+    </div>
+    <fieldset class="campo">
+      <legend>Índice do contrato</legend>
+      <div class="opcoes opcoes--linha">
+        {Object.entries(SERIES).map(([k, s], i) => <label><input type="radio" name="indice" value={k} checked={temSeries && i === 0} disabled={!series[k as keyof typeof series]} /> {s.nome}</label>)}
+        <label><input type="radio" name="indice" value="outro" checked={!temSeries} /> Outro percentual</label>
+      </div>
+    </fieldset>
+    <div class="campo" id="campo-percentual" hidden={temSeries}>
+      <label for="percentual">Percentual de reajuste (%)</label>
+      <input id="percentual" inputmode="decimal" autocomplete="off" placeholder="4,5" />
+    </div>
+    <div class="campo">
+      <label class="marcar"><input type="checkbox" id="naoreduzir" checked /> Não reduzir o aluguel se o índice for negativo</label>
+    </div>
+    {temSeries ? <p class="nota-tabela">Índices do Banco Central atualizados em {atualizado}.</p> : <p class="nota-tabela">Os índices não puderam ser carregados agora. Informe o percentual do seu contrato.</p>}
+  </Fragment>
+
+  <Fragment slot="conteudo">
+    <h2>Como funciona o reajuste</h2>
+    <p>
+      O reajuste usa a variação acumulada do índice nos 12 meses anteriores ao mês de aniversário do contrato. A calculadora multiplica as 12 variações mensais (juros compostos), e não apenas soma. Quando o
+      índice do mês anterior ainda não foi divulgado, usamos os 12 meses mais recentes disponíveis e avisamos.
+    </p>
+    <h3>Exemplo</h3>
+    <p>Aluguel de R$ 2.000 com índice acumulado de 4,5%: R$ 2.000 × 1,045 = R$ 2.090. O aumento é de R$ 90 por mês.</p>
+  </Fragment>
+</CalcPagina>
+
+<script>
+  import { $, destaqueHTML, infoHTML, ligarAcoes, mostrar, parHTML, rodapeHTML, tabelaHTML, topoHTML, estadoURL } from "../../lib/ui/calc-ui";
+  import { acumulado12, calcularReajuste, nomeMes } from "../../lib/aluguel/reajuste";
+  import { SERIES, type Indice, type Serie } from "../../lib/aluguel/indices";
+  import { formatarBRL, lerValor } from "../../lib/dinheiro";
+
+  const series = JSON.parse($("series").textContent || "{}") as Partial<Record<Indice, Serie>>;
+  const form = $<HTMLFormElement>("form");
+  const estado = estadoURL(form, { aluguel: "a", mes: "m", indice: "i", percentual: "p", naoreduzir: "nr" });
+  const pct = (x: number) => `${(x * 100).toFixed(2).replace(".", ",")}%`;
+  const hoje = new Date();
+  const mesInput = $<HTMLInputElement>("mes");
+  if (!mesInput.value) mesInput.value = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}`;
+
+  function atualizar() {
+    const indice = form.querySelector<HTMLInputElement>("input[name=indice]:checked")?.value ?? "outro";
+    $("campo-percentual").hidden = indice !== "outro";
+    estado.salvar();
+    const aluguel = lerValor($<HTMLInputElement>("aluguel").value);
+    if (!(aluguel > 0)) return mostrar(null, { vazio: "Informe o valor atual do aluguel." });
+    const naoReduzir = $<HTMLInputElement>("naoreduzir").checked;
+    const mes = mesInput.value;
+    let percentual: number;
+    let periodo = "";
+    const avisos: string[] = [];
+    if (indice === "outro") {
+      percentual = lerValor($<HTMLInputElement>("percentual").value) / 100;
+      if (!Number.isFinite(percentual)) return mostrar(null, { vazio: "Informe o percentual de reajuste." });
+    } else {
+      const a = series[indice as Indice] && acumulado12(series[indice as Indice]!, mes);
+      if (!a) return mostrar(null, { erro: "Não há dados do índice para esse mês. Escolha outro mês ou informe o percentual." });
+      percentual = a.percentual;
+      periodo = `${SERIES[indice as Indice].nome} de ${nomeMes(a.de)} a ${nomeMes(a.ate)}`;
+      if (a.aproximado) avisos.push(`O índice do mês anterior ao reajuste ainda não foi divulgado. Usamos os 12 meses mais recentes: ${nomeMes(a.de)} a ${nomeMes(a.ate)}.`);
+    }
+    try {
+      const r = calcularReajuste({ aluguel, percentual, naoReduzir });
+      if (r.travado) avisos.push("O índice acumulado ficou negativo. Como você marcou para não reduzir, o aluguel continua o mesmo.");
+      // Comparação entre os índices disponíveis, para o mesmo mês.
+      const comparacao = (Object.keys(SERIES) as Indice[])
+        .map((k) => {
+          const a = series[k] && acumulado12(series[k]!, mes);
+          if (!a) return null;
+          const c = calcularReajuste({ aluguel, percentual: a.percentual, naoReduzir });
+          return [SERIES[k].nome, pct(a.percentual), formatarBRL(c.novo)];
+        })
+        .filter(Boolean) as string[][];
+      const html =
+        topoHTML("Reajuste de aluguel", periodo || `Percentual informado: ${pct(percentual)}`) +
+        parHTML("Aluguel atual", formatarBRL(aluguel)) +
+        parHTML("Índice acumulado em 12 meses", pct(percentual)) +
+        parHTML("Aumento por mês", formatarBRL(r.aumento)) +
+        destaqueHTML("Novo aluguel", r.novo) +
+        (comparacao.length > 1 ? `<h3>Comparação entre índices</h3>${tabelaHTML(["Índice", "Acumulado", "Novo aluguel"], comparacao)}` : "") +
+        infoHTML([`Por ano, a diferença é de ${formatarBRL(r.aumento * 12)}.`], avisos) +
+        rodapeHTML("Índices mensais do Banco Central (FGV e IBGE). Confira o índice e a data-base no seu contrato.");
+      mostrar(html, {
+        barra: { rotulo: "Novo aluguel", valor: r.novo },
+        compartilhar: {
+          titulo: "Simulei o reajuste do aluguel",
+          detalhe: periodo || `Reajuste de ${pct(percentual)}`,
+          itens: [
+            { rotulo: "Aluguel atual", valor: aluguel },
+            { rotulo: "Reajuste", valor: pct(r.aplicado) },
+            { rotulo: "Novo aluguel", valor: r.novo },
+          ],
+        },
+      });
+    } catch (err) {
+      mostrar(null, { erro: err instanceof Error ? err.message : "Não foi possível calcular com esses dados." });
+    }
+  }
+
+  form.addEventListener("input", atualizar);
+  form.addEventListener("change", atualizar);
+  form.addEventListener("submit", (e) => e.preventDefault());
+  ligarAcoes();
+  estado.ler();
+  atualizar();
+</script>

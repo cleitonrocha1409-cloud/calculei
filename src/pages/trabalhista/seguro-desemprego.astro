@@ -1,0 +1,129 @@
+---
+import CalcPagina from "../../components/CalcPagina.astro";
+
+const perguntas = [
+  {
+    p: "Quem tem direito ao seguro-desemprego?",
+    r: "Quem foi demitido sem justa causa ou saiu por rescisão indireta, cumpre o tempo mínimo de trabalho e não tem outra renda própria suficiente. Quem pede demissão, sai por acordo ou é demitido por justa causa não tem direito.",
+  },
+  {
+    p: "Qual o valor do seguro-desemprego em 2026?",
+    r: "Depende da média dos três últimos salários antes da demissão. A parcela vai de R$ 1.621,00 (salário mínimo) a R$ 2.518,65 (teto), conforme a tabela do Ministério do Trabalho vigente desde 11/01/2026.",
+  },
+  {
+    p: "Quantas parcelas vou receber?",
+    r: "De 3 a 5, conforme o tempo trabalhado nos 36 meses antes da demissão e se é a 1ª, 2ª ou 3ª vez que você pede: 5 parcelas para quem trabalhou 24 meses ou mais; 4 para 12 a 23 meses; 3 parcelas a partir da 2ª solicitação, para quem tem menos de 12 meses.",
+  },
+  {
+    p: "Qual o prazo para pedir?",
+    r: "De 7 a 120 dias depois da demissão, pela Carteira de Trabalho Digital, pelo portal gov.br ou numa unidade do Sine.",
+  },
+];
+---
+
+<CalcPagina
+  titulo="Seguro-desemprego 2026: calcule o valor e o número de parcelas"
+  descricao="Calcule o seguro-desemprego com a tabela de 2026: valor da parcela pela média dos 3 últimos salários, número de parcelas e total a receber."
+  h1="Seguro-desemprego"
+  categoria="trabalhista"
+  caminho="/trabalhista/seguro-desemprego/"
+  nomeApp="Calculadora de seguro-desemprego 2026"
+  perguntas={perguntas}
+>
+  <Fragment slot="form">
+    <fieldset class="campo">
+      <legend>Três últimos salários antes da demissão</legend>
+      <div class="moeda"><span aria-hidden="true">R$</span><input id="s1" inputmode="decimal" autocomplete="off" placeholder="Último salário" aria-label="Último salário" /></div>
+      <div class="duas" style="margin-top: 0.6rem">
+        <div class="moeda"><span aria-hidden="true">R$</span><input id="s2" inputmode="decimal" autocomplete="off" placeholder="Penúltimo" aria-label="Penúltimo salário" /></div>
+        <div class="moeda"><span aria-hidden="true">R$</span><input id="s3" inputmode="decimal" autocomplete="off" placeholder="Antepenúltimo" aria-label="Antepenúltimo salário" /></div>
+      </div>
+    </fieldset>
+    <div class="campo">
+      <label for="meses">Meses de carteira assinada nos últimos 3 anos</label>
+      <input id="meses" type="number" min="0" max="36" inputmode="numeric" placeholder="24" />
+    </div>
+    <fieldset class="campo">
+      <legend>Quantas vezes já pediu o seguro?</legend>
+      <div class="opcoes opcoes--linha">
+        <label><input type="radio" name="vez" value="1" checked /> É a 1ª vez</label>
+        <label><input type="radio" name="vez" value="2" /> 2ª vez</label>
+        <label><input type="radio" name="vez" value="3" /> 3ª vez ou mais</label>
+      </div>
+    </fieldset>
+  </Fragment>
+
+  <Fragment slot="conteudo">
+    <h2>Tabela do seguro-desemprego 2026</h2>
+    <div class="tabela-rolagem">
+      <table>
+        <thead><tr><th scope="col">Média salarial</th><th scope="col">Valor da parcela</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Até R$ 2.222,17</th><td>Média × 0,8 (mínimo de R$ 1.621,00)</td></tr>
+          <tr><th scope="row">De R$ 2.222,18 a R$ 3.703,99</th><td>(Média − R$ 2.222,17) × 0,5 + R$ 1.777,74</td></tr>
+          <tr><th scope="row">Acima de R$ 3.703,99</th><td>R$ 2.518,65 (teto)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Tabela do Ministério do Trabalho e Emprego, vigente desde 11 de janeiro de 2026.</p>
+    <h3>Exemplo</h3>
+    <p>Média de R$ 3.000: (R$ 3.000 − R$ 2.222,17) × 0,5 + R$ 1.777,74 = R$ 2.166,66 por parcela. Com 24 meses ou mais de trabalho, são 5 parcelas: R$ 10.833,30 no total.</p>
+  </Fragment>
+</CalcPagina>
+
+<script>
+  import { $, destaqueHTML, infoHTML, ligarAcoes, linhaHTML, mostrar, parHTML, rodapeHTML, topoHTML, estadoURL } from "../../lib/ui/calc-ui";
+  import { calcularSeguro, ErroSeguro } from "../../lib/trabalhista/seguro-desemprego";
+  import { formatarBRL, lerValor } from "../../lib/dinheiro";
+
+  const form = $<HTMLFormElement>("form");
+  const estado = estadoURL(form, { s1: "a", s2: "b", s3: "c", meses: "m", vez: "v" });
+
+  function atualizar() {
+    estado.salvar();
+    const salarios = ["s1", "s2", "s3"].map((id) => lerValor($<HTMLInputElement>(id).value) || 0);
+    const meses = Number($<HTMLInputElement>("meses").value);
+    if (!(salarios[0] > 0)) return mostrar(null, { vazio: "Informe pelo menos o último salário." });
+    if (!(meses > 0)) return mostrar(null, { vazio: "Informe quantos meses trabalhou nos últimos 3 anos." });
+    try {
+      const vez = Number(form.querySelector<HTMLInputElement>("input[name=vez]:checked")!.value) as 1 | 2 | 3;
+      const janela = vez === 1 ? 18 : vez === 2 ? 12 : 6;
+      const r = calcularSeguro({ salarios, mesesTrabalhados: meses, solicitacao: vez, mesesUltimos: Math.min(meses, janela) });
+      const html =
+        topoHTML("Seguro-desemprego 2026", `${vez}ª solicitação, ${meses} meses trabalhados`) +
+        parHTML("Média salarial", formatarBRL(r.media)) +
+        `<ul class="linhas">${linhaHTML({ rotulo: "Valor de cada parcela", valor: r.parcela, memoria: r.memoria, base: "Lei 7.998/1990, art. 5º; tabela MTE 2026" })}</ul>` +
+        (r.temDireito
+          ? parHTML("Número de parcelas", String(r.parcelas)) + destaqueHTML("Total a receber", r.total)
+          : `<p class="erro">${r.motivo}</p>`) +
+        infoHTML(
+          ["Só tem direito quem foi demitido sem justa causa ou saiu por rescisão indireta.", "Peça entre 7 e 120 dias após a demissão, pela Carteira de Trabalho Digital ou no gov.br."],
+          meses < 36 && vez === 1 ? ["Consideramos que os meses informados são os mais recentes, antes da demissão."] : [],
+        ) +
+        rodapeHTML("Estimativa. O valor final é definido pelo Ministério do Trabalho na habilitação.");
+      mostrar(html, {
+        barra: { rotulo: r.temDireito ? `${r.parcelas}x de` : "Parcela", valor: r.parcela },
+        compartilhar: {
+          titulo: "Simulei meu seguro-desemprego",
+          detalhe: "Tabela de 2026",
+          itens: r.temDireito
+            ? [
+                { rotulo: "Valor da parcela", valor: r.parcela },
+                { rotulo: "Número de parcelas", valor: String(r.parcelas) },
+                { rotulo: "Total", valor: r.total },
+              ]
+            : [{ rotulo: "Valor da parcela", valor: r.parcela }],
+        },
+      });
+    } catch (err) {
+      mostrar(null, { erro: err instanceof ErroSeguro ? err.message : "Não foi possível calcular com esses dados." });
+    }
+  }
+
+  form.addEventListener("input", atualizar);
+  form.addEventListener("change", atualizar);
+  form.addEventListener("submit", (e) => e.preventDefault());
+  ligarAcoes();
+  estado.ler();
+  atualizar();
+</script>
