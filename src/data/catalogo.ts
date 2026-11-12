@@ -40,6 +40,7 @@ export const CATEGORIAS: Categoria[] = [
       { titulo: "Salário líquido", resumo: "Do bruto ao líquido, e do líquido ao bruto", url: "/trabalhista/salario-liquido/", busca: ["inss", "irrf", "imposto de renda", "holerite", "bruto"] },
       { titulo: "Hora extra", resumo: "50%, 100% e DSR, com a nova jornada", url: "/trabalhista/calculo-hora-extra/", busca: ["horas extras", "dsr", "adicional"] },
       { titulo: "Seguro-desemprego", resumo: "Valor e número de parcelas em 2026", url: "/trabalhista/seguro-desemprego/", busca: ["seguro desemprego", "parcelas", "demitido"] },
+      { titulo: "FGTS e multa de 40%", resumo: "Quanto você saca em cada tipo de saída", url: "/trabalhista/fgts-e-multa/", busca: ["fgts", "multa 40", "multa fgts", "saque aniversario", "saque-aniversário", "saque rescisao", "demissão"] },
     ],
   },
   {
@@ -68,7 +69,7 @@ export const CATEGORIAS: Categoria[] = [
       { titulo: "Financiamento imobiliário", resumo: "SAC e Price lado a lado", url: "/financiamentos/financiamento-imobiliario/", busca: ["imóvel", "imovel", "casa", "apartamento", "sac", "price", "caixa"] },
       { titulo: "Empréstimo e financiamento de veículo", resumo: "Parcela, juros e taxa real", url: "/financiamentos/simulador-de-emprestimo/", busca: ["carro", "moto", "consignado", "cet", "emprestimo", "taxa de juros"] },
       { titulo: "Juros compostos", resumo: "Quanto um valor rende ao longo do tempo", url: "/financiamentos/juros-compostos/", busca: ["investimento", "rendimento", "aporte"] },
-      { titulo: "Correção monetária", resumo: "Atualize um valor pelo IPCA, INPC, IGP-M ou Selic", busca: ["atualizar valor", "indice", "inflação"] },
+      { titulo: "Correção monetária", resumo: "Atualize um valor pelo IPCA, INPC ou IGP-M", url: "/financiamentos/correcao-monetaria/", busca: ["atualizar valor", "indice", "inflação", "ipca", "inpc", "igpm", "corrigir"] },
       { titulo: "Investimentos", resumo: "CDB, poupança e Tesouro Direto lado a lado", busca: ["cdb", "poupança", "tesouro", "rendimento"] },
     ],
   },
@@ -77,7 +78,7 @@ export const CATEGORIAS: Categoria[] = [
     nome: "Dívidas em atraso",
     descricao: "Quanto pagar de multa e juros em contas atrasadas, com as regras de cada tipo de dívida.",
     calculadoras: [
-      { titulo: "Boleto atrasado", resumo: "Multa e juros de mora pelos dias de atraso", busca: ["boleto", "multa", "juros de mora", "conta atrasada"] },
+      { titulo: "Boleto atrasado", resumo: "Multa e juros de mora pelos dias de atraso", url: "/dividas/boleto-atrasado/", busca: ["boleto", "multa", "juros de mora", "conta atrasada", "boleto vencido"] },
       { titulo: "Cartão de crédito", resumo: "Quanto cresce a dívida no rotativo", busca: ["rotativo", "fatura"] },
       { titulo: "Cheque especial", resumo: "Juros pelos dias no negativo", busca: ["limite", "conta negativa"] },
       { titulo: "Aluguel em atraso", resumo: "Multa, juros e correção do aluguel vencido", busca: ["aluguel atrasado"] },

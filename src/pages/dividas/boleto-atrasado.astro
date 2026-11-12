@@ -1,0 +1,115 @@
+---
+import CalcPagina from "../../components/CalcPagina.astro";
+
+const perguntas = [
+  {
+    p: "Quanto é a multa de um boleto atrasado?",
+    r: "Em contas de consumo (lojas, escolas, serviços, contas de luz e telefone), a multa por atraso é de no máximo 2% do valor (Código de Defesa do Consumidor, art. 52, § 1º). No condomínio, o limite também é 2% (Código Civil, art. 1.336). A multa é cobrada uma vez só, não importa quantos dias passem.",
+  },
+  {
+    p: "Como são calculados os juros de mora?",
+    r: "Pelos dias de atraso. O mais comum é 1% ao mês, que dá cerca de 0,033% por dia. Exemplo: R$ 1.000 pagos com 15 dias de atraso, com multa de 2% e juros de 1% ao mês, custam R$ 20 de multa e R$ 5 de juros: R$ 1.025.",
+  },
+  {
+    p: "O boleto venceu no sábado. Pago com juros na segunda?",
+    r: "Não. Quando o vencimento cai em sábado, domingo ou feriado, o boleto pode ser pago no próximo dia útil sem multa nem juros. A calculadora já considera isso.",
+  },
+  {
+    p: "A empresa pode cobrar mais de 2% de multa?",
+    r: "Em relação de consumo, não. Se o boleto trouxer multa maior, você pode questionar com a empresa ou no Procon. Em contratos entre empresas ou de aluguel, a multa segue o que foi combinado.",
+  },
+];
+---
+
+<CalcPagina
+  titulo="Boleto atrasado: calcule a multa e os juros por dia de atraso"
+  descricao="Quanto pagar num boleto ou conta atrasada: multa de até 2% e juros de mora por dia. Considera vencimento em fim de semana e feriado. Grátis e sem cadastro."
+  h1="Boleto atrasado: multa e juros"
+  apoio="Um boleto atrasado costuma custar 2% de multa, cobrada uma vez, mais 1% de juros ao mês, proporcional aos dias. Informe o valor e as datas: o resto já vem preenchido."
+  categoria="dividas"
+  caminho="/dividas/boleto-atrasado/"
+  nomeApp="Calculadora de boleto atrasado"
+  perguntas={perguntas}
+>
+  <Fragment slot="form">
+    <div class="campo">
+      <label for="valor">Valor do boleto</label>
+      <div class="moeda"><span aria-hidden="true">R$</span><input id="valor" inputmode="decimal" autocomplete="off" placeholder="350,00" /></div>
+    </div>
+    <div class="duas">
+      <div class="campo"><label for="vencimento">Vencimento</label><input id="vencimento" type="date" /></div>
+      <div class="campo"><label for="pagamento">Data do pagamento</label><input id="pagamento" type="date" /></div>
+    </div>
+    <div class="duas">
+      <div class="campo"><label for="multa">Multa (%)</label><input id="multa" inputmode="decimal" autocomplete="off" value="2" /></div>
+      <div class="campo"><label for="juros">Juros ao mês (%)</label><input id="juros" inputmode="decimal" autocomplete="off" value="1" /></div>
+    </div>
+    <p class="ajuda">Os percentuais estão no próprio boleto, perto do vencimento. Os valores já preenchidos são os mais comuns.</p>
+  </Fragment>
+
+  <Fragment slot="conteudo">
+    <h2>Quanto custa atrasar R$ 100</h2>
+    <p>Com multa de 2% e juros de 1% ao mês:</p>
+    <div class="tabela-rolagem">
+      <table>
+        <thead><tr><th scope="col">Atraso</th><th scope="col">Multa</th><th scope="col">Juros</th><th scope="col">Total a pagar</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">1 dia</th><td>R$ 2,00</td><td>R$ 0,03</td><td>R$ 102,03</td></tr>
+          <tr><th scope="row">10 dias</th><td>R$ 2,00</td><td>R$ 0,33</td><td>R$ 102,33</td></tr>
+          <tr><th scope="row">30 dias</th><td>R$ 2,00</td><td>R$ 1,00</td><td>R$ 103,00</td></tr>
+          <tr><th scope="row">90 dias</th><td>R$ 2,00</td><td>R$ 3,00</td><td>R$ 105,00</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Fontes: Código de Defesa do Consumidor, art. 52, § 1º (multa de até 2%), e Código Civil, art. 1.336 (condomínio).</p>
+  </Fragment>
+</CalcPagina>
+
+<script>
+  import { $, destaqueHTML, estadoURL, infoHTML, ligarAcoes, linhaHTML, mostrar, rodapeHTML, topoHTML } from "../../lib/ui/calc-ui";
+  import { calcularBoleto } from "../../lib/financeiro/boleto";
+  import { hojeBrasilia } from "../../lib/calendario/pagamentos";
+  import { formatarBRL, lerValor } from "../../lib/dinheiro";
+
+  const form = $<HTMLFormElement>("form");
+  const estado = estadoURL(form, { valor: "v", vencimento: "d", pagamento: "p", multa: "m", juros: "j" });
+  const pct = (x: number, casas = 2) => `${(x * 100).toFixed(casas).replace(".", ",")}%`;
+  const br = (d: string) => d.split("-").reverse().join("/");
+  if (!$<HTMLInputElement>("pagamento").value) $<HTMLInputElement>("pagamento").value = hojeBrasilia();
+
+  function atualizar() {
+    estado.salvar();
+    const valor = lerValor($<HTMLInputElement>("valor").value);
+    const vencimento = $<HTMLInputElement>("vencimento").value;
+    const pagamento = $<HTMLInputElement>("pagamento").value;
+    if (!(valor > 0)) return mostrar(null, { vazio: "Informe o valor do boleto." });
+    if (!vencimento || !pagamento) return mostrar(null, { vazio: "Informe o vencimento e a data do pagamento." });
+    const multa = (lerValor($<HTMLInputElement>("multa").value) || 0) / 100;
+    const jurosMes = (lerValor($<HTMLInputElement>("juros").value) || 0) / 100;
+    const r = calcularBoleto({ valor, vencimento, pagamento, multa, jurosMes });
+    const sub = r.dias === 0 ? "Pago em dia" : `${r.dias} ${r.dias === 1 ? "dia" : "dias"} de atraso`;
+    const linhas = [
+      linhaHTML({ rotulo: "Valor original", valor, memoria: `Vencimento em ${br(vencimento)}${r.prorrogado ? `, que passa para ${br(r.vencimentoEfetivo)} por cair em fim de semana ou feriado` : ""}.`, base: "" }),
+      linhaHTML({ rotulo: `Multa de ${pct(multa, 1)}`, valor: r.multa, memoria: r.dias ? `${pct(multa, 1)} de ${formatarBRL(valor)}, cobrada uma vez.` : "Sem multa: pagamento em dia.", base: "CDC, art. 52, § 1º: até 2% nas relações de consumo." }),
+      linhaHTML({ rotulo: `Juros de ${pct(jurosMes, 1)} ao mês`, valor: r.juros, memoria: r.dias ? `${formatarBRL(valor)} × ${pct(r.jurosDia, 4)} ao dia × ${r.dias} dias (juros simples).` : "Sem juros: pagamento em dia.", base: "" }),
+    ];
+    const alertas = r.acimaDoLimite ? ["A multa informada passa de 2%. Em contas de consumo, o limite é 2% (CDC, art. 52, § 1º)."] : [];
+    const html =
+      topoHTML("Boleto atrasado", sub) +
+      `<ul class="linhas">${linhas.join("")}</ul>` +
+      destaqueHTML("Total a pagar", r.total) +
+      infoHTML([r.dias ? `O atraso custou ${pct((r.total - valor) / valor)} a mais.` : "Pagando até o vencimento, não há multa nem juros."], alertas) +
+      rodapeHTML("Toque em uma linha para ver a conta.");
+    mostrar(html, {
+      barra: { rotulo: "Total a pagar", valor: r.total },
+      compartilhar: { titulo: "Boleto atrasado", detalhe: sub, itens: [{ rotulo: "Multa", valor: r.multa }, { rotulo: "Juros", valor: r.juros }, { rotulo: "Total", valor: r.total }] },
+    });
+  }
+
+  form.addEventListener("input", atualizar);
+  form.addEventListener("change", atualizar);
+  form.addEventListener("submit", (e) => e.preventDefault());
+  ligarAcoes();
+  estado.ler();
+  atualizar();
+</script>

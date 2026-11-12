@@ -1,0 +1,147 @@
+---
+import CalcPagina from "../../components/CalcPagina.astro";
+import historico from "../../data/indices.json";
+import { nomeMes } from "../../lib/aluguel/reajuste";
+
+const ultimo = historico.series.ipca.at(-1)!.mes;
+
+const perguntas = [
+  {
+    p: "Como fazer a correção monetária de um valor?",
+    r: "Escolha o índice e o período. A calculadora multiplica as variações mensais oficiais, uma sobre a outra, e aplica ao valor. Exemplo: R$ 1.000 corrigidos pelo IPCA de janeiro a dezembro de 2025 (4,26% no ano) viram cerca de R$ 1.042,60.",
+  },
+  {
+    p: "Qual índice usar?",
+    r: "O que estiver no contrato ou na decisão. Quando não há índice combinado, o Código Civil manda usar o IPCA (art. 389, parágrafo único, na redação da Lei 14.905/2024). O INPC é comum em dívidas trabalhistas e previdenciárias antigas, e o IGP-M, em aluguéis.",
+  },
+  {
+    p: "Correção monetária é a mesma coisa que juros?",
+    r: "Não. A correção só repõe a perda de valor pela inflação: o dinheiro vale o mesmo que valia antes. Os juros são um ganho a mais, cobrado pelo tempo em que o credor ficou sem o dinheiro. Por isso os dois podem ser cobrados juntos.",
+  },
+  {
+    p: "Quais juros usar numa dívida civil?",
+    r: "Os do contrato. Sem taxa combinada, vale a taxa legal do Código Civil, que desde a Lei 14.905/2024 é a Selic menos o IPCA, calculada pelo Banco Central todo mês. Antes dela, muitos tribunais usavam 1% ao mês. Para processos judiciais, siga o que a decisão determinar.",
+  },
+];
+---
+
+<CalcPagina
+  titulo="Correção monetária: atualize um valor pelo IPCA, INPC ou IGP-M"
+  descricao="Calculadora de correção monetária com os índices oficiais: atualize um valor pelo IPCA, INPC ou IGP-M entre dois meses, com juros opcionais e o acumulado mês a mês."
+  h1="Correção monetária"
+  apoio={`Corrigir um valor é multiplicar a inflação de cada mês do período. Escolha o índice e os meses: usamos as variações oficiais do IBGE e da FGV, até ${nomeMes(ultimo)}.`}
+  categoria="financiamentos"
+  caminho="/financiamentos/correcao-monetaria/"
+  nomeApp="Calculadora de correção monetária"
+  perguntas={perguntas}
+>
+  <Fragment slot="form">
+    <script type="application/json" id="series-build" set:html={JSON.stringify(historico.series)} />
+    <div class="campo">
+      <label for="valor">Valor original</label>
+      <div class="moeda"><span aria-hidden="true">R$</span><input id="valor" inputmode="decimal" autocomplete="off" placeholder="1.000,00" /></div>
+    </div>
+    <fieldset class="campo">
+      <legend>Índice</legend>
+      <div class="opcoes opcoes--linha">
+        <label><input type="radio" name="indice" value="ipca" checked /> IPCA</label>
+        <label><input type="radio" name="indice" value="inpc" /> INPC</label>
+        <label><input type="radio" name="indice" value="igpm" /> IGP-M</label>
+      </div>
+    </fieldset>
+    <fieldset class="campo">
+      <legend>Período</legend>
+      <div class="duas">
+        <div><label for="de" class="sub">De (mês da dívida)</label><input id="de" type="month" min="2019-01" /></div>
+        <div><label for="ate" class="sub">Até</label><input id="ate" type="month" min="2019-01" /></div>
+      </div>
+      <p class="ajuda">Temos os índices de janeiro de 2019 em diante.</p>
+    </fieldset>
+    <details class="mais">
+      <summary>Mais opções: juros</summary>
+      <div class="campo">
+        <label for="juros">Juros simples ao mês (%) <span class="opcional">(opcional)</span></label>
+        <input id="juros" inputmode="decimal" autocomplete="off" placeholder="0" />
+        <p class="ajuda">Use a taxa do contrato. Os juros incidem sobre o valor já corrigido.</p>
+      </div>
+    </details>
+  </Fragment>
+
+  <Fragment slot="conteudo">
+    <h2>Como a correção é calculada</h2>
+    <p>A inflação de cada mês incide sobre o valor já corrigido no mês anterior. Por isso as variações são multiplicadas, e não somadas: dois meses de 1% dão 2,01%, e não 2%.</p>
+    <p>Fontes dos índices: IBGE (IPCA e INPC) e FGV (IGP-M). Atualizamos os meses novos assim que são divulgados.</p>
+  </Fragment>
+</CalcPagina>
+
+<script>
+  import { $, destaqueHTML, estadoURL, infoHTML, ligarAcoes, linhaHTML, mostrar, rodapeHTML, tabelaHTML, topoHTML } from "../../lib/ui/calc-ui";
+  import { corrigirValor } from "../../lib/financeiro/correcao";
+  import { nomeMes, nomeMesCurto, somarMeses } from "../../lib/aluguel/reajuste";
+  import { formatarBRL, lerValor } from "../../lib/dinheiro";
+  import type { Serie } from "../../lib/aluguel/indices";
+
+  const series = JSON.parse($("series-build").textContent!) as Record<string, Serie>;
+  const NOMES: Record<string, string> = { ipca: "IPCA", inpc: "INPC", igpm: "IGP-M" };
+  const form = $<HTMLFormElement>("form");
+  const estado = estadoURL(form, { valor: "v", indice: "i", de: "de", ate: "ate", juros: "j" });
+  const pct = (x: number) => `${(x * 100).toFixed(2).replace(".", ",")}%`;
+
+  function limites() {
+    const i = form.querySelector<HTMLInputElement>("input[name=indice]:checked")!.value;
+    const ultimo = series[i].at(-1)!.mes;
+    $<HTMLInputElement>("de").max = ultimo;
+    $<HTMLInputElement>("ate").max = ultimo;
+    if (!$<HTMLInputElement>("ate").value) $<HTMLInputElement>("ate").value = ultimo;
+    if (!$<HTMLInputElement>("de").value) $<HTMLInputElement>("de").value = somarMeses(ultimo, -11);
+    return { i, ultimo };
+  }
+
+  function atualizar() {
+    const { i, ultimo } = limites();
+    estado.salvar();
+    const valor = lerValor($<HTMLInputElement>("valor").value);
+    if (!(valor > 0)) return mostrar(null, { vazio: "Informe o valor a corrigir." });
+    const de = $<HTMLInputElement>("de").value;
+    const ate = $<HTMLInputElement>("ate").value;
+    if (de > ate) return mostrar(null, { erro: "O mês inicial precisa ser anterior ao final." });
+    const jurosMes = (lerValor($<HTMLInputElement>("juros").value) || 0) / 100;
+    const r = corrigirValor({ valor, serie: series[i], de, ate, jurosMes });
+    if (!r || r.meses === 0) return mostrar(null, { erro: `Não há ${NOMES[i]} divulgado para esse período. O último é de ${nomeMes(ultimo)}.` });
+    const a = r.acumulado;
+    const linhas = [
+      linhaHTML({ rotulo: `Correção pelo ${NOMES[i]} (${pct(a.percentual)})`, valor: r.correcao, memoria: `${formatarBRL(valor)} × ${(1 + a.percentual).toFixed(6).replace(".", ",")} (fator acumulado de ${r.meses} meses).`, base: "" }),
+      ...(jurosMes > 0 ? [linhaHTML({ rotulo: `Juros de ${pct(jurosMes)} ao mês`, valor: r.juros, memoria: `${formatarBRL(r.corrigido)} × ${pct(jurosMes)} × ${r.meses} meses (juros simples).`, base: "" })] : []),
+    ];
+    const tabela = tabelaHTML(
+      ["Mês", "Variação", "Acumulado"],
+      a.meses.map((m) => [nomeMesCurto(m.mes), pct(m.valor / 100), pct(m.acumulado)]),
+    );
+    const html =
+      topoHTML("Correção monetária", `${NOMES[i]} de ${nomeMes(a.de)} a ${nomeMes(a.ate)}`) +
+      `<ul class="linhas">${linhas.join("")}</ul>` +
+      destaqueHTML("Valor atualizado", r.total) +
+      `<details class="memoria"><summary>Ver o índice mês a mês</summary>${tabela}</details>` +
+      infoHTML([`Variação acumulada de ${pct(a.percentual)} em ${r.meses} meses.`], a.faltando.length ? [`Meses sem índice divulgado ficaram de fora: ${a.faltando.map(nomeMesCurto).join(", ")}.`] : []) +
+      rodapeHTML("Índices oficiais do IBGE e da FGV. Toque em uma linha para ver a conta.");
+    mostrar(html, {
+      barra: { rotulo: "Valor atualizado", valor: r.total },
+      compartilhar: {
+        titulo: "Correção monetária",
+        detalhe: `${NOMES[i]}, ${nomeMesCurto(a.de)} a ${nomeMesCurto(a.ate)}`,
+        itens: [
+          { rotulo: "Valor original", valor },
+          { rotulo: `${NOMES[i]} acumulado`, valor: pct(a.percentual) },
+          { rotulo: "Valor atualizado", valor: r.total },
+        ],
+      },
+    });
+  }
+
+  form.addEventListener("input", atualizar);
+  form.addEventListener("change", atualizar);
+  form.addEventListener("submit", (e) => e.preventDefault());
+  ligarAcoes();
+  estado.ler();
+  atualizar();
+</script>

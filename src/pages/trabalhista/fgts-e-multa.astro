@@ -1,0 +1,148 @@
+---
+import CalcPagina from "../../components/CalcPagina.astro";
+import { SAIDAS } from "../../lib/trabalhista/fgts";
+
+const perguntas = [
+  {
+    p: "Quanto é a multa do FGTS?",
+    r: "Na demissão sem justa causa e na rescisão indireta, a empresa paga 40% de tudo o que foi depositado no FGTS durante o contrato, com os rendimentos, mesmo que você já tenha sacado parte (Lei 8.036/1990, art. 18). No acordo entre as partes, a multa é de 20%. No pedido de demissão e na justa causa, não há multa.",
+  },
+  {
+    p: "Quem está no saque-aniversário recebe o FGTS na demissão?",
+    r: "Recebe a multa de 40%, mas não saca o saldo. O dinheiro continua na conta e só sai nas parcelas anuais, no mês do aniversário. Para voltar ao saque-rescisão é preciso pedir no app FGTS, e a mudança só vale depois de 25 meses.",
+  },
+  {
+    p: "Pedi demissão. Perco o FGTS?",
+    r: "Não. O saldo continua seu e rendendo, só não pode ser sacado por causa da saída. Ele pode ser usado na compra da casa própria, na aposentadoria, em doenças graves ou depois de 3 anos seguidos sem carteira assinada, entre outras situações.",
+  },
+  {
+    p: "O que é o saldo para fins rescisórios?",
+    r: "É o total depositado durante o contrato, com os rendimentos, sem descontar os saques que você já fez (como os do saque-aniversário). É sobre ele que a multa é calculada. Aparece no app FGTS, no extrato da conta do emprego.",
+  },
+  {
+    p: "Em quanto tempo o FGTS cai depois da demissão?",
+    r: "A empresa tem até 10 dias depois do fim do contrato para depositar a multa e informar a saída. Com a informação no sistema, o saque pode ser pedido pelo app FGTS, em geral em poucos dias.",
+  },
+];
+---
+
+<CalcPagina
+  titulo="Cálculo do FGTS e da multa de 40%: quanto você saca na demissão"
+  descricao="Calcule a multa do FGTS (40% ou 20%) e quanto pode sacar em cada tipo de saída do emprego, no saque-rescisão ou no saque-aniversário. Grátis, com a base legal."
+  h1="FGTS e multa de 40%"
+  apoio="Na demissão sem justa causa, você saca todo o saldo do FGTS e recebe 40% de multa. No acordo, a multa é de 20% e o saque, de 80%. No saque-aniversário, só a multa. Informe o saldo e o tipo de saída."
+  categoria="trabalhista"
+  caminho="/trabalhista/fgts-e-multa/"
+  nomeApp="Calculadora de FGTS e multa rescisória"
+  perguntas={perguntas}
+>
+  <Fragment slot="form">
+    <div class="campo">
+      <label for="saida">Tipo de saída</label>
+      <select id="saida">
+        {Object.entries(SAIDAS).map(([k, v]) => <option value={k}>{v}</option>)}
+      </select>
+    </div>
+    <fieldset class="campo">
+      <legend>Modalidade do FGTS</legend>
+      <div class="opcoes opcoes--linha">
+        <label><input type="radio" name="modalidade" value="rescisao" checked /> Saque-rescisão (padrão)</label>
+        <label><input type="radio" name="modalidade" value="aniversario" /> Saque-aniversário</label>
+      </div>
+    </fieldset>
+    <div class="campo">
+      <label for="saldo">Saldo para fins rescisórios <span class="opcional">(no app FGTS)</span></label>
+      <div class="moeda"><span aria-hidden="true">R$</span><input id="saldo" inputmode="decimal" autocomplete="off" placeholder="Vazio = estimar" /></div>
+    </div>
+    <details class="mais" id="estimar">
+      <summary>Não sei o saldo: estimar pelo salário</summary>
+      <div class="duas">
+        <div class="campo">
+          <label for="salario">Salário mensal</label>
+          <div class="moeda"><span aria-hidden="true">R$</span><input id="salario" inputmode="decimal" autocomplete="off" placeholder="3.000,00" /></div>
+        </div>
+        <div class="campo">
+          <label for="meses">Meses de contrato</label>
+          <input id="meses" type="number" min="1" max="600" inputmode="numeric" placeholder="24" />
+        </div>
+      </div>
+    </details>
+  </Fragment>
+
+  <Fragment slot="conteudo">
+    <h2>O que você recebe do FGTS em cada tipo de saída</h2>
+    <div class="tabela-rolagem">
+      <table>
+        <thead><tr><th scope="col">Tipo de saída</th><th scope="col">Multa</th><th scope="col">Saque do saldo (saque-rescisão)</th><th scope="col">No saque-aniversário</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Sem justa causa</th><td>40%</td><td>100%</td><td>Só a multa</td></tr>
+          <tr><th scope="row">Rescisão indireta</th><td>40%</td><td>100%</td><td>Só a multa</td></tr>
+          <tr><th scope="row">Acordo</th><td>20%</td><td>80%</td><td>Só a multa</td></tr>
+          <tr><th scope="row">Fim de contrato a termo</th><td>—</td><td>100%</td><td>Saldo retido</td></tr>
+          <tr><th scope="row">Pedido de demissão</th><td>—</td><td>—</td><td>—</td></tr>
+          <tr><th scope="row">Justa causa</th><td>—</td><td>—</td><td>—</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Fontes: Lei 8.036/1990 (arts. 18 e 20), CLT art. 484-A (acordo) e Lei 13.932/2019 (saque-aniversário).</p>
+  </Fragment>
+</CalcPagina>
+
+<script>
+  import { $, destaqueHTML, infoHTML, ligarAcoes, linhaHTML, mostrar, parHTML, rodapeHTML, subtotalHTML, topoHTML, estadoURL } from "../../lib/ui/calc-ui";
+  import { calcularFGTS, SAIDAS, type Modalidade, type SaidaFGTS } from "../../lib/trabalhista/fgts";
+  import { formatarBRL, lerValor } from "../../lib/dinheiro";
+
+  const form = $<HTMLFormElement>("form");
+  const estado = estadoURL(form, { saida: "t", modalidade: "m", saldo: "s", salario: "sal", meses: "n" });
+  const num = (id: string) => lerValor($<HTMLInputElement>(id).value);
+
+  function atualizar() {
+    estado.salvar();
+    const saida = $<HTMLSelectElement>("saida").value as SaidaFGTS;
+    const modalidade = form.querySelector<HTMLInputElement>("input[name=modalidade]:checked")!.value as Modalidade;
+    const saldo = num("saldo");
+    const salario = num("salario");
+    const meses = Number($<HTMLInputElement>("meses").value) || 0;
+    if (!(saldo > 0)) {
+      if (!(salario > 0 && meses > 0)) {
+        ($<HTMLDetailsElement>("estimar")).open = true;
+        return mostrar(null, { vazio: "Informe o saldo do FGTS ou, para estimar, o salário e os meses de contrato." });
+      }
+    }
+    const r = calcularFGTS({ saida, modalidade, saldo: saldo > 0 ? saldo : undefined, salario, meses });
+    const pct = `${Math.round(r.percentualMulta * 100)}%`;
+    const linhas = [
+      linhaHTML({ rotulo: `Multa de ${pct}`, valor: r.multa, memoria: r.percentualMulta ? `${pct} de ${formatarBRL(r.saldo)}, paga pela empresa.` : "Este tipo de saída não tem multa.", base: r.base }),
+      linhaHTML({ rotulo: "Saque do saldo agora", valor: r.saqueSaldo, memoria: r.saqueSaldo ? `${Math.round((r.saqueSaldo / r.saldo) * 100)}% do saldo liberado pela saída.` : "Esta saída não libera o saldo.", base: "" }),
+    ];
+    const html =
+      topoHTML("FGTS na saída", `${SAIDAS[saida]}, ${modalidade === "rescisao" ? "saque-rescisão" : "saque-aniversário"}`) +
+      parHTML(r.saldoEstimado ? "Saldo estimado do FGTS" : "Saldo para fins rescisórios", formatarBRL(r.saldo)) +
+      (r.saldoEstimado ? `<p class="nota">8% de ${formatarBRL(salario)} × ${meses} meses, somando 13º e 1/3 de férias, sem rendimentos.</p>` : "") +
+      `<ul class="linhas">${linhas.join("")}</ul>` +
+      destaqueHTML("Você saca agora", r.totalAgora) +
+      (r.retido > 0 ? subtotalHTML("Fica na conta do FGTS", r.retido) : "") +
+      infoHTML(["A multa é calculada sobre tudo o que foi depositado no contrato, mesmo o que você já sacou."], r.avisos) +
+      rodapeHTML("Regras da Lei 8.036/1990 e da CLT. Toque em uma linha para ver a conta.");
+    mostrar(html, {
+      barra: { rotulo: "Você saca agora", valor: r.totalAgora },
+      compartilhar: {
+        titulo: "FGTS na saída",
+        detalhe: SAIDAS[saida],
+        itens: [
+          { rotulo: `Multa de ${pct}`, valor: r.multa },
+          { rotulo: "Saque do saldo", valor: r.saqueSaldo },
+          { rotulo: "Total agora", valor: r.totalAgora },
+        ],
+      },
+    });
+  }
+
+  form.addEventListener("input", atualizar);
+  form.addEventListener("change", atualizar);
+  form.addEventListener("submit", (e) => e.preventDefault());
+  ligarAcoes();
+  estado.ler();
+  atualizar();
+</script>
