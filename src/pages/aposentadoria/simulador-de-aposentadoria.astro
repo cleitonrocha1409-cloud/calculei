@@ -1,0 +1,235 @@
+---
+import CalcPagina from "../../components/CalcPagina.astro";
+import { idadeProgressivaNoAno, pontosNoAno, PREVIDENCIA } from "../../data/previdencia";
+import { anosMeses } from "../../lib/previdencia/aposentadoria";
+import { formatarBRL } from "../../lib/dinheiro";
+
+const anos = [2026, 2027, 2028, 2029, 2030, 2031, 2032, 2033];
+
+const perguntas = [
+  {
+    p: "Quais são as regras de aposentadoria em 2026?",
+    r: "Para quem já contribuía antes da reforma (13/11/2019), há quatro regras de transição por tempo de contribuição: pontos (93 para mulheres e 103 para homens em 2026), idade mínima progressiva (59 anos e 6 meses / 64 anos e 6 meses), pedágio de 50% e pedágio de 100%. Há também a aposentadoria por idade: 62 anos para mulheres e 65 para homens, com 15 anos de contribuição.",
+  },
+  {
+    p: "O que muda em 2027?",
+    r: "Em 1º de janeiro de 2027, a regra de pontos passa a exigir 94 pontos das mulheres e 104 dos homens, e a idade mínima progressiva sobe para 60 e 65 anos. Para os homens, a idade progressiva chega ao limite final de 65 anos em 2027.",
+  },
+  {
+    p: "Como é calculado o valor da aposentadoria?",
+    r: "Nas regras de pontos, idade progressiva e por idade, o benefício é 60% da média de todos os salários de contribuição desde julho de 1994, mais 2% por ano de contribuição acima de 15 anos (mulheres) ou 20 anos (homens). No pedágio de 100%, é 100% da média. No pedágio de 50%, a média é multiplicada pelo fator previdenciário. O valor nunca fica abaixo do salário mínimo (R$ 1.621,00) nem acima do teto (R$ 8.475,55 em 2026).",
+  },
+  {
+    p: "Onde vejo meu tempo de contribuição e minha média?",
+    r: "No extrato do CNIS, no aplicativo ou site Meu INSS (entre com a conta gov.br e procure \"Extrato de contribuição\"). Confira se todos os empregos estão lá: períodos faltando reduzem o tempo e a média, e podem ser corrigidos com carteira de trabalho, holerites ou contrato.",
+  },
+  {
+    p: "O simulador vale para professores, atividade especial e trabalhador rural?",
+    r: "Não. Professores, quem trabalhou exposto a agentes nocivos (aposentadoria especial), trabalhadores rurais e pessoas com deficiência têm regras próprias, com idades e tempos menores. Para esses casos, use o simulador do Meu INSS ou procure um especialista em direito previdenciário.",
+  },
+];
+---
+
+<CalcPagina
+  titulo="Simulador de aposentadoria do INSS 2026: compare as regras de transição"
+  descricao="Descubra quando você pode se aposentar e quanto vai receber em cada regra do INSS: pontos, idade progressiva, pedágios de 50% e 100% e por idade. Grátis e sem cadastro."
+  h1="Simulador de aposentadoria do INSS"
+  apoio="Informe sua idade, seu tempo de contribuição e sua média salarial. O simulador compara todas as regras da reforma e mostra a data e o valor estimado de cada uma."
+  categoria="aposentadoria"
+  caminho="/aposentadoria/simulador-de-aposentadoria/"
+  nomeApp="Simulador de aposentadoria do INSS"
+  perguntas={perguntas}
+>
+  <Fragment slot="form">
+    <fieldset class="campo">
+      <legend>Sexo</legend>
+      <div class="opcoes opcoes--linha">
+        <label><input type="radio" name="sexo" value="f" checked /> Mulher</label>
+        <label><input type="radio" name="sexo" value="m" /> Homem</label>
+      </div>
+    </fieldset>
+    <div class="campo">
+      <label for="nascimento">Data de nascimento</label>
+      <input id="nascimento" type="date" min="1940-01-01" max="2010-12-31" />
+    </div>
+    <fieldset class="campo">
+      <legend>Tempo de contribuição até hoje</legend>
+      <div class="duas">
+        <div><label for="anos" class="sub">Anos</label><input id="anos" type="number" min="0" max="60" inputmode="numeric" placeholder="0" /></div>
+        <div><label for="meses" class="sub">Meses</label><input id="meses" type="number" min="0" max="11" inputmode="numeric" placeholder="0" /></div>
+      </div>
+      <p class="ajuda">Está no extrato do CNIS, no app Meu INSS.</p>
+    </fieldset>
+    <div class="campo">
+      <label for="media">Média dos seus salários desde 1994</label>
+      <div class="moeda"><span aria-hidden="true">R$</span><input id="media" inputmode="decimal" autocomplete="off" placeholder="3.000,00" /></div>
+      <p class="ajuda">Não sabe? Use o seu salário atual para ter uma ideia.</p>
+    </div>
+    <fieldset class="campo">
+      <legend>Vai continuar contribuindo?</legend>
+      <div class="opcoes opcoes--linha">
+        <label><input type="radio" name="contribui" value="s" checked /> Sim</label>
+        <label><input type="radio" name="contribui" value="n" /> Não</label>
+      </div>
+    </fieldset>
+    <details class="mais">
+      <summary>Mais opções: tempo antes da reforma</summary>
+      <fieldset class="campo">
+        <legend>Tempo de contribuição até 13/11/2019 <span class="opcional">(opcional)</span></legend>
+        <div class="duas">
+          <div><label for="anos19" class="sub">Anos</label><input id="anos19" type="number" min="0" max="60" inputmode="numeric" placeholder="Estimado" /></div>
+          <div><label for="meses19" class="sub">Meses</label><input id="meses19" type="number" min="0" max="11" inputmode="numeric" placeholder="0" /></div>
+        </div>
+        <p class="ajuda">Se ficar em branco, estimamos supondo que você contribuiu sem parar desde a reforma. Informe se teve meses sem contribuir: muda os pedágios.</p>
+      </fieldset>
+      <label class="marcar"><input type="checkbox" id="novo" /> Comecei a contribuir depois de 13/11/2019</label>
+    </details>
+  </Fragment>
+
+  <Fragment slot="conteudo">
+    <h2>Tabela de pontos e idade mínima, ano a ano</h2>
+    <p>As duas regras sobem todo 1º de janeiro. Além da pontuação ou da idade, as duas exigem {PREVIDENCIA.tempoTransicao.f} anos de contribuição para mulheres e {PREVIDENCIA.tempoTransicao.m} para homens.</p>
+    <div class="tabela-rolagem">
+      <table>
+        <thead>
+          <tr><th scope="col">Ano</th><th scope="col">Pontos (mulher)</th><th scope="col">Pontos (homem)</th><th scope="col">Idade (mulher)</th><th scope="col">Idade (homem)</th></tr>
+        </thead>
+        <tbody>
+          {anos.map((a) => (
+            <tr>
+              <th scope="row">{a}</th>
+              <td>{pontosNoAno(a, "f")}</td>
+              <td>{pontosNoAno(a, "m")}</td>
+              <td>{anosMeses(idadeProgressivaNoAno(a, "f"))}</td>
+              <td>{anosMeses(idadeProgressivaNoAno(a, "m"))}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <h2>As regras da reforma da Previdência</h2>
+    <ul>
+      <li><strong>Pontos:</strong> idade + tempo de contribuição. Valor de 60% da média + 2% por ano acima de 15 (mulher) ou 20 (homem).</li>
+      <li><strong>Idade mínima progressiva:</strong> idade que sobe 6 meses por ano + tempo mínimo. Mesmo cálculo de valor.</li>
+      <li><strong>Pedágio de 50%:</strong> só para quem estava a até 2 anos de completar o tempo em 13/11/2019. Valor com fator previdenciário.</li>
+      <li><strong>Pedágio de 100%:</strong> idade mínima de {PREVIDENCIA.pedagio100Idade.f} (mulher) ou {PREVIDENCIA.pedagio100Idade.m} (homem) e o dobro do tempo que faltava em 2019. Valor de 100% da média.</li>
+      <li><strong>Por idade:</strong> {PREVIDENCIA.idade.f} anos (mulher) ou {PREVIDENCIA.idade.m} (homem), com 15 anos de contribuição (20 para homens que começaram depois da reforma).</li>
+    </ul>
+    <p>O benefício fica entre {formatarBRL(PREVIDENCIA.piso)} e {formatarBRL(PREVIDENCIA.teto)} em 2026. Fonte: {PREVIDENCIA.fonte}.</p>
+  </Fragment>
+</CalcPagina>
+
+<script>
+  import { $, esc2 as esc, estadoURL, infoHTML, ligarAcoes, mostrar, parHTML, rodapeHTML, tabelaHTML, topoHTML } from "../../lib/ui/calc-ui";
+  import { anosMeses, simularAposentadoria, valorEsperando, type ResultadoRegra } from "../../lib/previdencia/aposentadoria";
+  import { formatarBRL, lerValor } from "../../lib/dinheiro";
+  import { lerData } from "../../lib/datas";
+  import type { Sexo } from "../../data/previdencia";
+
+  const form = $<HTMLFormElement>("form");
+  const estado = estadoURL(form, { sexo: "s", nascimento: "n", anos: "a", meses: "m", media: "v", contribui: "c", anos19: "a19", meses19: "m19", novo: "nv" });
+  const marcado = (n: string) => form.querySelector<HTMLInputElement>(`input[name=${n}]:checked`)!.value;
+  const int = (id: string) => Math.max(0, Math.floor(Number($<HTMLInputElement>(id).value) || 0));
+  const mesAno = (d: Date) => d.toLocaleDateString("pt-BR", { month: "long", year: "numeric", timeZone: "UTC" });
+  const dataBR = (d: Date) => d.toLocaleDateString("pt-BR", { timeZone: "UTC" });
+
+  function hojeUTC() {
+    const s = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date());
+    return lerData(s);
+  }
+
+  const quando = (r: ResultadoRegra) => (r.jaCumpre ? "Já pode" : r.data ? mesAno(r.data) : "—");
+
+  function atualizar() {
+    estado.salvar();
+    const nascTxt = $<HTMLInputElement>("nascimento").value;
+    const media = lerValor($<HTMLInputElement>("media").value);
+    const tempoHoje = int("anos") * 12 + int("meses");
+    if (!nascTxt) return mostrar(null, { vazio: "Informe sua data de nascimento." });
+    if (!(tempoHoje > 0)) return mostrar(null, { vazio: "Informe seu tempo de contribuição até hoje." });
+    if (!(media > 0)) return mostrar(null, { vazio: "Informe a média dos seus salários (ou o salário atual)." });
+    const hoje = hojeUTC();
+    const nascimento = lerData(nascTxt);
+    if (nascimento >= hoje) return mostrar(null, { erro: "A data de nascimento precisa ser anterior a hoje." });
+
+    const sexo = marcado("sexo") as Sexo;
+    const novo = $<HTMLInputElement>("novo").checked;
+    const t19Txt = $<HTMLInputElement>("anos19").value || $<HTMLInputElement>("meses19").value;
+    const tempo2019 = novo ? 0 : t19Txt ? int("anos19") * 12 + int("meses19") : undefined;
+    if (tempo2019 !== undefined && tempo2019 > tempoHoje) return mostrar(null, { erro: "O tempo até 2019 não pode ser maior que o tempo até hoje." });
+
+    const r = simularAposentadoria({ sexo, nascimento, hoje, tempoHoje, tempo2019, contribuindo: marcado("contribui") === "s", media });
+    const idadeHoje = Math.floor((hoje.getTime() - nascimento.getTime()) / (365.2425 * 86400000));
+    const sub = `${sexo === "f" ? "Mulher" : "Homem"}, ${idadeHoje} anos, ${anosMeses(tempoHoje)} de contribuição`;
+
+    const b = r.melhor;
+    let destaque: string;
+    if (!b) {
+      destaque = `<p class="proxima"><span>Com os dados informados</span><strong>Nenhuma regra alcançada</strong><small>Voltar a contribuir muda o resultado.</small></p>`;
+    } else {
+      destaque =
+        `<p class="proxima"><span>${b.jaCumpre ? "Você já pode se aposentar" : "Você pode se aposentar a partir de"}</span>` +
+        `<strong>${b.jaCumpre ? "Hoje" : esc(mesAno(b.data!))}</strong>` +
+        `<small>${esc(b.nome)}${b.valor ? `, cerca de ${formatarBRL(b.valor)} por mês` : ", valor com fator previdenciário"}</small></p>`;
+    }
+
+    const visiveis = r.novoSegurado ? r.regras.filter((x) => x.aplica) : r.regras;
+    const linhas = visiveis.map((x) => [x.nome, x.aplica ? quando(x) : "Não se aplica", x.valor ? formatarBRL(x.valor) : x.data ? "Com fator" : "—"]);
+    const iMelhor = b ? visiveis.indexOf(b) : -1;
+
+    const detalhes = visiveis
+      .map((x) => {
+        const situacao = !x.aplica || !x.data
+          ? esc(x.motivo ?? "")
+          : `${x.jaCumpre ? "Já cumpre hoje" : `Cumpre em ${dataBR(x.data)}`}, com ${anosMeses(x.idadeNaData!)} de idade e ${anosMeses(x.tempoNaData!)} de contribuição.${x.calculo ? ` Valor: ${esc(x.calculo)}.` : ""}`;
+        return `<li><strong>${esc(x.nome)}.</strong> ${situacao}<br><span class="base">Exige: ${esc(x.requisitos)}.</span></li>`;
+      })
+      .join("");
+
+    const esperar = b ? valorEsperando(b, sexo, r.media, 5) : [];
+    const esperarHTML = esperar.length
+      ? `<h3 class="sub-holerite">Vale a pena esperar?</h3><p class="nota">Cada ano a mais de contribuição soma 2% da média.</p>` +
+        tabelaHTML(
+          ["Aposentando em", "Valor por mês", "A mais"],
+          esperar.map((e) => [mesAno(e.data), formatarBRL(e.valor), `+ ${formatarBRL(e.valor - (b!.valor ?? 0))}`]),
+        )
+      : "";
+
+    const avisos = [
+      "É uma estimativa em valores de hoje. O INSS calcula com os salários exatos do seu CNIS, corrigidos pela inflação.",
+      r.novoSegurado
+        ? "Quem começou a contribuir depois de 13/11/2019 tem só a regra geral por idade."
+        : `Tempo até 13/11/2019 ${tempo2019 === undefined ? `estimado em ${anosMeses(r.tempo2019)}, supondo contribuição sem parar desde a reforma` : `informado: ${anosMeses(r.tempo2019)}`}.`,
+      "Não inclui professores, atividade especial, trabalho rural nem pessoa com deficiência, que têm regras próprias.",
+    ];
+    const alertas = r.direitoAdquirido
+      ? ["Você já tinha o tempo mínimo antes da reforma: pode ter direito adquirido às regras antigas, que podem dar um valor maior. Vale consultar o Meu INSS ou um especialista."]
+      : [];
+
+    const html =
+      topoHTML("Aposentadoria", sub) +
+      destaque +
+      tabelaHTML(["Regra", "Quando", "Valor estimado"], linhas, iMelhor) +
+      `<details class="memoria"><summary>Ver os requisitos e a conta de cada regra</summary><ul class="regras-detalhe">${detalhes}</ul></details>` +
+      esperarHTML +
+      infoHTML(avisos, alertas) +
+      rodapeHTML("Regras da EC 103/2019, com o salário mínimo e o teto de 2026. Abra “Ver os requisitos” para conferir a conta.");
+
+    mostrar(html, {
+      barra: b ? { rotulo: b.jaCumpre ? "Já pode se aposentar" : "Aposenta em", valor: b.jaCumpre ? (b.valor ? formatarBRL(b.valor) : "hoje") : mesAno(b.data!) } : undefined,
+      compartilhar: {
+        titulo: "Simulação de aposentadoria",
+        detalhe: sub,
+        itens: r.regras.filter((x) => x.data).map((x) => ({ rotulo: x.nome, valor: `${quando(x)}${x.valor ? `, ${formatarBRL(x.valor)}` : ""}` })),
+        chamada: "Veja a simulação completa, regra por regra:",
+      },
+    });
+  }
+
+  form.addEventListener("input", atualizar);
+  form.addEventListener("change", atualizar);
+  form.addEventListener("submit", (e) => e.preventDefault());
+  ligarAcoes();
+  estado.ler();
+  atualizar();
+</script>

@@ -685,3 +685,40 @@
   .calendario-tabela th[scope="row"] {
     text-transform: capitalize;
   }
+  .holerite .sub-holerite {
+    margin: 1.5rem 0 0.25rem;
+    font: 700 1.1rem var(--titulo);
+  }
+  .holerite .nota {
+    margin: 0 0 0.5rem;
+    font-size: 0.9rem;
+    color: var(--tinta-2);
+  }
+  .holerite details.memoria {
+    margin: 1rem 0 0;
+  }
+  .holerite details.memoria summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--carteira);
+    padding: 0.6rem 0;
+  }
+  .regras-detalhe {
+    margin: 0.5rem 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.92rem;
+  }
+  .regras-detalhe li {
+    padding: 0.6rem 0;
+    border-bottom: 1px dashed var(--linha);
+  }
+  .regras-detalhe .base {
+    color: var(--tinta-2);
+    font-size: 0.86rem;
+  }
+  @media print {
+    .holerite details.memoria > ul {
+      display: block;
+    }
+  }

@@ -53,6 +53,14 @@ export const CATEGORIAS: Categoria[] = [
     ],
   },
   {
+    slug: "aposentadoria",
+    nome: "Aposentadoria e INSS",
+    descricao: "Quando você pode se aposentar e quanto vai receber em cada regra da reforma da Previdência.",
+    calculadoras: [
+      { titulo: "Simulador de aposentadoria", resumo: "Compare pontos, idade progressiva, pedágios e idade", url: "/aposentadoria/simulador-de-aposentadoria/", busca: ["aposentadoria", "inss", "aposentar", "regra de transição", "pontos", "pedágio", "idade mínima", "tempo de contribuição", "simulador"] },
+    ],
+  },
+  {
     slug: "financiamentos",
     nome: "Financiamentos e empréstimos",
     descricao: "Simule parcelas, juros e o custo total antes de assinar.",
