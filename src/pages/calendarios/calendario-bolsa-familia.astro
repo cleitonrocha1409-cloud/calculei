@@ -13,7 +13,7 @@ const perguntas = [
   },
   {
     p: "Quando o Bolsa Família é pago?",
-    r: "Nos últimos 10 dias úteis de cada mês, começando pelo NIS final 1 e terminando no final 0. Em dezembro o calendário é antecipado e termina antes do Natal: em 2026, de 10 a 23 de dezembro.",
+    r: "Normalmente, nos últimos 10 dias úteis de cada mês, começando pelo NIS final 1 e terminando no final 0. De outubro a dezembro de 2026, por causa do El Niño, o governo concentrou os pagamentos em 3 dias: final 1, final 2 e, no terceiro dia, todos os finais de 3 a 0. Em dezembro: 10, 11 e 14/12.",
   },
   {
     p: "Minha cidade está em calamidade. Muda alguma coisa?",
@@ -84,7 +84,10 @@ const perguntas = [
       lista: datasBolsa(calamidade ? 1 : final),
       rotuloColuna: "Mês",
       avisos: ["O valor fica disponível no Caixa Tem a partir do dia do depósito.", "Dúvidas: Atendimento Caixa ao Cidadão, 111, ou Disque Social 121."],
-      alertas: calamidade ? ["Em cidades em calamidade reconhecida, todas as famílias recebem no primeiro dia do calendário."] : [],
+      alertas: [
+        "De outubro a dezembro de 2026 o calendário é extraordinário (El Niño): final 1, final 2 e, no terceiro dia, os finais 3 a 0 juntos.",
+        ...(calamidade ? ["Em cidades em calamidade reconhecida, todas as famílias recebem no primeiro dia do calendário."] : []),
+      ],
       rodape: `Fonte: ${CALENDARIOS.bolsa.fonte}. Atualizado em ${CALENDARIOS.atualizadoEm.split("-").reverse().join("/")}.`,
       arquivo: `bolsa-familia-nis-${final}.ics`,
     });

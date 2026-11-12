@@ -39,7 +39,7 @@ const INSS_2026_PISO: Tabela = {
   12: [22, 23, 28, 29, 30, 4, 5, 6, 7, 8],
 };
 
-// Bolsa Família 2026, por final do NIS (índice 0 = final 1). Fonte: calendário do MDS.
+// Bolsa Família 2026, por final do NIS (índice 0 = final 1). Fonte: calendário do MDS; out–dez revisados em 12/11/2026.
 const BOLSA_2026: Tabela = {
   1: [19, 20, 21, 22, 23, 26, 27, 28, 29, 30],
   2: [12, 13, 18, 19, 20, 23, 24, 25, 26, 27],
@@ -50,9 +50,10 @@ const BOLSA_2026: Tabela = {
   7: [20, 21, 22, 23, 24, 27, 28, 29, 30, 31],
   8: [18, 19, 20, 21, 24, 25, 26, 27, 28, 31],
   9: [17, 18, 21, 22, 23, 24, 25, 28, 29, 30],
-  10: [19, 20, 21, 22, 23, 26, 27, 28, 29, 30],
-  11: [16, 17, 18, 19, 23, 24, 25, 26, 27, 30],
-  12: [10, 11, 14, 15, 16, 17, 18, 21, 22, 23],
+  // Out–dez: calendário extraordinário do MDS (El Niño), em 3 dias: final 1, final 2 e os finais 3 a 0 juntos.
+  10: [19, 20, 21, 21, 21, 21, 21, 21, 21, 21],
+  11: [16, 17, 18, 18, 18, 18, 18, 18, 18, 18],
+  12: [10, 11, 14, 14, 14, 14, 14, 14, 14, 14],
 };
 
 export const CALENDARIOS = {

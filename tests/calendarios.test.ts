@@ -46,8 +46,10 @@ describe("INSS", () => {
 });
 
 describe("Bolsa Família e PIS", () => {
-  it("NIS final 0 em dezembro: 23/12", () => {
-    expect(datasBolsa(0)[11].data).toBe("2026-12-23");
+  it("calendário extraordinário (El Niño): finais 3 a 0 juntos em 18/11 e 14/12", () => {
+    expect(datasBolsa(0)[10].data).toBe("2026-11-18");
+    expect(datasBolsa(3)[11].data).toBe("2026-12-14");
+    expect(datasBolsa(2)[11].data).toBe("2026-12-11");
   });
   it("PIS: nascidos em novembro, 17/08/2026", () => {
     expect(dataPIS(11, 2026)).toBe("2026-08-17");
