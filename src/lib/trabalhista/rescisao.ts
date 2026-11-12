@@ -179,7 +179,7 @@ export function calcularRescisao(e: EntradaRescisao): ResultadoRescisao {
         valor,
         memoria:
           `${formatarBRL(remuneracao)} ÷ 12 × ${avos} meses com 15 dias ou mais trabalhados em ${ano}` +
-          (ate.getTime() !== saida.getTime() && ate > saida ? `, contando a projeção do aviso até ${formatarData(ate)}` : ""),
+          (projetada > saida ? ` (o aviso indenizado projeta o contrato até ${formatarData(projetada)})` : ""),
         base: "Lei 4.090/1962; OJ 82 da SDI-1 do TST",
       });
     }
