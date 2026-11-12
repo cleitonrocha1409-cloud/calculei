@@ -69,10 +69,10 @@ describe("rescisão — sem justa causa, aviso indenizado", () => {
 
 describe("rescisão — outros tipos", () => {
   const base = { salario: 3000, admissao: "2023-03-10", saida: "2026-11-11" } as const;
-  it("acordo paga metade do aviso (19 dias) e multa de 20%", () => {
+  it("acordo paga metade do valor do aviso (39 dias → 19,5) e multa de 20%", () => {
     const r = calcularRescisao({ ...base, tipo: "acordo", aviso: "indenizado" });
     expect(r.info.diasAvisoProjetados).toBe(19);
-    expect(v(r, "aviso")).toBe(1900);
+    expect(v(r, "aviso")).toBe(1950);
     expect(r.fgts.percentualMulta).toBe(0.2);
     expect(r.seguroDesemprego).toBe(false);
   });

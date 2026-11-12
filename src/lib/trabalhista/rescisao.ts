@@ -143,15 +143,18 @@ export function calcularRescisao(e: EntradaRescisao): ResultadoRescisao {
   // Aviso prévio indenizado
   let avisoIndenizado = 0;
   if (aviso === "indenizado" && diasIndenizados > 0) {
-    avisoIndenizado = arred(diaria * diasIndenizados);
+    // No acordo, paga-se metade do valor do aviso (art. 484-A, I, a): 39 dias → 19,5 dias de salário.
+    const diasPagos = tipo === "acordo" ? diasAviso / 2 : diasIndenizados;
+    const diasTxt = String(diasPagos).replace(".", ",");
+    avisoIndenizado = arred(diaria * diasPagos);
     proventos.push({
       id: "aviso",
-      rotulo: tipo === "acordo" ? `Aviso prévio indenizado, metade (${diasIndenizados} dias)` : `Aviso prévio indenizado (${diasIndenizados} dias)`,
+      rotulo: tipo === "acordo" ? `Aviso prévio indenizado, metade (${diasTxt} dias)` : `Aviso prévio indenizado (${diasIndenizados} dias)`,
       valor: avisoIndenizado,
       memoria:
         `30 dias + 3 dias × ${anos} ano(s) completo(s) = ${diasAviso} dias` +
-        (tipo === "acordo" ? `; no acordo, paga-se a metade: ${diasIndenizados} dias` : "") +
-        `. ${formatarBRL(remuneracao)} ÷ 30 × ${diasIndenizados}`,
+        (tipo === "acordo" ? `; no acordo, paga-se a metade: ${diasTxt} dias` : "") +
+        `. ${formatarBRL(remuneracao)} ÷ 30 × ${diasTxt}`,
       base: tipo === "acordo" ? "CLT, art. 484-A" : "CLT, art. 487; Lei 12.506/2011",
     });
   }
