@@ -1,0 +1,145 @@
+---
+import CalcPagina from "../../components/CalcPagina.astro";
+
+const perguntas = [
+  {
+    p: "Quando a empresa precisa pagar as férias?",
+    r: "Até 2 dias antes do início do descanso (CLT, art. 145). Se pagar depois, a Justiça do Trabalho costuma determinar o pagamento em dobro.",
+  },
+  {
+    p: "Posso vender 10 dias de férias?",
+    r: "Sim. O abono pecuniário permite converter 1/3 das férias (10 dias, em férias de 30) em dinheiro. O pedido deve ser feito até 15 dias antes do fim do período aquisitivo, e o valor não tem INSS nem imposto de renda.",
+  },
+  {
+    p: "Posso dividir as férias?",
+    r: "Sim, em até três períodos, se você concordar: um deles com pelo menos 14 dias e os outros com pelo menos 5 dias cada (CLT, art. 134, § 1º).",
+  },
+  {
+    p: "Tem desconto de INSS e imposto de renda nas férias?",
+    r: "Sim, sobre as férias e o 1/3. O imposto é calculado separado do salário do mês. O abono dos dias vendidos é isento dos dois.",
+  },
+  {
+    p: "Posso receber a 1ª parcela do 13º junto com as férias?",
+    r: "Sim, se pedir por escrito no mês de janeiro. A parcela é metade do salário e não tem descontos.",
+  },
+];
+---
+
+<CalcPagina
+  titulo="Cálculo de férias 2026: calculadora com 1/3, abono e descontos"
+  descricao="Calcule o valor das férias com 1/3 constitucional, venda de 10 dias, adiantamento do 13º e descontos de INSS e imposto de renda de 2026."
+  h1="Cálculo de férias"
+  categoria="trabalhista"
+  caminho="/trabalhista/calculo-de-ferias/"
+  nomeApp="Calculadora de férias 2026"
+  perguntas={perguntas}
+>
+  <Fragment slot="form">
+    <div class="campo">
+      <label for="salario">Salário bruto mensal</label>
+      <div class="moeda"><span aria-hidden="true">R$</span><input id="salario" inputmode="decimal" autocomplete="off" placeholder="3.000,00" /></div>
+    </div>
+    <div class="campo">
+      <label for="dias">Dias de descanso</label>
+      <select id="dias">
+        <option value="30">30 dias</option>
+        <option value="20">20 dias</option>
+        <option value="15">15 dias</option>
+        <option value="14">14 dias</option>
+        <option value="10">10 dias</option>
+        <option value="5">5 dias</option>
+      </select>
+    </div>
+    <div class="campo">
+      <label class="marcar"><input type="checkbox" id="vender" /> Vender 10 dias (abono pecuniário)</label>
+      <label class="marcar"><input type="checkbox" id="adiantar" /> Receber a 1ª parcela do 13º junto</label>
+    </div>
+    <details class="mais">
+      <summary>Mais opções: horas extras e dependentes</summary>
+      <div class="campo">
+        <label for="variaveis">Média mensal de horas extras, comissões e adicionais</label>
+        <div class="moeda"><span aria-hidden="true">R$</span><input id="variaveis" inputmode="decimal" autocomplete="off" placeholder="0,00" /></div>
+      </div>
+      <div class="campo">
+        <label for="dependentes">Dependentes no imposto de renda</label>
+        <input id="dependentes" type="number" min="0" max="20" inputmode="numeric" value="0" />
+      </div>
+    </details>
+  </Fragment>
+
+  <Fragment slot="conteudo">
+    <h2>Como é feito o cálculo das férias</h2>
+    <p>
+      O valor das férias é o salário dividido por 30 e multiplicado pelos dias de descanso, mais 1/3 desse valor. Horas extras, comissões e adicionais habituais entram pela média. Sobre férias e 1/3 incidem
+      INSS e imposto de renda; até R$ 5.000 de rendimento, o imposto é zerado pela regra de 2026.
+    </p>
+    <h3>Exemplo</h3>
+    <p>
+      Salário de R$ 3.000 e 30 dias de férias: R$ 3.000 de férias mais R$ 1.000 de 1/3, total de R$ 4.000. O INSS é de R$ 368,60 e não há imposto de renda. Você recebe R$ 3.631,40 até 2 dias antes de sair.
+    </p>
+    <p>
+      Se tirar 20 dias e vender 10: R$ 2.000 de férias, R$ 666,67 de 1/3, R$ 1.000 de abono e R$ 333,33 de 1/3 sobre o abono. O abono e o seu terço não têm descontos.
+    </p>
+  </Fragment>
+</CalcPagina>
+
+<script>
+  import { $, destaqueHTML, infoHTML, ligarAcoes, listaHTML, mostrar, rodapeHTML, subtotalHTML, topoHTML, estadoURL } from "../../lib/ui/calc-ui";
+  import { calcularFerias, ErroFerias } from "../../lib/trabalhista/ferias";
+  import { formatarBRL, lerValor } from "../../lib/dinheiro";
+
+  const form = $<HTMLFormElement>("form");
+  const estado = estadoURL(form, { salario: "s", dias: "d", vender: "vd", adiantar: "a13", variaveis: "v", dependentes: "dep" });
+  const num = (id: string) => lerValor($<HTMLInputElement>(id).value) || 0;
+  const vender = $<HTMLInputElement>("vender");
+  const dias = $<HTMLSelectElement>("dias");
+
+  function atualizar(ev?: Event) {
+    // Vender 10 dias pede no máximo 20 dias de descanso.
+    if (ev?.target === vender && vender.checked && Number(dias.value) > 20) dias.value = "20";
+    if (ev?.target === dias && Number(dias.value) > 20) vender.checked = false;
+    estado.salvar();
+    const salario = num("salario");
+    if (!(salario > 0)) return mostrar(null, { vazio: "Informe o salário bruto." });
+    try {
+      const r = calcularFerias({
+        salario,
+        mediaVariaveis: num("variaveis"),
+        dias: Number(dias.value),
+        venderDias: vender.checked,
+        adiantar13: $<HTMLInputElement>("adiantar").checked,
+        dependentes: num("dependentes"),
+      });
+      const html =
+        topoHTML("Simulação de férias", `${dias.value} dias de descanso${r.diasVendidos ? " + 10 dias vendidos" : ""}`) +
+        `<h3>A receber</h3>` +
+        listaHTML(r.proventos) +
+        subtotalHTML("Total bruto", r.totalProventos) +
+        `<h3>Descontos</h3>` +
+        listaHTML(r.descontos, true) +
+        subtotalHTML("Total de descontos", r.totalDescontos, true) +
+        destaqueHTML("Você recebe", r.liquido) +
+        infoHTML(["Pagamento até 2 dias antes do início das férias (CLT, art. 145)."], r.alertas) +
+        rodapeHTML();
+      mostrar(html, { barra: { rotulo: "Você recebe", valor: r.liquido }, compartilhar: {
+          titulo: "Simulei minhas férias",
+          detalhe: `${dias.value} dias de descanso${r.diasVendidos ? " + 10 dias vendidos" : ""}`,
+          itens: [
+            { rotulo: "Total bruto", valor: r.totalProventos },
+            { rotulo: "Descontos", valor: r.totalDescontos },
+            { rotulo: "Valor a receber", valor: r.liquido },
+          ],
+        },
+      });
+    } catch (err) {
+      mostrar(null, { erro: err instanceof ErroFerias ? err.message : "Não foi possível calcular com esses dados." });
+    }
+  }
+
+  form.addEventListener("input", atualizar);
+  form.addEventListener("change", atualizar);
+  form.addEventListener("submit", (e) => e.preventDefault());
+  ligarAcoes();
+  estado.ler();
+  atualizar();
+</script>

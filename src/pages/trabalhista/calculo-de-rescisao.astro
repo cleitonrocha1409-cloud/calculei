@@ -1,0 +1,390 @@
+---
+import Base from "../../layouts/Base.astro";
+import "../../styles/calculadora.css";
+import { SITE } from "../../config";
+
+const perguntas = [
+  {
+    p: "Quanto tempo a empresa tem para pagar a rescisão?",
+    r: "Até 10 dias corridos depois do fim do contrato, em qualquer tipo de desligamento (CLT, art. 477, § 6º). O atraso gera multa de um salário a favor do trabalhador.",
+  },
+  {
+    p: "Como funciona o aviso prévio proporcional?",
+    r: "São 30 dias mais 3 dias por ano completo de trabalho, até o limite de 90 dias (Lei 12.506/2011). O acréscimo vale quando a empresa demite; quem pede demissão cumpre ou indeniza 30 dias.",
+  },
+  {
+    p: "O aviso prévio indenizado conta para 13º e férias?",
+    r: "Sim. O período do aviso indenizado é projetado no contrato e pode acrescentar meses ao 13º e às férias proporcionais (OJ 82 da SDI-1 do TST). A calculadora já faz essa projeção.",
+  },
+  {
+    p: "O que recebo no acordo entre as partes?",
+    r: "Metade do aviso prévio indenizado, multa de 20% do FGTS, saque de 80% do saldo do FGTS e as demais verbas integrais. Não há seguro-desemprego (CLT, art. 484-A).",
+  },
+  {
+    p: "Tem desconto de INSS e imposto de renda na rescisão?",
+    r: "Há INSS e IRRF sobre o saldo de salário e sobre o 13º, calculados separadamente. Aviso prévio indenizado e férias indenizadas não têm INSS nem imposto de renda. Desde 2026, quem recebe até R$ 5.000 no mês não paga IR (Lei 15.270/2025).",
+  },
+  {
+    p: "Quem pede demissão recebe férias proporcionais?",
+    r: "Sim, mesmo com menos de um ano de empresa (Súmula 261 do TST), além de saldo de salário e 13º proporcional. Não há multa do FGTS nem saque do saldo.",
+  },
+];
+
+const jsonld = [
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: "Calculadora de rescisão trabalhista 2026",
+    applicationCategory: "FinanceApplication",
+    operatingSystem: "Web",
+    offers: { "@type": "Offer", price: "0", priceCurrency: "BRL" },
+    url: `${SITE.dominio}/trabalhista/calculo-de-rescisao/`,
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: perguntas.map((q) => ({ "@type": "Question", name: q.p, acceptedAnswer: { "@type": "Answer", text: q.r } })),
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Início", item: SITE.dominio + "/" },
+      { "@type": "ListItem", position: 2, name: "Trabalhista", item: SITE.dominio + "/trabalhista/" },
+      { "@type": "ListItem", position: 3, name: "Cálculo de rescisão" },
+    ],
+  },
+];
+---
+
+<Base
+  titulo="Cálculo de rescisão 2026: calculadora com FGTS e aviso prévio"
+  descricao="Calcule sua rescisão em qualquer tipo de desligamento: saldo de salário, aviso prévio, 13º, férias, FGTS e multa, com INSS e IRRF de 2026."
+  jsonld={jsonld}
+>
+  <div class="envelope cabecalho">
+    <p class="trilha"><a href="/">Início</a> / <a href="/trabalhista/">Trabalhista</a> / Rescisão</p>
+    <h1>Cálculo de rescisão</h1>
+    <p class="cabecalho__apoio">Preencha os dados do contrato. O resultado aparece ao lado e se atualiza enquanto você digita.</p>
+  </div>
+
+  <div class="envelope calc">
+    <form id="form" class="form" novalidate>
+      <fieldset class="campo">
+        <legend>Como foi o desligamento?</legend>
+        <div class="opcoes" id="tipos">
+          <label><input type="radio" name="tipo" value="sem_justa_causa" checked /> Demissão sem justa causa</label>
+          <label><input type="radio" name="tipo" value="pedido_demissao" /> Pedido de demissão</label>
+          <label><input type="radio" name="tipo" value="acordo" /> Acordo entre as partes</label>
+          <label><input type="radio" name="tipo" value="justa_causa" /> Justa causa</label>
+          <label><input type="radio" name="tipo" value="rescisao_indireta" /> Rescisão indireta</label>
+        </div>
+      </fieldset>
+
+      <div class="campo">
+        <label for="salario">Salário bruto mensal</label>
+        <div class="moeda"><span aria-hidden="true">R$</span><input id="salario" name="salario" inputmode="decimal" autocomplete="off" placeholder="3.000,00" /></div>
+      </div>
+
+      <div class="duas">
+        <div class="campo">
+          <label for="admissao">Data de admissão</label>
+          <input id="admissao" name="admissao" type="date" />
+        </div>
+        <div class="campo">
+          <label for="saida">Último dia trabalhado</label>
+          <input id="saida" name="saida" type="date" />
+        </div>
+      </div>
+
+      <fieldset class="campo" id="campo-aviso">
+        <legend>Aviso prévio</legend>
+        <div class="opcoes opcoes--linha" id="avisos"></div>
+      </fieldset>
+
+      <div class="campo">
+        <label for="vencidas">Férias vencidas não tiradas</label>
+        <select id="vencidas" name="vencidas">
+          <option value="0">Nenhuma</option>
+          <option value="1">1 período</option>
+          <option value="2">2 períodos</option>
+        </select>
+        <label class="marcar" id="campo-dobro" hidden><input type="checkbox" id="dobro" name="dobro" /> O prazo para tirar já passou (pagas em dobro)</label>
+      </div>
+
+      <details class="mais">
+        <summary>Mais opções: FGTS, horas extras, dependentes</summary>
+        <div class="campo">
+          <label for="fgts">Saldo atual do FGTS <span class="opcional">(opcional, veja no app FGTS)</span></label>
+          <div class="moeda"><span aria-hidden="true">R$</span><input id="fgts" name="fgts" inputmode="decimal" autocomplete="off" placeholder="Deixe vazio para estimar" /></div>
+        </div>
+        <div class="campo">
+          <label for="variaveis">Média mensal de horas extras, comissões e adicionais</label>
+          <div class="moeda"><span aria-hidden="true">R$</span><input id="variaveis" name="variaveis" inputmode="decimal" autocomplete="off" placeholder="0,00" /></div>
+        </div>
+        <div class="duas">
+          <div class="campo">
+            <label for="dependentes">Dependentes no IR</label>
+            <input id="dependentes" name="dependentes" type="number" min="0" max="20" inputmode="numeric" value="0" />
+          </div>
+          <div class="campo">
+            <label for="adiantamento">1ª parcela do 13º já recebida</label>
+            <div class="moeda"><span aria-hidden="true">R$</span><input id="adiantamento" name="adiantamento" inputmode="decimal" autocomplete="off" placeholder="0,00" /></div>
+          </div>
+        </div>
+      </details>
+    </form>
+
+    <section class="resultado" id="resultado" aria-live="polite" aria-label="Resultado da simulação">
+      <div class="holerite" id="holerite">
+        <p class="vazio">Informe o salário e as datas para ver o cálculo.</p>
+      </div>
+      <div class="acoes" id="acoes" hidden>
+        <button type="button" id="pdf">Baixar PDF</button>
+        <a id="whats" target="_blank" rel="noopener">Enviar no WhatsApp</a>
+        <button type="button" id="copiar">Copiar link</button>
+      </div>
+    </section>
+  </div>
+
+  <div class="barra" id="barra" hidden>
+    <span>Você recebe <strong id="barra-valor"></strong></span>
+    <a href="#resultado">Ver detalhes</a>
+  </div>
+
+  <section class="envelope comparar" id="comparar" hidden>
+    <h2>Quanto você receberia em cada tipo de desligamento</h2>
+    <p class="texto-longo">Mesmo salário e mesmas datas, mudando só a forma de saída. O FGTS liberado inclui a multa.</p>
+    <div class="tabela-rolagem">
+      <table>
+        <thead>
+          <tr><th scope="col">Tipo</th><th scope="col">Rescisão líquida</th><th scope="col">FGTS liberado</th><th scope="col">Total</th><th scope="col">Seguro-desemprego</th></tr>
+        </thead>
+        <tbody id="comparar-corpo"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <article class="envelope conteudo texto-longo">
+    <h2>Como é feito o cálculo da rescisão</h2>
+    <p>
+      A rescisão soma as verbas que o trabalhador tem a receber e desconta INSS, imposto de renda e eventuais adiantamentos. O que entra depende do tipo de desligamento:
+    </p>
+    <div class="tabela-rolagem">
+      <table class="direitos">
+        <thead>
+          <tr><th scope="col">Verba</th><th scope="col">Sem justa causa</th><th scope="col">Pedido</th><th scope="col">Acordo</th><th scope="col">Justa causa</th></tr>
+        </thead>
+        <tbody>
+          <tr><th scope="row">Saldo de salário</th><td>Sim</td><td>Sim</td><td>Sim</td><td>Sim</td></tr>
+          <tr><th scope="row">Aviso prévio indenizado</th><td>Sim</td><td>Não</td><td>Metade</td><td>Não</td></tr>
+          <tr><th scope="row">13º proporcional</th><td>Sim</td><td>Sim</td><td>Sim</td><td>Não</td></tr>
+          <tr><th scope="row">Férias vencidas + 1/3</th><td>Sim</td><td>Sim</td><td>Sim</td><td>Sim</td></tr>
+          <tr><th scope="row">Férias proporcionais + 1/3</th><td>Sim</td><td>Sim</td><td>Sim</td><td>Não</td></tr>
+          <tr><th scope="row">Multa do FGTS</th><td>40%</td><td>Não</td><td>20%</td><td>Não</td></tr>
+          <tr><th scope="row">Saque do FGTS</th><td>Total</td><td>Não</td><td>80%</td><td>Não</td></tr>
+          <tr><th scope="row">Seguro-desemprego</th><td>Sim</td><td>Não</td><td>Não</td><td>Não</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Rescisão indireta, quando a falta grave é da empresa, segue as mesmas regras da demissão sem justa causa.</p>
+
+    <h3>Exemplo</h3>
+    <p>
+      Salário de R$ 3.000, admissão em 10/03/2023 e demissão sem justa causa em 11/11/2026, com aviso indenizado. São 3 anos completos, então o aviso é de 39 dias e projeta o contrato até 20/12/2026. Isso
+      garante 12/12 de 13º (R$ 3.000) e 9/12 de férias proporcionais (R$ 2.250 + R$ 750 de 1/3). Com saldo de 11 dias (R$ 1.100) e aviso de R$ 3.900, os proventos somam R$ 11.000; o único desconto é
+      o INSS. Nessa faixa, o imposto de renda fica zerado pela isenção de 2026.
+    </p>
+
+    <h3>Tabelas usadas</h3>
+    <p>
+      INSS 2026 (7,5% a 14%, teto de R$ 8.475,55) e IRRF 2026 com a redução da Lei 15.270/2025. A estimativa do FGTS considera 8% ao mês sobre a remuneração; para o valor exato, informe o saldo do app FGTS.{" "}
+      <a href="/sobre/">Veja a metodologia</a>.
+    </p>
+
+    <h2>Perguntas frequentes</h2>
+    {
+      perguntas.map((q) => (
+        <details class="faq">
+          <summary>{q.p}</summary>
+          <p>{q.r}</p>
+        </details>
+      ))
+    }
+    <h2>Outras calculadoras</h2>
+    <ul class="relacionadas">
+      <li><a href="/trabalhista/calculo-de-ferias/">Férias</a>: com 1/3, abono pecuniário e descontos</li>
+      <li><a href="/trabalhista/calculo-decimo-terceiro/">13º salário</a>: primeira e segunda parcela</li>
+      <li><a href="/trabalhista/salario-liquido/">Salário líquido</a>: do bruto ao líquido, e do líquido ao bruto</li>
+    </ul>
+  </article>
+</Base>
+
+<script>
+  import { calcularRescisao, compararTipos, AVISOS, TIPOS, ErroEntrada, type TipoRescisao, type Aviso } from "../../lib/trabalhista/rescisao";
+  import { formatarBRL, lerValor } from "../../lib/dinheiro";
+  import { formatarData, lerData, paraISO } from "../../lib/datas";
+  import { textoWhatsApp } from "../../lib/ui/calc-ui";
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const form = $<HTMLFormElement>("form");
+  const holerite = $("holerite");
+  const acoes = $("acoes");
+  const barra = $("barra");
+  const comparar = $("comparar");
+
+  const tipoAtual = () => (form.querySelector<HTMLInputElement>("input[name=tipo]:checked")!.value as TipoRescisao);
+
+  function montarAvisos(preferido?: string) {
+    const tipo = tipoAtual();
+    const opcoes = AVISOS[tipo];
+    $("campo-aviso").hidden = opcoes.length === 0;
+    const atual = preferido ?? form.querySelector<HTMLInputElement>("input[name=aviso]:checked")?.value;
+    const escolhido = opcoes.some((o) => o.valor === atual) ? atual : opcoes[0]?.valor;
+    $("avisos").innerHTML = opcoes
+      .map((o) => `<label><input type="radio" name="aviso" value="${o.valor}" ${o.valor === escolhido ? "checked" : ""}/> ${o.rotulo}</label>`)
+      .join("");
+  }
+
+  function lerEntrada() {
+    const v = (id: string) => ($<HTMLInputElement>(id).value || "").trim();
+    const fg = v("fgts");
+    return {
+      tipo: tipoAtual(),
+      salario: lerValor(v("salario")),
+      mediaVariaveis: lerValor(v("variaveis")) || 0,
+      admissao: v("admissao"),
+      saida: v("saida"),
+      aviso: (form.querySelector<HTMLInputElement>("input[name=aviso]:checked")?.value as Aviso) || undefined,
+      periodosFeriasVencidas: Number(v("vencidas")),
+      feriasVencidasEmDobro: $<HTMLInputElement>("dobro").checked,
+      dependentes: Number(v("dependentes")) || 0,
+      saldoFGTS: fg ? lerValor(fg) : undefined,
+      adiantamento13: lerValor(v("adiantamento")) || 0,
+    };
+  }
+
+  // Estado na URL: o link reabre o cálculo preenchido.
+  const CHAVES: Record<string, string> = { tipo: "t", salario: "s", variaveis: "v", admissao: "a", saida: "d", vencidas: "fv", dependentes: "dep", fgts: "fg", adiantamento: "ad" };
+  function salvarURL() {
+    const p = new URLSearchParams();
+    p.set("t", tipoAtual());
+    for (const [id, k] of Object.entries(CHAVES)) {
+      if (id === "tipo") continue;
+      const el = document.getElementById(id) as HTMLInputElement | null;
+      if (el?.value && el.value !== "0") p.set(k, el.value);
+    }
+    const av = form.querySelector<HTMLInputElement>("input[name=aviso]:checked")?.value;
+    if (av) p.set("av", av);
+    if ($<HTMLInputElement>("dobro").checked) p.set("fd", "1");
+    history.replaceState(null, "", `${location.pathname}?${p}`);
+  }
+  function lerURL() {
+    const p = new URLSearchParams(location.search);
+    const t = p.get("t");
+    if (t && t in TIPOS) form.querySelector<HTMLInputElement>(`input[name=tipo][value=${t}]`)!.checked = true;
+    for (const [id, k] of Object.entries(CHAVES)) {
+      if (id === "tipo") continue;
+      const val = p.get(k);
+      if (val !== null) ($<HTMLInputElement>(id)).value = val;
+    }
+    $<HTMLInputElement>("dobro").checked = p.get("fd") === "1";
+    montarAvisos(p.get("av") ?? undefined);
+  }
+
+  const linha = (l: { rotulo: string; valor: number; memoria: string; base?: string }, sinal: "+" | "−") => `
+    <li>
+      <details>
+        <summary><span>${l.rotulo}</span><span class="valor ${sinal === "−" ? "neg" : ""}">${sinal === "−" ? "− " : ""}${formatarBRL(l.valor)}</span></summary>
+        <p>${l.memoria}${l.base ? `<br><span class="base">${l.base}</span>` : ""}</p>
+      </details>
+    </li>`;
+
+
+  function atualizar() {
+    $("campo-dobro").hidden = $<HTMLSelectElement>("vencidas").value === "0";
+    const e = lerEntrada();
+    salvarURL();
+    if (!(e.salario > 0) || !e.admissao || !e.saida) {
+      holerite.innerHTML = `<p class="vazio">Informe o salário e as datas para ver o cálculo.</p>`;
+      acoes.hidden = barra.hidden = comparar.hidden = true;
+      return;
+    }
+    try {
+      const r = calcularRescisao(e);
+      const f = r.fgts;
+      const saqueTxt = f.saque === "integral" ? "Pode sacar tudo" : f.saque === "80%" ? "Pode sacar 80% do saldo + a multa" : "Não pode sacar agora";
+      holerite.innerHTML = `
+        <header class="holerite__topo">
+          <p class="holerite__titulo">Simulação de rescisão</p>
+          <p>${TIPOS[e.tipo]} · admissão ${formatarData(lerData(e.admissao))} · saída ${formatarData(lerData(e.saida))}</p>
+        </header>
+        <h3>A receber</h3>
+        <ul class="linhas">${r.proventos.map((l) => linha(l, "+")).join("")}</ul>
+        <p class="subtotal"><span>Total bruto</span><span>${formatarBRL(r.totalProventos)}</span></p>
+        ${r.descontos.length ? `<h3>Descontos</h3><ul class="linhas">${r.descontos.map((l) => linha(l, "−")).join("")}</ul>
+        <p class="subtotal"><span>Total de descontos</span><span class="neg">− ${formatarBRL(r.totalDescontos)}</span></p>` : ""}
+        <p class="liquido"><span>Você recebe</span><strong>${formatarBRL(r.liquido)}</strong></p>
+        <h3>FGTS</h3>
+        <ul class="fgts">
+          <li><span>Saldo ${f.saldoEstimado ? "estimado" : "informado"}</span><span>${formatarBRL(f.saldo)}</span></li>
+          <li><span>Depósito sobre a rescisão</span><span>${formatarBRL(f.depositoRescisao)}</span></li>
+          ${f.percentualMulta ? `<li><span>Multa de ${f.percentualMulta * 100}%</span><span>${formatarBRL(f.multa)}</span></li>` : ""}
+          <li class="fgts__saque"><span>${saqueTxt}</span><span>${formatarBRL(f.valorSaque)}</span></li>
+        </ul>
+        <ul class="info">
+          ${r.info.diasAviso ? `<li>Aviso prévio de ${r.info.diasAviso} dias (${r.info.anosCompletos} ano${r.info.anosCompletos === 1 ? "" : "s"} completo${r.info.anosCompletos === 1 ? "" : "s"})</li>` : ""}
+          ${r.info.diasAvisoProjetados ? `<li>Contrato projetado até ${formatarData(lerData(r.info.dataProjetada))}</li>` : ""}
+          <li>Seguro-desemprego: ${r.seguroDesemprego ? "tem direito, se cumprir a carência" : "não tem direito"}</li>
+          ${r.alertas.map((a) => `<li class="alerta">${a}</li>`).join("")}
+        </ul>
+        <p class="rodape-holerite">Valores estimados com as tabelas de 2026. Toque em uma linha para ver a conta.</p>`;
+      acoes.hidden = false;
+      barra.hidden = false;
+      $("barra-valor").textContent = formatarBRL(r.liquido);
+
+      const itens = [{ rotulo: "Rescisão líquida", valor: r.liquido }];
+      if (f.valorSaque > 0) itens.push({ rotulo: "FGTS para sacar", valor: f.valorSaque }, { rotulo: "Total", valor: r.liquido + f.valorSaque });
+      const texto = textoWhatsApp({ titulo: "Simulei minha rescisão", detalhe: TIPOS[e.tipo], itens }, location.href);
+      $<HTMLAnchorElement>("whats").href = `https://wa.me/?text=${encodeURIComponent(texto)}`;
+
+      const atual = e.tipo;
+      $("comparar-corpo").innerHTML = compararTipos(e)
+        .map(
+          (c) => `<tr class="${c.tipo === atual ? "atual" : ""}"><th scope="row">${c.rotulo}</th><td>${formatarBRL(c.liquido)}</td><td>${formatarBRL(c.fgtsSaque)}</td><td><strong>${formatarBRL(c.total)}</strong></td><td>${c.seguro ? "Sim" : "Não"}</td></tr>`,
+        )
+        .join("");
+      comparar.hidden = false;
+    } catch (err) {
+      const msg = err instanceof ErroEntrada ? err.message : "Não foi possível calcular com esses dados. Confira as datas e o salário.";
+      holerite.innerHTML = `<p class="erro">${msg}</p>`;
+      acoes.hidden = barra.hidden = comparar.hidden = true;
+    }
+  }
+
+  form.addEventListener("input", (ev) => {
+    if ((ev.target as HTMLInputElement).name === "tipo") montarAvisos();
+    atualizar();
+  });
+  form.addEventListener("change", atualizar);
+  form.addEventListener("submit", (ev) => ev.preventDefault());
+
+  $("pdf").addEventListener("click", () => window.print());
+  // No PDF, a memória de cálculo de cada linha aparece aberta.
+  window.addEventListener("beforeprint", () => holerite.querySelectorAll("details").forEach((d) => (d.open = true)));
+  $("copiar").addEventListener("click", async () => {
+    const botao = $<HTMLButtonElement>("copiar");
+    try {
+      await navigator.clipboard.writeText(location.href);
+      botao.textContent = "Link copiado";
+    } catch {
+      botao.textContent = "Copie o endereço da página";
+    }
+    setTimeout(() => (botao.textContent = "Copiar link"), 2500);
+  });
+
+  // Saída sugerida: hoje.
+  if (!new URLSearchParams(location.search).has("d")) $<HTMLInputElement>("saida").value = paraISO(new Date(Date.UTC(new Date().getFullYear(), new Date().getMonth(), new Date().getDate())));
+  lerURL();
+  atualizar();
+</script>

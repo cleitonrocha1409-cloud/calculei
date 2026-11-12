@@ -1,0 +1,9 @@
+{
+  // Publicação no Cloudflare Workers (site estático).
+  "name": "calculei",
+  "compatibility_date": "2026-11-12",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "404-page"
+  }
+}

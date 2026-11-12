@@ -1,0 +1,450 @@
+/* Estilos compartilhados por todas as calculadoras. */
+
+  .cabecalho {
+    padding-top: 2.25rem;
+  }
+  .trilha {
+    font-size: 0.9rem;
+    color: var(--tinta-2);
+  }
+  .cabecalho__apoio {
+    color: var(--tinta-2);
+    font-size: 1.05rem;
+    max-width: 60ch;
+  }
+
+  .calc {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+    gap: 2rem;
+    align-items: start;
+    margin-top: 1.5rem;
+  }
+  @media (max-width: 880px) {
+    .calc {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* Formulário */
+  .form {
+    background: var(--papel);
+    border: 1px solid var(--linha);
+    border-radius: var(--raio);
+    padding: 1.5rem;
+  }
+  .campo {
+    border: 0;
+    padding: 0;
+    margin: 0 0 1.35rem;
+    min-width: 0;
+  }
+  .campo > label,
+  legend {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+    padding: 0;
+  }
+  .opcional {
+    font-weight: 400;
+    color: var(--tinta-2);
+    font-size: 0.88rem;
+  }
+  input,
+  select {
+    font: 500 1.05rem var(--texto);
+    color: var(--tinta);
+    width: 100%;
+    padding: 0.7rem 0.8rem;
+    border: 1.5px solid var(--linha);
+    border-radius: 8px;
+    background: #fff;
+    min-height: 48px;
+  }
+  input:focus,
+  select:focus {
+    outline: none;
+    border-color: var(--carteira);
+    box-shadow: 0 0 0 3px var(--carteira-claro);
+  }
+  .moeda {
+    display: flex;
+    align-items: center;
+    border: 1.5px solid var(--linha);
+    border-radius: 8px;
+    background: #fff;
+  }
+  .moeda:focus-within {
+    border-color: var(--carteira);
+    box-shadow: 0 0 0 3px var(--carteira-claro);
+  }
+  .moeda span {
+    padding-left: 0.8rem;
+    color: var(--tinta-2);
+    font-weight: 600;
+  }
+  .moeda input {
+    border: 0;
+    box-shadow: none;
+  }
+  .duas {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  @media (max-width: 420px) {
+    .duas {
+      grid-template-columns: 1fr;
+    }
+  }
+  .opcoes {
+    display: grid;
+    gap: 0.45rem;
+  }
+  .opcoes--linha {
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  }
+  .opcoes label {
+    display: flex;
+    gap: 0.6rem;
+    align-items: center;
+    padding: 0.65rem 0.8rem;
+    border: 1.5px solid var(--linha);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.97rem;
+    min-height: 48px;
+  }
+  .opcoes input {
+    width: 1.1rem;
+    height: 1.1rem;
+    min-height: 0;
+    margin: 0;
+    accent-color: var(--carteira);
+    flex-shrink: 0;
+  }
+  .opcoes label:has(input:checked) {
+    border-color: var(--carteira);
+    background: var(--carteira-claro);
+    font-weight: 600;
+  }
+  .marcar {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    margin-top: 0.6rem;
+    font-size: 0.95rem;
+  }
+  .marcar input {
+    width: 1.1rem;
+    height: 1.1rem;
+    min-height: 0;
+    accent-color: var(--carteira);
+  }
+  .mais summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--carteira);
+    margin-bottom: 1rem;
+  }
+
+  /* Resultado: um holerite de rescisão */
+  .resultado {
+    position: sticky;
+    top: 1rem;
+  }
+  .holerite {
+    background: var(--papel);
+    border-radius: 4px;
+    padding: 1.5rem 1.5rem 1.25rem;
+    box-shadow: 0 1px 0 var(--linha), 0 12px 32px -18px rgba(22, 32, 42, 0.35);
+    position: relative;
+    -webkit-mask: radial-gradient(circle 6px at 50% 0, #0000 98%, #000) 50% 0 / 18px 100% repeat-x;
+    mask: radial-gradient(circle 6px at 50% 0, #0000 98%, #000) 50% 0 / 18px 100% repeat-x;
+  }
+  .holerite .vazio,
+  .holerite .erro {
+    margin: 0.5rem 0;
+    color: var(--tinta-2);
+  }
+  .holerite .erro {
+    color: var(--negativo);
+    font-weight: 600;
+  }
+  .holerite .holerite__topo {
+    border-bottom: 2px solid var(--tinta);
+    padding-bottom: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+  .holerite .holerite__titulo {
+    font: 700 1.25rem/1.2 var(--titulo);
+    margin: 0.4rem 0 0.25rem;
+  }
+  .holerite .holerite__topo p:last-child {
+    margin: 0;
+    font-size: 0.88rem;
+    color: var(--tinta-2);
+  }
+  .holerite h3 {
+    font: 600 0.95rem var(--texto);
+    color: var(--tinta-2);
+    margin: 1.1rem 0 0.2rem;
+  }
+  .holerite .linhas,
+  .holerite .fgts,
+  .holerite .info {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .holerite .linhas li {
+    border-bottom: 1px dashed var(--linha);
+  }
+  .holerite .linhas summary {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.5rem 0;
+    cursor: pointer;
+    list-style: none;
+  }
+  .holerite .linhas summary::-webkit-details-marker {
+    display: none;
+  }
+  .holerite .linhas summary span:first-child {
+    text-decoration: underline dotted var(--linha);
+    text-underline-offset: 4px;
+  }
+  .holerite .linhas details[open] summary span:first-child {
+    text-decoration-color: var(--carteira);
+  }
+  .holerite .linhas details p {
+    font-size: 0.86rem;
+    color: var(--tinta-2);
+    background: var(--fundo);
+    border-radius: 6px;
+    padding: 0.5rem 0.7rem;
+    margin: 0 0 0.6rem;
+  }
+  .holerite .base {
+    font-style: italic;
+  }
+  .holerite .valor {
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .holerite .neg {
+    color: var(--negativo);
+  }
+  .holerite .subtotal,
+  .holerite .fgts li {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin: 0;
+    padding: 0.45rem 0;
+    font-size: 0.95rem;
+  }
+  .holerite .subtotal {
+    font-weight: 600;
+  }
+  .holerite .liquido {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    margin: 0.9rem -0.5rem 0;
+    padding: 0.8rem 0.5rem;
+    border-top: 2px solid var(--tinta);
+    border-bottom: 2px solid var(--tinta);
+  }
+  .holerite .liquido span {
+    font-weight: 600;
+  }
+  .holerite .liquido strong {
+    font: 750 clamp(1.7rem, 1.3rem + 1.5vw, 2.25rem) / 1 var(--titulo);
+    background: linear-gradient(transparent 55%, var(--marca-texto) 55%);
+    padding: 0 0.2rem;
+  }
+  .holerite .fgts li {
+    border-bottom: 1px dashed var(--linha);
+  }
+  .holerite .fgts__saque {
+    font-weight: 600;
+  }
+  .holerite .info {
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    color: var(--tinta-2);
+    display: grid;
+    gap: 0.3rem;
+  }
+  .holerite .alerta {
+    color: var(--tinta);
+    padding-left: 0.75rem;
+    border-left: 3px solid var(--marca-texto);
+  }
+  .holerite .rodape-holerite {
+    margin: 1rem 0 0;
+    font-size: 0.8rem;
+    color: var(--tinta-2);
+  }
+
+  .acoes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-top: 1rem;
+  }
+  .acoes button,
+  .acoes a {
+    font: 600 0.95rem var(--texto);
+    padding: 0.7rem 1rem;
+    border-radius: 8px;
+    border: 1.5px solid var(--carteira);
+    background: var(--papel);
+    color: var(--carteira);
+    cursor: pointer;
+    text-decoration: none;
+    min-height: 44px;
+  }
+  .acoes button:first-child {
+    background: var(--carteira);
+    color: #fff;
+  }
+
+  /* Barra fixa no celular */
+  .barra {
+    display: none;
+  }
+  @media (max-width: 880px) {
+    .resultado {
+      position: static;
+    }
+    .barra:not([hidden]) {
+      display: flex;
+      position: fixed;
+      inset: auto 0 0 0;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.75rem 1.25rem calc(0.75rem + env(safe-area-inset-bottom));
+      background: var(--tinta);
+      color: #fff;
+      z-index: 5;
+    }
+    .barra strong {
+      color: var(--marca-texto);
+      font-size: 1.1rem;
+    }
+    .barra a {
+      color: #fff;
+      font-weight: 600;
+    }
+  }
+
+  /* Comparação e conteúdo */
+  .comparar {
+    margin-top: 3.5rem;
+  }
+  .tabela-rolagem {
+    overflow-x: auto;
+    background: var(--papel);
+    border: 1px solid var(--linha);
+    border-radius: var(--raio);
+    margin-bottom: 1.25rem;
+  }
+  .tabela-rolagem table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+  }
+  .tabela-rolagem th,
+  .tabela-rolagem td {
+    text-align: right;
+    padding: 0.65rem 0.9rem;
+    border-bottom: 1px solid var(--linha);
+    white-space: nowrap;
+  }
+  .tabela-rolagem th:first-child {
+    text-align: left;
+  }
+  .tabela-rolagem thead th {
+    font-weight: 600;
+    color: var(--tinta-2);
+    font-size: 0.88rem;
+  }
+  .tabela-rolagem tbody th {
+    font-weight: 500;
+  }
+  .tabela-rolagem tbody tr:last-child > * {
+    border-bottom: 0;
+  }
+  .tabela-rolagem tr.atual {
+    background: var(--carteira-claro);
+  }
+  .direitos td {
+    text-align: center;
+  }
+  .conteudo {
+    margin-top: 3.5rem;
+  }
+  .conteudo h2 {
+    margin-top: 2.5rem;
+  }
+  .faq {
+    border-bottom: 1px solid var(--linha);
+    padding: 0.4rem 0;
+  }
+  .faq summary {
+    cursor: pointer;
+    font-weight: 600;
+    padding: 0.5rem 0;
+  }
+
+  @media print {
+    .topo,
+    .rodape,
+    .form,
+    .acoes,
+    .barra,
+    .comparar,
+    .conteudo,
+    .cabecalho__apoio,
+    .trilha {
+      display: none !important;
+    }
+    .calc {
+      display: block;
+    }
+    .holerite {
+      box-shadow: none;
+      -webkit-mask: none;
+      mask: none;
+    }
+    .holerite details > p {
+      display: block !important;
+    }
+    body {
+      background: #fff;
+    }
+  }
+
+  .relacionadas {
+    padding-left: 1.2rem;
+  }
+  .relacionadas li {
+    margin-bottom: 0.35rem;
+  }
+  .campo .marcar + .marcar {
+    margin-top: 0.4rem;
+  }
+  .campo .marcar:first-child {
+    margin-top: 0;
+  }
+  .sub {
+    display: block;
+    margin: 0.75rem 0 0.4rem;
+    font-weight: 500;
+  }

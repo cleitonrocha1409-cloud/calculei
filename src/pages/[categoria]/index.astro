@@ -1,0 +1,80 @@
+---
+import Base from "../../layouts/Base.astro";
+import { CATEGORIAS, type Categoria } from "../../data/catalogo";
+
+export function getStaticPaths() {
+  return CATEGORIAS.map((c) => ({ params: { categoria: c.slug }, props: { c } }));
+}
+const { c } = Astro.props as { c: Categoria };
+---
+
+<Base titulo={`Calculadoras: ${c.nome}`} descricao={c.descricao}>
+  <div class="envelope pagina">
+    <p class="trilha"><a href="/">Início</a> / {c.nome}</p>
+    <h1>{c.nome}</h1>
+    <p class="texto-longo intro">{c.descricao}</p>
+    <ul class="lista">
+      {
+        c.calculadoras.map((calc) => (
+          <li>
+            {calc.url ? (
+              <a href={calc.url}>
+                <strong>{calc.titulo}</strong>
+                <span>{calc.resumo}</span>
+              </a>
+            ) : (
+              <div class="breve">
+                <strong>{calc.titulo}</strong>
+                <span>{calc.resumo} · em breve</span>
+              </div>
+            )}
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</Base>
+
+<style>
+  .pagina {
+    padding-top: 2.5rem;
+  }
+  .trilha {
+    font-size: 0.9rem;
+    color: var(--tinta-2);
+  }
+  .intro {
+    font-size: 1.1rem;
+    color: var(--tinta-2);
+  }
+  .lista {
+    list-style: none;
+    padding: 0;
+    margin: 2rem 0 0;
+    max-width: 760px;
+    background: var(--papel);
+    border-radius: var(--raio);
+    border: 1px solid var(--linha);
+  }
+  .lista li + li {
+    border-top: 1px solid var(--linha);
+  }
+  .lista a,
+  .breve {
+    display: grid;
+    padding: 1rem 1.25rem;
+    color: var(--tinta);
+    text-decoration: none;
+  }
+  .lista a:hover strong {
+    color: var(--carteira);
+    text-decoration: underline;
+  }
+  .lista span {
+    color: var(--tinta-2);
+    font-size: 0.94rem;
+  }
+  .breve strong {
+    color: var(--tinta-2);
+  }
+</style>

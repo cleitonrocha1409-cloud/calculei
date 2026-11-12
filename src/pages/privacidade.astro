@@ -1,0 +1,22 @@
+---
+import Texto from "../layouts/Texto.astro";
+import { SITE } from "../config";
+---
+
+<Texto titulo="Política de privacidade">
+  <p><em>Rascunho para revisão jurídica antes da publicação.</em></p>
+  <p>
+    Esta política explica como o {SITE.nome} trata dados pessoais, conforme a Lei Geral de Proteção de Dados (Lei 13.709/2018).
+  </p>
+  <h2>Dados digitados nas calculadoras</h2>
+  <p>
+    Os cálculos são feitos no seu próprio navegador. Salário, datas e outros valores que você digita não são enviados nem armazenados pelo {SITE.nome}. Eles aparecem apenas no endereço da página, para que você possa
+    salvar ou compartilhar o link.
+  </p>
+  <h2>Cookies e medição de audiência</h2>
+  <p>
+    Usamos ferramentas de medição de audiência e, futuramente, de publicidade, que podem usar cookies. Você poderá aceitar ou recusar cookies não essenciais no aviso exibido na primeira visita.
+  </p>
+  <h2>Seus direitos</h2>
+  <p>Você pode pedir informações, correção ou exclusão de dados pessoais pelo e-mail contato@{SITE.dominio.replace("https://", "")}.</p>
+</Texto>

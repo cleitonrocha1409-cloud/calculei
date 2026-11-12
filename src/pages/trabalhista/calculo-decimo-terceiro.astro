@@ -1,0 +1,135 @@
+---
+import CalcPagina from "../../components/CalcPagina.astro";
+
+const perguntas = [
+  {
+    p: "Quando o 13º é pago em 2026?",
+    r: "A 1ª parcela vai até 30 de novembro. A 2ª parcela tem prazo até 20 de dezembro; em 2026 essa data cai num domingo, então o pagamento deve sair até sexta-feira, 18 de dezembro.",
+  },
+  {
+    p: "Por que a 2ª parcela é menor que a 1ª?",
+    r: "Porque todos os descontos (INSS e imposto de renda) saem na 2ª parcela, calculados sobre o 13º inteiro. A 1ª parcela é paga sem descontos.",
+  },
+  {
+    p: "Quem trabalhou só parte do ano recebe 13º?",
+    r: "Sim, proporcional: 1/12 do salário para cada mês com 15 dias ou mais trabalhados (Lei 4.090/1962).",
+  },
+  {
+    p: "O 13º tem imposto de renda em 2026?",
+    r: "Tem, mas a redução da Lei 15.270/2025 também vale para o 13º: se ele for de até R$ 5.000, o imposto é zerado. O cálculo é separado do salário de dezembro.",
+  },
+  {
+    p: "Horas extras e comissões entram no 13º?",
+    r: "Sim. Valores habituais entram pela média do ano. Informe essa média em \"Mais opções\".",
+  },
+];
+const anoAtual = 2026;
+---
+
+<CalcPagina
+  titulo="Cálculo do 13º salário 2026: 1ª e 2ª parcela com descontos"
+  descricao="Calcule o 13º salário de 2026: valor proporcional, 1ª parcela até 30/11 e 2ª parcela com INSS e imposto de renda, já com a isenção até R$ 5 mil."
+  h1="13º salário"
+  categoria="trabalhista"
+  caminho="/trabalhista/calculo-decimo-terceiro/"
+  nomeApp="Calculadora de 13º salário 2026"
+  perguntas={perguntas}
+>
+  <Fragment slot="form">
+    <div class="campo">
+      <label for="salario">Salário bruto mensal</label>
+      <div class="moeda"><span aria-hidden="true">R$</span><input id="salario" inputmode="decimal" autocomplete="off" placeholder="3.000,00" /></div>
+    </div>
+    <fieldset class="campo">
+      <legend>Trabalhou o ano inteiro na empresa?</legend>
+      <div class="opcoes opcoes--linha">
+        <label><input type="radio" name="periodo" value="inteiro" checked /> Sim, desde janeiro</label>
+        <label><input type="radio" name="periodo" value="parcial" /> Não, entrei durante o ano</label>
+      </div>
+    </fieldset>
+    <div class="campo" id="campo-admissao" hidden>
+      <label for="admissao">Data de admissão</label>
+      <input id="admissao" type="date" min={`${anoAtual}-01-01`} max={`${anoAtual}-12-31`} />
+    </div>
+    <details class="mais">
+      <summary>Mais opções: horas extras e dependentes</summary>
+      <div class="campo">
+        <label for="variaveis">Média mensal de horas extras, comissões e adicionais</label>
+        <div class="moeda"><span aria-hidden="true">R$</span><input id="variaveis" inputmode="decimal" autocomplete="off" placeholder="0,00" /></div>
+      </div>
+      <div class="campo">
+        <label for="dependentes">Dependentes no imposto de renda</label>
+        <input id="dependentes" type="number" min="0" max="20" inputmode="numeric" value="0" />
+      </div>
+    </details>
+  </Fragment>
+
+  <Fragment slot="conteudo">
+    <h2>Como é feito o cálculo do 13º</h2>
+    <p>
+      O 13º é o salário dividido por 12 e multiplicado pelos meses trabalhados no ano (contam os meses com 15 dias ou mais). A 1ª parcela é metade desse valor, sem descontos. Na 2ª parcela, a empresa
+      desconta INSS e imposto de renda sobre o 13º inteiro e abate o que já pagou.
+    </p>
+    <h3>Exemplo</h3>
+    <p>
+      Salário de R$ 3.000, ano inteiro: 13º de R$ 3.000. A 1ª parcela é de R$ 1.500. Na 2ª, saem R$ 248,60 de INSS e não há imposto de renda, então ela fica em R$ 1.251,40. No total, você recebe R$ 2.751,40.
+    </p>
+  </Fragment>
+</CalcPagina>
+
+<script>
+  import { $, destaqueHTML, infoHTML, ligarAcoes, listaHTML, mostrar, rodapeHTML, subtotalHTML, topoHTML, estadoURL } from "../../lib/ui/calc-ui";
+  import { calcularDecimoTerceiro, ErroDecimo } from "../../lib/trabalhista/decimo-terceiro";
+  import { formatarBRL, lerValor } from "../../lib/dinheiro";
+
+  const ANO = 2026;
+  const form = $<HTMLFormElement>("form");
+  const estado = estadoURL(form, { salario: "s", periodo: "p", admissao: "a", variaveis: "v", dependentes: "dep" });
+  const num = (id: string) => lerValor($<HTMLInputElement>(id).value) || 0;
+
+  function atualizar() {
+    const parcial = form.querySelector<HTMLInputElement>("input[name=periodo]:checked")!.value === "parcial";
+    $("campo-admissao").hidden = !parcial;
+    estado.salvar();
+    const salario = num("salario");
+    if (!(salario > 0)) return mostrar(null, { vazio: "Informe o salário bruto." });
+    const admissao = parcial ? $<HTMLInputElement>("admissao").value : undefined;
+    if (parcial && !admissao) return mostrar(null, { vazio: "Informe a data de admissão." });
+    try {
+      const r = calcularDecimoTerceiro({ salario, mediaVariaveis: num("variaveis"), ano: ANO, admissao, dependentes: num("dependentes") });
+      const html =
+        topoHTML(`13º salário ${ANO}`, `${r.avos}/12 avos`) +
+        listaHTML(r.linhas) +
+        `<h3>1ª parcela, até 30/11</h3>` +
+        subtotalHTML("1ª parcela", r.primeira) +
+        `<h3>2ª parcela, até 18/12</h3>` +
+        subtotalHTML("13º integral", r.total) +
+        listaHTML(r.segunda.descontos, true) +
+        subtotalHTML("2ª parcela", r.segunda.liquido) +
+        destaqueHTML("Total líquido do 13º", r.totalLiquido) +
+        infoHTML(["Em 2026, 20 de dezembro cai num domingo: a 2ª parcela deve ser paga até sexta-feira, 18/12."]) +
+        rodapeHTML();
+      mostrar(html, {
+        barra: { rotulo: "Total líquido", valor: r.totalLiquido },
+        compartilhar: {
+          titulo: "Simulei meu 13º salário",
+          detalhe: `${r.avos}/12 avos em ${ANO}`,
+          itens: [
+            { rotulo: "1ª parcela (até 30/11)", valor: r.primeira },
+            { rotulo: "2ª parcela (até 18/12)", valor: r.segunda.liquido },
+            { rotulo: "Total líquido", valor: r.totalLiquido },
+          ],
+        },
+      });
+    } catch (err) {
+      mostrar(null, { erro: err instanceof ErroDecimo ? err.message : "Não foi possível calcular com esses dados." });
+    }
+  }
+
+  form.addEventListener("input", atualizar);
+  form.addEventListener("change", atualizar);
+  form.addEventListener("submit", (e) => e.preventDefault());
+  ligarAcoes();
+  estado.ler();
+  atualizar();
+</script>

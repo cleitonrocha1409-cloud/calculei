@@ -1,0 +1,187 @@
+---
+import Base from "../layouts/Base.astro";
+import { CATEGORIAS } from "../data/catalogo";
+import { SITE } from "../config";
+
+const normalizar = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+const jsonld = [{ "@context": "https://schema.org", "@type": "WebSite", name: SITE.nome, url: SITE.dominio }];
+---
+
+<Base titulo="Início" jsonld={jsonld}>
+  <section class="abertura">
+    <div class="envelope">
+      <h1>Que conta você precisa fazer hoje?</h1>
+      <p class="abertura__apoio">Rescisão, férias, financiamento, aluguel e o fim da escala 6x1. Resultado na hora, com cada linha explicada.</p>
+      <label class="busca" for="busca">
+        <span class="sr-only">Buscar calculadora</span>
+        <input id="busca" type="search" placeholder="Ex.: rescisão, reajuste de aluguel, 6x1" autocomplete="off" />
+      </label>
+      <p class="busca__vazio" id="busca-vazio" hidden>Nenhuma calculadora com esse nome ainda. Tente “rescisão” ou “aluguel”.</p>
+    </div>
+  </section>
+
+  <div class="envelope aviso-6x1">
+    <p>
+      <strong>A jornada máxima cai para 42 horas em dezembro.</strong> Veja como fica o seu valor-hora, a hora extra e a escala com o fim da 6x1.{" "}
+      <a href="/fim-da-escala-6x1/">Calculadoras do fim da 6x1</a>
+    </p>
+  </div>
+
+  <div class="envelope categorias">
+    {
+      CATEGORIAS.map((c) => (
+        <section class="categoria" data-categoria>
+          <h2>
+            <a href={`/${c.slug}/`}>{c.nome}</a>
+          </h2>
+          <ul class="lista">
+            {c.calculadoras.map((calc) => (
+              <li data-termos={normalizar([calc.titulo, calc.resumo, c.nome, ...(calc.busca ?? [])].join(" "))}>
+                {calc.url ? (
+                  <a class="item" href={calc.url}>
+                    <span class="item__titulo">{calc.titulo}</span>
+                    <span class="item__resumo">{calc.resumo}</span>
+                  </a>
+                ) : (
+                  <span class="item item--breve">
+                    <span class="item__titulo">{calc.titulo}</span>
+                    <span class="item__resumo">{calc.resumo}</span>
+                    <span class="selo">em breve</span>
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))
+    }
+  </div>
+</Base>
+
+<script>
+  const campo = document.getElementById("busca") as HTMLInputElement;
+  const vazio = document.getElementById("busca-vazio")!;
+  const norm = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
+  campo.addEventListener("input", () => {
+    const termo = norm(campo.value);
+    let achados = 0;
+    document.querySelectorAll<HTMLElement>("[data-categoria]").forEach((sec) => {
+      let naSecao = 0;
+      sec.querySelectorAll<HTMLElement>("li[data-termos]").forEach((li) => {
+        const ok = !termo || termo.split(/\s+/).every((p) => li.dataset.termos!.includes(p));
+        li.hidden = !ok;
+        if (ok) naSecao++;
+      });
+      sec.hidden = naSecao === 0;
+      achados += naSecao;
+    });
+    vazio.hidden = achados > 0;
+  });
+</script>
+
+<style>
+  .abertura {
+    background: var(--carteira);
+    color: #fff;
+    padding: 3.5rem 0 4.5rem;
+  }
+  .abertura h1 {
+    max-width: 18ch;
+  }
+  .abertura__apoio {
+    color: #d5def0;
+    max-width: 56ch;
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+  }
+  .busca input {
+    width: 100%;
+    max-width: 640px;
+    font: 500 1.15rem var(--texto);
+    padding: 1rem 1.2rem;
+    border: 0;
+    border-radius: var(--raio);
+    box-shadow: 0 0 0 4px rgba(255, 226, 122, 0);
+    transition: box-shadow 0.15s;
+  }
+  .busca input:focus {
+    outline: none;
+    box-shadow: 0 0 0 4px var(--marca-texto);
+  }
+  .busca__vazio {
+    margin-top: 1rem;
+    color: var(--marca-texto);
+  }
+  .aviso-6x1 {
+    margin-top: -1.75rem;
+  }
+  .aviso-6x1 p {
+    background: var(--marca-texto);
+    border-radius: var(--raio);
+    padding: 1rem 1.25rem;
+    margin: 0;
+    max-width: 760px;
+  }
+  .aviso-6x1 a {
+    color: var(--tinta);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .categorias {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 2.5rem 3rem;
+    margin-top: 3rem;
+  }
+  .categoria h2 {
+    font-size: 1.3rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 2px solid var(--tinta);
+    margin-bottom: 0;
+  }
+  .categoria h2 a {
+    color: inherit;
+    text-decoration: none;
+  }
+  .lista {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .lista li {
+    border-bottom: 1px solid var(--linha);
+  }
+  .item {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    padding: 0.8rem 0;
+    text-decoration: none;
+    color: var(--tinta);
+  }
+  a.item:hover .item__titulo {
+    text-decoration: underline;
+    color: var(--carteira);
+  }
+  .item__titulo {
+    font-weight: 600;
+    grid-column: 1;
+  }
+  .item__resumo {
+    grid-column: 1;
+    color: var(--tinta-2);
+    font-size: 0.92rem;
+  }
+  .item--breve .item__titulo {
+    color: var(--tinta-2);
+  }
+  .selo {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: center;
+    font-size: 0.78rem;
+    color: var(--tinta-2);
+    border: 1px solid var(--linha);
+    border-radius: 999px;
+    padding: 0.1rem 0.6rem;
+  }
+</style>

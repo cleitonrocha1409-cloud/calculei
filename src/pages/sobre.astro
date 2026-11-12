@@ -1,0 +1,32 @@
+---
+import Texto from "../layouts/Texto.astro";
+import { SITE } from "../config";
+---
+
+<Texto titulo="Quem somos e metodologia" descricao={`Como o ${SITE.nome} faz os cálculos e de onde vêm as tabelas.`}>
+  <p>
+    O {SITE.nome} reúne calculadoras trabalhistas, financeiras e de aluguel para quem precisa de uma resposta rápida e confiável. Cada resultado mostra a conta feita, linha por linha, com a regra legal que a sustenta.
+  </p>
+
+  <h2>Como garantimos a precisão</h2>
+  <ul>
+    <li>As fórmulas seguem a CLT, as leis citadas em cada calculadora e as súmulas do TST.</li>
+    <li>As tabelas de INSS e IRRF ficam em um só lugar e são atualizadas no dia em que o governo publica os novos valores.</li>
+    <li>Cada calculadora tem casos de teste conferidos manualmente antes de ir ao ar.</li>
+  </ul>
+
+  <h2>Tabelas em uso</h2>
+  <ul>
+    <li>Salário mínimo 2026: R$ 1.621,00.</li>
+    <li>INSS 2026: alíquotas de 7,5%, 9%, 12% e 14%, teto de R$ 8.475,55 (Portaria Interministerial MPS/MF nº 13/2026).</li>
+    <li>IRRF 2026: tabela progressiva mensal com a redução da Lei 15.270/2025 (isenção até R$ 5.000 e redução parcial até R$ 7.350).</li>
+  </ul>
+
+  <h2>Limites</h2>
+  <p>
+    Os resultados são simulações. Convenções coletivas, verbas específicas da sua categoria e decisões judiciais podem alterar os valores. Para decisões importantes, confirme com um contador ou advogado trabalhista.
+  </p>
+
+  <h2>Encontrou um erro?</h2>
+  <p>Escreva para contato@{SITE.dominio.replace("https://", "")} com o link do cálculo. Corrigimos e respondemos.</p>
+</Texto>

@@ -1,0 +1,99 @@
+@import "@fontsource-variable/bricolage-grotesque";
+@import "@fontsource-variable/public-sans";
+
+:root {
+  --fundo: #eef1f4;
+  --papel: #ffffff;
+  --tinta: #16202a;
+  --tinta-2: #4a5866;
+  --carteira: #1f3b7a; /* azul da carteira de trabalho */
+  --carteira-escuro: #172d5e;
+  --carteira-claro: #e3e9f6;
+  --marca-texto: #ffe27a;
+  --positivo: #17734a;
+  --negativo: #b42318;
+  --linha: #d3dae2;
+  --titulo: "Bricolage Grotesque Variable", system-ui, sans-serif;
+  --texto: "Public Sans Variable", system-ui, sans-serif;
+  --raio: 10px;
+  --largura: 1120px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--fundo);
+  color: var(--tinta);
+  font: 400 1rem/1.6 var(--texto);
+  font-variant-numeric: tabular-nums;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--titulo);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  margin: 0 0 0.5em;
+}
+h1 {
+  font-size: clamp(2rem, 1.4rem + 2.6vw, 3.25rem);
+  font-weight: 700;
+}
+h2 {
+  font-size: clamp(1.4rem, 1.2rem + 0.9vw, 1.9rem);
+  font-weight: 650;
+}
+h3 {
+  font-size: 1.15rem;
+  font-weight: 650;
+}
+p {
+  margin: 0 0 1em;
+}
+
+a {
+  color: var(--carteira);
+  text-underline-offset: 3px;
+}
+
+:focus-visible {
+  outline: 3px solid var(--carteira);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.envelope {
+  width: min(100% - 2.5rem, var(--largura));
+  margin-inline: auto;
+}
+
+.texto-longo {
+  max-width: 68ch;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

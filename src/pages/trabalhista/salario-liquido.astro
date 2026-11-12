@@ -1,0 +1,160 @@
+---
+import CalcPagina from "../../components/CalcPagina.astro";
+import { calcularSalarioLiquido } from "../../lib/trabalhista/salario";
+import { formatarBRL } from "../../lib/dinheiro";
+
+const perguntas = [
+  {
+    p: "Quem ganha até R$ 5.000 paga imposto de renda em 2026?",
+    r: "Não. Desde janeiro de 2026, a Lei 15.270/2025 zera o imposto retido de quem recebe até R$ 5.000 por mês. Entre R$ 5.000,01 e R$ 7.350, o imposto é reduzido parcialmente.",
+  },
+  {
+    p: "Como é calculado o INSS?",
+    r: "De forma progressiva: 7,5% sobre a parte do salário até R$ 1.621,00, 9% sobre a parte até R$ 2.902,84, 12% até R$ 4.354,27 e 14% até o teto de R$ 8.475,55. O desconto máximo em 2026 é de cerca de R$ 988,09.",
+  },
+  {
+    p: "Quanto a empresa pode descontar de vale-transporte?",
+    r: "Até 6% do salário básico. Se o custo das passagens for menor que 6%, a empresa desconta só o custo (Lei 7.418/1985).",
+  },
+  {
+    p: "Dependentes diminuem o imposto?",
+    r: "Sim. Cada dependente reduz R$ 189,59 da base do imposto. A calculadora compara com o desconto simplificado de R$ 607,20 e usa o que for melhor para você.",
+  },
+];
+
+const faixas = [1621, 2000, 2500, 3000, 3500, 4000, 5000, 6000, 7000, 8000, 10000, 15000].map((b) => {
+  const r = calcularSalarioLiquido({ bruto: b });
+  return { bruto: b, inss: r.descontos[0].valor, ir: r.descontos[1].valor, liquido: r.liquido };
+});
+---
+
+<CalcPagina
+  titulo="Salário líquido 2026: calculadora com INSS e IR atualizados"
+  descricao="Calcule o salário líquido com as tabelas de INSS e imposto de renda de 2026, incluindo a isenção até R$ 5 mil. Também faz a conta inversa: do líquido para o bruto."
+  h1="Salário líquido"
+  categoria="trabalhista"
+  caminho="/trabalhista/salario-liquido/"
+  nomeApp="Calculadora de salário líquido 2026"
+  perguntas={perguntas}
+>
+  <Fragment slot="form">
+    <fieldset class="campo">
+      <legend>O que você quer calcular?</legend>
+      <div class="opcoes opcoes--linha">
+        <label><input type="radio" name="modo" value="liquido" checked /> Do bruto para o líquido</label>
+        <label><input type="radio" name="modo" value="bruto" /> Do líquido para o bruto</label>
+      </div>
+    </fieldset>
+    <div class="campo">
+      <label for="valor" id="rotulo-valor">Salário bruto mensal</label>
+      <div class="moeda"><span aria-hidden="true">R$</span><input id="valor" inputmode="decimal" autocomplete="off" placeholder="3.000,00" /></div>
+    </div>
+    <div class="campo">
+      <label for="dependentes">Dependentes no imposto de renda</label>
+      <input id="dependentes" type="number" min="0" max="20" inputmode="numeric" value="0" />
+    </div>
+    <div class="campo">
+      <label class="marcar"><input type="checkbox" id="vt" /> Desconto de vale-transporte</label>
+      <div id="campo-custo-vt" hidden>
+        <label for="custovt" class="sub">Custo mensal das passagens <span class="opcional">(opcional)</span></label>
+        <div class="moeda"><span aria-hidden="true">R$</span><input id="custovt" inputmode="decimal" autocomplete="off" placeholder="Vazio = 6% do salário" /></div>
+      </div>
+    </div>
+    <details class="mais">
+      <summary>Mais opções: pensão e outros descontos</summary>
+      <div class="campo">
+        <label for="pensao">Pensão alimentícia judicial</label>
+        <div class="moeda"><span aria-hidden="true">R$</span><input id="pensao" inputmode="decimal" autocomplete="off" placeholder="0,00" /></div>
+      </div>
+      <div class="campo">
+        <label for="outros">Outros descontos (plano de saúde, refeição)</label>
+        <div class="moeda"><span aria-hidden="true">R$</span><input id="outros" inputmode="decimal" autocomplete="off" placeholder="0,00" /></div>
+      </div>
+    </details>
+  </Fragment>
+
+  <Fragment slot="conteudo">
+    <h2>Salário líquido em 2026, faixa por faixa</h2>
+    <p>Valores sem dependentes e sem outros descontos. Até R$ 5.000 não há imposto de renda.</p>
+    <div class="tabela-rolagem">
+      <table>
+        <thead><tr><th scope="col">Salário bruto</th><th scope="col">INSS</th><th scope="col">IR</th><th scope="col">Líquido</th></tr></thead>
+        <tbody>
+          {
+            faixas.map((f) => (
+              <tr>
+                <th scope="row">{formatarBRL(f.bruto)}</th>
+                <td>{formatarBRL(f.inss)}</td>
+                <td>{formatarBRL(f.ir)}</td>
+                <td><strong>{formatarBRL(f.liquido)}</strong></td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+    <h2>Como o salário líquido é calculado</h2>
+    <p>
+      Primeiro sai o INSS, pela tabela progressiva. Depois, o imposto de renda incide sobre o salário menos o INSS e os dependentes, ou menos o desconto simplificado de R$ 607,20, o que for melhor. Por fim, a
+      redução da Lei 15.270/2025 zera o imposto até R$ 5.000 e o diminui até R$ 7.350. Vale-transporte, pensão e outros descontos saem por último.
+    </p>
+  </Fragment>
+</CalcPagina>
+
+<script>
+  import { $, destaqueHTML, infoHTML, ligarAcoes, listaHTML, mostrar, rodapeHTML, subtotalHTML, topoHTML, estadoURL } from "../../lib/ui/calc-ui";
+  import { brutoParaLiquido, calcularSalarioLiquido } from "../../lib/trabalhista/salario";
+  import { formatarBRL, lerValor } from "../../lib/dinheiro";
+
+  const form = $<HTMLFormElement>("form");
+  const estado = estadoURL(form, { modo: "m", valor: "v", dependentes: "dep", vt: "vt", custovt: "cvt", pensao: "p", outros: "o" });
+  const modo = () => form.querySelector<HTMLInputElement>("input[name=modo]:checked")!.value;
+  const num = (id: string) => lerValor($<HTMLInputElement>(id).value) || 0;
+
+  function atualizar() {
+    const reverso = modo() === "bruto";
+    $("rotulo-valor").textContent = reverso ? "Quanto você quer receber líquido" : "Salário bruto mensal";
+    $("campo-custo-vt").hidden = !$<HTMLInputElement>("vt").checked;
+    estado.salvar();
+    const valor = num("valor");
+    if (!(valor > 0)) return mostrar(null, { vazio: reverso ? "Informe o líquido desejado." : "Informe o salário bruto." });
+
+    const opcoes = {
+      dependentes: num("dependentes"),
+      valeTransporte: $<HTMLInputElement>("vt").checked,
+      custoVT: num("custovt") || undefined,
+      pensao: num("pensao"),
+      outrosDescontos: num("outros"),
+    };
+    const bruto = reverso ? brutoParaLiquido(valor, opcoes) : valor;
+    const r = calcularSalarioLiquido({ ...opcoes, bruto });
+    const html =
+      topoHTML(reverso ? "Salário bruto necessário" : "Salário líquido", reverso ? `Para receber ${formatarBRL(valor)} por mês` : "Tabelas de INSS e IRRF de 2026") +
+      (reverso ? destaqueHTML("Salário bruto", r.bruto) : `<p class="subtotal"><span>Salário bruto</span><span>${formatarBRL(r.bruto)}</span></p>`) +
+      `<h3>Descontos</h3>` +
+      listaHTML(r.descontos.filter((d) => d.valor > 0 || d.id === "irrf"), true) +
+      subtotalHTML("Total de descontos", r.totalDescontos, true) +
+      (reverso ? `<p class="subtotal"><span>Você recebe</span><span>${formatarBRL(r.liquido)}</span></p>` : destaqueHTML("Você recebe", r.liquido)) +
+      infoHTML([`INSS e imposto de renda levam ${(r.aliquotaEfetiva * 100).toFixed(1).replace(".", ",")}% do seu salário bruto.`]) +
+      rodapeHTML();
+    mostrar(html, {
+      barra: reverso ? { rotulo: "Bruto necessário", valor: r.bruto } : { rotulo: "Você recebe", valor: r.liquido },
+      compartilhar: {
+        titulo: "Simulei meu salário líquido",
+        detalhe: "Com INSS e imposto de renda de 2026",
+        itens: [
+          { rotulo: "Salário bruto", valor: r.bruto },
+          { rotulo: "Descontos", valor: r.totalDescontos },
+          { rotulo: "Salário líquido", valor: r.liquido },
+        ],
+      },
+    });
+  }
+
+  form.addEventListener("input", atualizar);
+  form.addEventListener("change", atualizar);
+  form.addEventListener("submit", (e) => e.preventDefault());
+  ligarAcoes();
+  estado.ler();
+  atualizar();
+</script>

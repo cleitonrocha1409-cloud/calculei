@@ -1,0 +1,24 @@
+---
+import Base from "./Base.astro";
+interface Props {
+  titulo: string;
+  descricao?: string;
+}
+const { titulo, descricao } = Astro.props;
+---
+
+<Base titulo={titulo} descricao={descricao}>
+  <article class="envelope texto-longo artigo">
+    <h1>{titulo}</h1>
+    <slot />
+  </article>
+</Base>
+
+<style>
+  .artigo {
+    padding-top: 2.5rem;
+  }
+  .artigo :global(h2) {
+    margin-top: 2rem;
+  }
+</style>
