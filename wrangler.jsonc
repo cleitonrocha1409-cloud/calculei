@@ -3,6 +3,11 @@
   "name": "calculei",
   "main": "worker/index.js",
   "compatibility_date": "2026-11-12",
+  // Domínio próprio (zona calculoemdia.com.br no Cloudflare). O www é redirecionado para o domínio principal.
+  "routes": [
+    { "pattern": "calculoemdia.com.br", "custom_domain": true },
+    { "pattern": "www.calculoemdia.com.br", "custom_domain": true }
+  ],
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
