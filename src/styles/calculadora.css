@@ -3,6 +3,30 @@
   .cabecalho {
     padding-top: 2.25rem;
   }
+  /* Selo de regras conferidas */
+  .selo {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: 0.4rem;
+    margin: 0.25rem 0 0;
+    padding: 0.35rem 0.7rem;
+    font-size: 0.88rem;
+    color: var(--positivo);
+    background: #e8f4ee;
+    border-radius: 6px;
+  }
+  .selo svg {
+    flex: none;
+    margin-top: 0.2em;
+  }
+  .selo a {
+    color: inherit;
+  }
+  .aviso-outro-site {
+    font-size: 0.9rem;
+    color: var(--tinta-2);
+    margin: 0.75rem 0 0;
+  }
   .trilha {
     font-size: 0.9rem;
     color: var(--tinta-2);

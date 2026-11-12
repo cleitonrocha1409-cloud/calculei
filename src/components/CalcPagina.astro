@@ -3,18 +3,20 @@ import Base from "../layouts/Base.astro";
 import "../styles/calculadora.css";
 import { SITE } from "../config";
 import { CATEGORIAS } from "../data/catalogo";
+import Selo from "./Selo.astro";
 
 interface Props {
   titulo: string; // <title>
   descricao: string;
   h1: string;
   apoio?: string;
+  selo?: string; // regras legais conferidas, ex.: "Tabelas do INSS e do IR de 2026"
   categoria: string; // slug
   caminho: string; // ex.: /trabalhista/salario-liquido/
   nomeApp: string;
   perguntas: { p: string; r: string }[];
 }
-const { titulo, descricao, h1, apoio = "Preencha os dados. O resultado aparece ao lado e se atualiza enquanto você digita.", categoria, caminho, nomeApp, perguntas } = Astro.props;
+const { selo, titulo, descricao, h1, apoio = "Preencha os dados. O resultado aparece ao lado e se atualiza enquanto você digita.", categoria, caminho, nomeApp, perguntas } = Astro.props;
 const cat = CATEGORIAS.find((c) => c.slug === categoria)!;
 const relacionadas = cat.calculadoras.filter((c) => c.url && c.url !== caminho);
 
@@ -50,6 +52,7 @@ const jsonld = [
     <p class="trilha"><a href="/">Início</a> / <a href={`/${cat.slug}/`}>{cat.nome}</a> / {h1}</p>
     <h1>{h1}</h1>
     <p class="cabecalho__apoio">{apoio}</p>
+    {selo && <Selo regras={selo} />}
   </div>
 
   <div class="envelope calc">

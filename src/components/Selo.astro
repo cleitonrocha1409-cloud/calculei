@@ -1,0 +1,12 @@
+---
+import { SITE } from "../config";
+interface Props {
+  regras: string; // ex.: "Tabelas do INSS e do IR de 2026"
+}
+const { regras } = Astro.props;
+---
+
+<p class="selo">
+  <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><path d="M6.4 11.2 3.2 8l1.1-1.1 2.1 2.1 5.3-5.3L12.8 4.8z" fill="currentColor"></path></svg>
+  <span>{regras}. Conferido em {SITE.conferidoEm}. <a href="/sobre/#tabelas">Ver fontes</a></span>
+</p>
