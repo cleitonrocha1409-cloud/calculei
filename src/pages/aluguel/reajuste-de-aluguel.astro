@@ -2,9 +2,16 @@
 import CalcPagina from "../../components/CalcPagina.astro";
 import { SERIES } from "../../lib/aluguel/indices";
 import historico from "../../data/indices.json";
+import { acumuladoPeriodo, nomeMes, ultimos12 } from "../../lib/aluguel/reajuste";
 
 // Histórico oficial guardado no próprio site (atualizado todo mês). O navegador ainda tenta trazer meses mais novos.
 const series = historico.series;
+const p12 = (k: "igpm" | "ipca") => {
+  const per = ultimos12(series[k])!;
+  return { ...per, pct: (acumuladoPeriodo(series[k], per.de, per.ate)!.percentual * 100).toFixed(2).replace(".", ",") };
+};
+const igpm = p12("igpm");
+const ipca = p12("ipca");
 
 const perguntas = [
   {
@@ -34,7 +41,7 @@ const perguntas = [
   titulo="Reajuste de aluguel: calculadora com IGP-M, IPCA e INPC do Banco Central"
   descricao="Calcule o reajuste do aluguel pelo IGP-M, IPCA, INPC ou IGP-DI. Escolha o índice e o período: buscamos os índices no Banco Central e mostramos o acumulado mês a mês."
   h1="Reajuste de aluguel"
-  apoio="Escolha o índice do contrato e o período. Buscamos as variações no Banco Central, acumulamos mês a mês e aplicamos ao seu aluguel."
+  apoio={`O aluguel é reajustado uma vez por ano pelo índice do contrato, acumulado nos 12 meses anteriores. Nos 12 meses até ${nomeMes(igpm.ate)}, o IGP-M acumulou ${igpm.pct}%; até ${nomeMes(ipca.ate)}, o IPCA acumulou ${ipca.pct}%. Escolha o índice e o período.`}
   categoria="aluguel"
   caminho="/aluguel/reajuste-de-aluguel/"
   nomeApp="Calculadora de reajuste de aluguel"

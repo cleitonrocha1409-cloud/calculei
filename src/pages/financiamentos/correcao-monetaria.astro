@@ -1,9 +1,12 @@
 ---
 import CalcPagina from "../../components/CalcPagina.astro";
 import historico from "../../data/indices.json";
-import { nomeMes } from "../../lib/aluguel/reajuste";
+import { acumuladoPeriodo, nomeMes, ultimos12 } from "../../lib/aluguel/reajuste";
+import { formatarBRL } from "../../lib/dinheiro";
 
 const ultimo = historico.series.ipca.at(-1)!.mes;
+const per = ultimos12(historico.series.ipca)!;
+const ipca12 = (acumuladoPeriodo(historico.series.ipca, per.de, per.ate)!.percentual * 100).toFixed(2).replace(".", ",");
 
 const perguntas = [
   {
@@ -29,7 +32,7 @@ const perguntas = [
   titulo="Correção monetária: atualize um valor pelo IPCA, INPC ou IGP-M"
   descricao="Calculadora de correção monetária com os índices oficiais: atualize um valor pelo IPCA, INPC ou IGP-M entre dois meses, com juros opcionais e o acumulado mês a mês."
   h1="Correção monetária"
-  apoio={`Corrigir um valor é multiplicar a inflação de cada mês do período. Escolha o índice e os meses: usamos as variações oficiais do IBGE e da FGV, até ${nomeMes(ultimo)}.`}
+  apoio={`Corrigir um valor é multiplicar a inflação de cada mês do período. Nos 12 meses até ${nomeMes(ultimo)}, o IPCA acumulou ${ipca12}%: R$ 1.000 de um ano atrás valem hoje cerca de ${formatarBRL(1000 * (1 + Number(ipca12.replace(",", ".")) / 100))}. Escolha o índice e os meses.`}
   categoria="financiamentos"
   caminho="/financiamentos/correcao-monetaria/"
   nomeApp="Calculadora de correção monetária"
