@@ -90,3 +90,21 @@ describe("rescisão — outros tipos", () => {
   it("rejeita saída antes da admissão", () =>
     expect(() => calcularRescisao({ ...base, tipo: "acordo", saida: "2020-01-01" })).toThrow());
 });
+
+describe("rescisão — projeção do aviso", () => {
+  it("projeção que entra no ano seguinte mantém o 13º do ano da saída completo", () => {
+    const r = calcularRescisao({ tipo: "sem_justa_causa", salario: 5000, admissao: "2016-02-01", saida: "2026-11-20", aviso: "indenizado" });
+    const v = (id: string) => r.proventos.find((l) => l.id === id)?.valor;
+    expect(r.info.dataProjetada).toBe("2027-01-19");
+    expect(v("13")).toBe(5000); // 12/12 de 2026
+    expect(v("13-2027")).toBe(416.67); // 1/12 de 2027
+    expect(r.info.avos13).toBe(13);
+  });
+  it("período aquisitivo completado na projeção gera férias integrais", () => {
+    const r = calcularRescisao({ tipo: "sem_justa_causa", salario: 2500, admissao: "2025-12-01", saida: "2026-11-12", aviso: "indenizado" });
+    const v = (id: string) => r.proventos.find((l) => l.id === id)?.valor;
+    expect(v("ferias-integrais")).toBe(2500);
+    expect(v("terco-integrais")).toBe(833.33);
+    expect(v("13")).toBe(2291.67); // 11/12
+  });
+});

@@ -159,20 +159,30 @@ export function calcularRescisao(e: EntradaRescisao): ResultadoRescisao {
     });
   }
 
-  // 13º proporcional (inclui a projeção do aviso indenizado)
+  // 13º proporcional (inclui a projeção do aviso indenizado). Se a projeção entra no ano seguinte,
+  // o 13º do ano da saída fica completo e o do ano seguinte começa a contar (OJ 82 da SDI-1 do TST).
   let decimo = 0;
   let avos13 = 0;
   if (tipo !== "justa_causa") {
-    avos13 = avosDecimoTerceiro(admissao, projetada);
-    decimo = arred((remuneracao / 12) * avos13);
-    if (decimo > 0)
+    const anoIni = Math.max(admissao.getUTCFullYear(), saida.getUTCFullYear());
+    for (let ano = anoIni; ano <= projetada.getUTCFullYear(); ano++) {
+      const fimAno = new Date(Date.UTC(ano, 11, 31));
+      const ate = projetada < fimAno ? projetada : fimAno;
+      const avos = avosDecimoTerceiro(admissao, ate);
+      const valor = arred((remuneracao / 12) * avos);
+      if (valor <= 0) continue;
+      avos13 += avos;
+      decimo = arred(decimo + valor);
       proventos.push({
-        id: "13",
-        rotulo: `13º salário proporcional (${avos13}/12)`,
-        valor: decimo,
-        memoria: `${formatarBRL(remuneracao)} ÷ 12 × ${avos13} meses com 15 dias ou mais trabalhados em ${projetada.getUTCFullYear()}`,
-        base: "Lei 4.090/1962",
+        id: ano === anoIni ? "13" : `13-${ano}`,
+        rotulo: projetada.getUTCFullYear() > saida.getUTCFullYear() ? `13º salário de ${ano} (${avos}/12)` : `13º salário proporcional (${avos}/12)`,
+        valor,
+        memoria:
+          `${formatarBRL(remuneracao)} ÷ 12 × ${avos} meses com 15 dias ou mais trabalhados em ${ano}` +
+          (ate.getTime() !== saida.getTime() && ate > saida ? `, contando a projeção do aviso até ${formatarData(ate)}` : ""),
+        base: "Lei 4.090/1962; OJ 82 da SDI-1 do TST",
       });
+    }
   }
 
   // Férias vencidas
@@ -193,6 +203,27 @@ export function calcularRescisao(e: EntradaRescisao): ResultadoRescisao {
     proventos.push({
       id: "terco-vencidas",
       rotulo: "1/3 sobre férias vencidas",
+      valor: terco,
+      memoria: `${formatarBRL(ferias)} ÷ 3`,
+      base: "Constituição, art. 7º, XVII",
+    });
+  }
+
+  // Férias integrais de período aquisitivo que se completa durante a projeção do aviso indenizado.
+  const integraisProjecao = tipo === "justa_causa" ? 0 : anosCompletos(admissao, projetada) - anos;
+  if (integraisProjecao > 0) {
+    const ferias = arred(remuneracao * integraisProjecao);
+    const terco = arred(ferias / 3);
+    proventos.push({
+      id: "ferias-integrais",
+      rotulo: `Férias integrais (12/12)`,
+      valor: ferias,
+      memoria: `O período aquisitivo se completa com a projeção do aviso (até ${formatarData(projetada)}): ${formatarBRL(remuneracao)} × ${integraisProjecao}`,
+      base: "CLT, arts. 146 e 487, § 1º; OJ 82 da SDI-1 do TST",
+    });
+    proventos.push({
+      id: "terco-integrais",
+      rotulo: "1/3 sobre férias integrais",
       valor: terco,
       memoria: `${formatarBRL(ferias)} ÷ 3`,
       base: "Constituição, art. 7º, XVII",
