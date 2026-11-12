@@ -1,0 +1,140 @@
+---
+import CalcPagina from "../../components/CalcPagina.astro";
+
+const perguntas = [
+  {
+    p: "Qual a diferença entre SAC e Price?",
+    r: "No SAC, a amortização é fixa e a parcela começa mais alta e diminui todo mês. Na Price, a parcela é fixa do começo ao fim. O SAC paga menos juros no total, porque a dívida cai mais rápido; a Price tem parcela inicial menor.",
+  },
+  {
+    p: "Quanto preciso ganhar para financiar um imóvel?",
+    r: "A maioria dos bancos limita a parcela a cerca de 30% da renda bruta familiar. A calculadora mostra a renda mínima para a primeira parcela de cada sistema.",
+  },
+  {
+    p: "Quanto de entrada preciso dar?",
+    r: "Em geral, os bancos financiam até 80% do valor do imóvel, então a entrada costuma ser de pelo menos 20%. Programas habitacionais podem ter regras diferentes.",
+  },
+  {
+    p: "A simulação inclui seguros e taxas?",
+    r: "Você pode informar em \"Mais opções\" o valor mensal de seguros e taxa de administração. A correção pela TR e outros custos do contrato (ITBI, registro) não estão incluídos.",
+  },
+];
+---
+
+<CalcPagina
+  titulo="Simulador de financiamento imobiliário: SAC x Price, parcela e juros"
+  descricao="Simule o financiamento de imóvel nos sistemas SAC e Price: primeira e última parcela, total de juros, renda mínima e evolução ano a ano."
+  h1="Financiamento imobiliário"
+  categoria="financiamentos"
+  caminho="/financiamentos/financiamento-imobiliario/"
+  nomeApp="Simulador de financiamento imobiliário SAC e Price"
+  perguntas={perguntas}
+>
+  <Fragment slot="form">
+    <div class="campo">
+      <label for="valor">Valor do imóvel</label>
+      <div class="moeda"><span aria-hidden="true">R$</span><input id="valor" inputmode="decimal" autocomplete="off" placeholder="400.000,00" /></div>
+    </div>
+    <div class="campo">
+      <label for="entrada">Entrada</label>
+      <div class="moeda"><span aria-hidden="true">R$</span><input id="entrada" inputmode="decimal" autocomplete="off" placeholder="80.000,00" /></div>
+    </div>
+    <div class="duas">
+      <div class="campo">
+        <label for="anos">Prazo (anos)</label>
+        <input id="anos" type="number" min="1" max="35" inputmode="numeric" value="30" />
+      </div>
+      <div class="campo">
+        <label for="juros">Juros ao ano (%)</label>
+        <input id="juros" inputmode="decimal" autocomplete="off" placeholder="11,5" />
+      </div>
+    </div>
+    <details class="mais">
+      <summary>Mais opções: seguros e taxas mensais</summary>
+      <div class="campo">
+        <label for="custos">Seguros e taxa de administração por mês</label>
+        <div class="moeda"><span aria-hidden="true">R$</span><input id="custos" inputmode="decimal" autocomplete="off" placeholder="0,00" /></div>
+      </div>
+    </details>
+  </Fragment>
+
+  <Fragment slot="conteudo">
+    <h2>SAC ou Price: qual escolher?</h2>
+    <p>
+      Escolha o SAC se a primeira parcela cabe no seu orçamento: ele paga menos juros e a parcela diminui com o tempo. A Price faz sentido quando você precisa de uma parcela inicial menor para aprovar o
+      crédito, aceitando pagar mais juros no total. Nos dois sistemas é possível amortizar com pagamentos extras para encurtar o prazo.
+    </p>
+    <h3>Como a simulação é feita</h3>
+    <p>
+      A taxa anual é convertida em taxa mensal equivalente. No SAC, a amortização mensal é o valor financiado dividido pelo prazo, e os juros incidem sobre o saldo devedor. Na Price, a parcela é calculada
+      para ser fixa durante todo o contrato. A simulação não inclui a correção pela TR.
+    </p>
+  </Fragment>
+</CalcPagina>
+
+<script>
+  import { $, destaqueHTML, infoHTML, ligarAcoes, mostrar, rodapeHTML, tabelaHTML, topoHTML, estadoURL } from "../../lib/ui/calc-ui";
+  import { calcularFinanciamento, ErroFinanciamento, porAno } from "../../lib/financeiro/financiamento";
+  import { formatarBRL, lerValor } from "../../lib/dinheiro";
+
+  const form = $<HTMLFormElement>("form");
+  const estado = estadoURL(form, { valor: "v", entrada: "e", anos: "a", juros: "j", custos: "c" });
+  const pct = (x: number) => `${(x * 100).toFixed(2).replace(".", ",")}%`;
+
+  function atualizar() {
+    estado.salvar();
+    const valor = lerValor($<HTMLInputElement>("valor").value);
+    const juros = lerValor($<HTMLInputElement>("juros").value);
+    if (!(valor > 0) || !(juros >= 0)) return mostrar(null, { vazio: "Informe o valor do imóvel e a taxa de juros." });
+    try {
+      const r = calcularFinanciamento({
+        valorImovel: valor,
+        entrada: lerValor($<HTMLInputElement>("entrada").value) || 0,
+        prazoMeses: Math.round((Number($<HTMLInputElement>("anos").value) || 0) * 12),
+        jurosAnual: juros / 100,
+        custosMensais: lerValor($<HTMLInputElement>("custos").value) || 0,
+      });
+      const { sac, price } = r;
+      const anosSac = porAno(sac);
+      const anosPrice = porAno(price);
+      const evolucao = anosSac.map((a, i) => [`Ano ${a.ano}`, formatarBRL(a.pago / 12), formatarBRL(anosPrice[i].pago / 12), formatarBRL(a.saldo), formatarBRL(anosPrice[i].saldo)]);
+      const html =
+        topoHTML("Financiamento imobiliário", `${formatarBRL(r.financiado)} financiados em ${sac.parcelas.length} meses, ${pct(r.taxaMensal)} ao mês`) +
+        tabelaHTML(
+          ["", "SAC", "Price"],
+          [
+            ["1ª parcela", formatarBRL(sac.primeira), formatarBRL(price.primeira)],
+            ["Última", formatarBRL(sac.ultima), formatarBRL(price.ultima)],
+            ["Juros", formatarBRL(sac.totalJuros), formatarBRL(price.totalJuros)],
+            ["Total pago", formatarBRL(sac.totalPago), formatarBRL(price.totalPago)],
+            ["Renda mín.", formatarBRL(r.rendaMinimaSAC), formatarBRL(r.rendaMinimaPrice)],
+          ],
+        ) +
+        destaqueHTML("Economia no SAC", r.economiaSAC) +
+        `<details class="ano-a-ano"><summary>Ver evolução ano a ano</summary>${tabelaHTML(["Ano", "Parcela média SAC", "Parcela Price", "Saldo SAC", "Saldo Price"], evolucao)}</details>` +
+        infoHTML([`Renda mínima: parcela de até 30% da renda bruta.`, `Na Price, a parcela fica em ${formatarBRL(price.primeira)} o contrato todo. No SAC, começa em ${formatarBRL(sac.primeira)} e cai até ${formatarBRL(sac.ultima)}.`], r.alertas) +
+        rodapeHTML("Simulação sem correção pela TR. Taxas, seguros e condições variam por banco.");
+      mostrar(html, {
+        barra: { rotulo: "1ª parcela SAC", valor: sac.primeira },
+        compartilhar: {
+          titulo: "Simulei um financiamento imobiliário",
+          detalhe: `${formatarBRL(r.financiado)} em ${sac.parcelas.length / 12} anos`,
+          itens: [
+            { rotulo: "1ª parcela SAC", valor: sac.primeira },
+            { rotulo: "Parcela Price", valor: price.primeira },
+            { rotulo: "Economia de juros no SAC", valor: r.economiaSAC },
+          ],
+        },
+      });
+    } catch (err) {
+      mostrar(null, { erro: err instanceof ErroFinanciamento ? err.message : "Não foi possível calcular com esses dados." });
+    }
+  }
+
+  form.addEventListener("input", atualizar);
+  form.addEventListener("change", atualizar);
+  form.addEventListener("submit", (e) => e.preventDefault());
+  ligarAcoes();
+  estado.ler();
+  atualizar();
+</script>

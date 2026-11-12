@@ -1,0 +1,171 @@
+---
+import CalcPagina from "../../components/CalcPagina.astro";
+
+const perguntas = [
+  {
+    p: "Como se calcula o valor da hora extra?",
+    r: "Divida o salário pelo divisor mensal da sua jornada (220 para 44 horas, 200 para 40 horas) e multiplique pelo adicional: 1,5 para hora extra a 50% e 2 para hora extra a 100%.",
+  },
+  {
+    p: "A hora extra fica mais cara com o fim da escala 6x1?",
+    r: "Sim. Com a jornada de 40 horas, o salário passa a ser dividido por 200 horas em vez de 220. Cada hora, e cada hora extra, fica 10% mais cara, sem mudança no salário.",
+  },
+  {
+    p: "Se a empresa mantiver as 44 horas depois de dezembro, as horas a mais viram extras?",
+    r: "Sim. As horas que passarem do novo limite semanal precisam ser pagas como hora extra, com adicional de pelo menos 50%, ou compensadas em banco de horas válido.",
+  },
+  {
+    p: "O que é o reflexo da hora extra no DSR?",
+    r: "Quem faz horas extras com frequência recebe também um valor proporcional sobre os dias de descanso remunerado: o total de horas extras dividido pelos dias úteis e multiplicado pelos domingos, feriados e folgas do mês.",
+  },
+  {
+    p: "Qual o limite de horas extras por dia?",
+    r: "Até 2 horas extras por dia, como regra geral da CLT (art. 59). Situações de necessidade imperiosa e acordos específicos têm regras próprias.",
+  },
+];
+---
+
+<CalcPagina
+  titulo="Cálculo de hora extra 2026: 50%, 100% e DSR, com a nova jornada"
+  descricao="Calcule hora extra a 50% e 100% com reflexo no DSR. Veja quanto ela passa a valer com o fim da escala 6x1, em dezembro de 2026 e em 2027."
+  h1="Cálculo de hora extra"
+  categoria="trabalhista"
+  caminho="/trabalhista/calculo-hora-extra/"
+  nomeApp="Calculadora de hora extra 2026"
+  perguntas={perguntas}
+>
+  <Fragment slot="form">
+    <div class="campo">
+      <label for="salario">Salário bruto mensal</label>
+      <div class="moeda"><span aria-hidden="true">R$</span><input id="salario" inputmode="decimal" autocomplete="off" placeholder="3.000,00" /></div>
+    </div>
+    <fieldset class="campo">
+      <legend>Período das horas extras</legend>
+      <div class="opcoes">
+        <label><input type="radio" name="periodo" value="atual" checked /> Até 15/12/2026 (44h)</label>
+        <label><input type="radio" name="periodo" value="transicao" /> De 16/12/2026 a 15/12/2027 (42h)</label>
+        <label><input type="radio" name="periodo" value="final" /> A partir de 16/12/2027 (40h)</label>
+      </div>
+      <label class="marcar" id="campo-acordo" hidden><input type="checkbox" id="acordo" /> Há acordo coletivo para 42 horas</label>
+    </fieldset>
+    <div class="duas">
+      <div class="campo">
+        <label for="h50">Horas extras a 50%</label>
+        <input id="h50" type="number" min="0" step="0.5" inputmode="decimal" placeholder="0" />
+      </div>
+      <div class="campo">
+        <label for="h100">Horas extras a 100%</label>
+        <input id="h100" type="number" min="0" step="0.5" inputmode="decimal" placeholder="0" />
+      </div>
+    </div>
+    <div class="campo">
+      <label class="marcar"><input type="checkbox" id="dsr" checked /> Incluir reflexo no descanso remunerado (DSR)</label>
+      <div class="duas" id="campos-dsr">
+        <div>
+          <label for="uteis" class="sub">Dias úteis no mês</label>
+          <input id="uteis" type="number" min="1" max="31" inputmode="numeric" />
+        </div>
+        <div>
+          <label for="descanso" class="sub">Domingos, feriados e folgas</label>
+          <input id="descanso" type="number" min="0" max="15" inputmode="numeric" />
+        </div>
+      </div>
+    </div>
+    <details class="mais">
+      <summary>Mais opções: jornada do contrato, adicionais</summary>
+      <div class="campo">
+        <label for="jornada">Jornada do contrato (horas por semana)</label>
+        <input id="jornada" type="number" min="10" max="44" inputmode="numeric" value="44" />
+      </div>
+      <div class="campo">
+        <label for="adicionais">Adicionais fixos (insalubridade, periculosidade)</label>
+        <div class="moeda"><span aria-hidden="true">R$</span><input id="adicionais" inputmode="decimal" autocomplete="off" placeholder="0,00" /></div>
+      </div>
+      <div class="campo">
+        <label for="percentual">Adicional da hora extra (%)</label>
+        <input id="percentual" type="number" min="50" max="200" inputmode="numeric" value="50" />
+      </div>
+    </details>
+  </Fragment>
+
+  <Fragment slot="conteudo">
+    <h2>Como é feito o cálculo da hora extra</h2>
+    <p>
+      O valor da hora é o salário dividido pelo divisor mensal: 220 para 44 horas semanais, 210 para 42 e 200 para 40. A hora extra vale pelo menos 50% a mais. Em domingos e feriados trabalhados sem
+      folga compensatória, costuma ser paga em dobro (100%).
+    </p>
+    <h3>Exemplo com o fim da 6x1</h3>
+    <p>
+      Salário de R$ 3.000 e 10 horas extras a 50%. Hoje, com 44 horas: R$ 3.000 ÷ 220 × 1,5 × 10 = R$ 204,55. A partir de dezembro de 2027, com 40 horas: R$ 3.000 ÷ 200 × 1,5 × 10 = R$ 225,00. São R$
+      20,45 a mais pelas mesmas horas, antes do reflexo no DSR.
+    </p>
+  </Fragment>
+</CalcPagina>
+
+<script>
+  import { $, destaqueHTML, infoHTML, ligarAcoes, listaHTML, mostrar, rodapeHTML, topoHTML, estadoURL } from "../../lib/ui/calc-ui";
+  import { calcularHoraExtra, DSR_PADRAO, ErroHoraExtra, PERIODOS } from "../../lib/jornada/hora-extra";
+  import type { Periodo } from "../../data/jornada";
+  import { formatarBRL, lerValor } from "../../lib/dinheiro";
+
+  const form = $<HTMLFormElement>("form");
+  const estado = estadoURL(form, { salario: "s", periodo: "p", acordo: "ac", h50: "h", h100: "hd", dsr: "r", uteis: "u", descanso: "ds", jornada: "j", adicionais: "ad", percentual: "pc" });
+  const periodo = () => form.querySelector<HTMLInputElement>("input[name=periodo]:checked")!.value as Periodo;
+  let ultimoPeriodo: Periodo | null = null;
+
+  function atualizar() {
+    const p = periodo();
+    $("campo-acordo").hidden = p !== "transicao";
+    // Ao trocar de período, sugere os dias úteis e de descanso típicos (6x1: 26/4; 5x2: 22/8).
+    if (p !== ultimoPeriodo) {
+      if (ultimoPeriodo !== null || !$<HTMLInputElement>("uteis").value) {
+        $<HTMLInputElement>("uteis").value = String(DSR_PADRAO[p].diasUteis);
+        $<HTMLInputElement>("descanso").value = String(DSR_PADRAO[p].diasDescanso);
+      }
+      ultimoPeriodo = p;
+    }
+    const comDSR = $<HTMLInputElement>("dsr").checked;
+    $("campos-dsr").hidden = !comDSR;
+    estado.salvar();
+    const salario = lerValor($<HTMLInputElement>("salario").value);
+    const h50 = Number($<HTMLInputElement>("h50").value) || 0;
+    const h100 = Number($<HTMLInputElement>("h100").value) || 0;
+    if (!(salario > 0)) return mostrar(null, { vazio: "Informe o salário bruto." });
+    if (h50 + h100 <= 0) return mostrar(null, { vazio: "Informe as horas extras do mês." });
+    try {
+      const r = calcularHoraExtra({
+        salario,
+        adicionais: lerValor($<HTMLInputElement>("adicionais").value) || 0,
+        jornadaContratual: Number($<HTMLInputElement>("jornada").value) || 44,
+        periodo: p,
+        acordo42h: $<HTMLInputElement>("acordo").checked,
+        horas50: h50,
+        horas100: h100,
+        percentual50: Number($<HTMLInputElement>("percentual").value) || 50,
+        dsr: comDSR ? { diasUteis: Number($<HTMLInputElement>("uteis").value) || 0, diasDescanso: Number($<HTMLInputElement>("descanso").value) || 0 } : undefined,
+      });
+      const info = [`Jornada de ${r.semanal}h por semana: o salário é dividido por ${r.divisor} horas, e a hora vale ${formatarBRL(r.valorHora)}.`];
+      if (r.comparacao)
+        info.push(`Pelas regras atuais (divisor ${r.comparacao.divisorAntes}), as mesmas horas renderiam ${formatarBRL(r.comparacao.totalAntes)}. Com a nova jornada, você recebe ${formatarBRL(r.comparacao.diferenca)} a mais.`);
+      const html =
+        topoHTML("Horas extras do mês", PERIODOS[p].rotulo) + listaHTML(r.linhas) + destaqueHTML("Total de horas extras", r.total) + infoHTML(info) + rodapeHTML("Valores brutos: INSS e imposto de renda incidem junto com o salário do mês.");
+      mostrar(html, {
+        barra: { rotulo: "Horas extras", valor: r.total },
+        compartilhar: {
+          titulo: "Simulei minhas horas extras",
+          detalhe: PERIODOS[p].rotulo,
+          itens: [{ rotulo: "Valor da hora", valor: r.valorHora }, { rotulo: "Total de horas extras", valor: r.total }],
+        },
+      });
+    } catch (err) {
+      mostrar(null, { erro: err instanceof ErroHoraExtra ? err.message : "Não foi possível calcular com esses dados." });
+    }
+  }
+
+  form.addEventListener("input", atualizar);
+  form.addEventListener("change", atualizar);
+  form.addEventListener("submit", (e) => e.preventDefault());
+  ligarAcoes();
+  estado.ler();
+  atualizar();
+</script>

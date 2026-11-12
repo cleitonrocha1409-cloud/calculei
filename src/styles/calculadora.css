@@ -22,7 +22,7 @@
   }
   @media (max-width: 880px) {
     .calc {
-      grid-template-columns: 1fr;
+      grid-template-columns: minmax(0, 1fr);
     }
   }
 
@@ -447,4 +447,163 @@
     display: block;
     margin: 0.75rem 0 0.4rem;
     font-weight: 500;
+  }
+
+  /* Tabelas compactas dentro do resultado */
+  .mini-rolagem {
+    overflow-x: auto;
+    margin: 0.4rem 0 0.2rem;
+  }
+  table.mini {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.86rem;
+  }
+  table.mini th,
+  table.mini td {
+    padding: 0.45rem 0.35rem;
+    border-bottom: 1px dashed var(--linha);
+    text-align: right;
+    white-space: nowrap;
+  }
+  table.mini th:first-child {
+    text-align: left;
+    white-space: normal;
+  }
+  table.mini thead th {
+    color: var(--tinta-2);
+    font-weight: 600;
+    font-size: 0.8rem;
+  }
+  table.mini tbody th {
+    font-weight: 500;
+  }
+  table.mini tr.atual {
+    background: var(--carteira-claro);
+  }
+  .holerite details.ano-a-ano summary {
+    cursor: pointer;
+    color: var(--carteira);
+    font-weight: 600;
+    margin: 1rem 0 0.4rem;
+  }
+
+  /* Grade da escala de folgas */
+  .escala-semana {
+    margin: 0.8rem 0 0.2rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+  table.escala {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 3px;
+    font-size: 0.82rem;
+    table-layout: fixed;
+  }
+  table.escala th {
+    font-weight: 600;
+    color: var(--tinta-2);
+    padding: 0.2rem 0;
+    text-align: center;
+  }
+  table.escala th:first-child {
+    text-align: left;
+    width: 4.6rem;
+  }
+  table.escala td {
+    text-align: center;
+    padding: 0.35rem 0;
+    border-radius: 5px;
+    font-weight: 600;
+  }
+  table.escala td.T {
+    background: var(--carteira-claro);
+    color: var(--carteira);
+  }
+  table.escala td.F {
+    background: var(--marca-texto);
+    color: var(--tinta);
+  }
+  table.escala td.X {
+    background: var(--fundo);
+    color: var(--tinta-2);
+    font-weight: 400;
+  }
+  .legenda {
+    font-size: 0.82rem;
+    color: var(--tinta-2);
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 0.5rem;
+  }
+  .legenda span::before {
+    content: "";
+    display: inline-block;
+    width: 0.8rem;
+    height: 0.8rem;
+    border-radius: 3px;
+    margin-right: 0.35rem;
+    vertical-align: -1px;
+  }
+  .legenda .lT::before {
+    background: var(--carteira-claro);
+  }
+  .legenda .lF::before {
+    background: var(--marca-texto);
+  }
+  .legenda .lX::before {
+    background: var(--fundo);
+    border: 1px solid var(--linha);
+  }
+  .dias-semana {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.35rem;
+  }
+  .dias-semana label {
+    display: grid;
+    place-items: center;
+    gap: 0.2rem;
+    padding: 0.5rem 0;
+    border: 1.5px solid var(--linha);
+    border-radius: 8px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    min-height: 48px;
+  }
+  .dias-semana input {
+    width: 1rem;
+    height: 1rem;
+    min-height: 0;
+    margin: 0;
+    accent-color: var(--carteira);
+  }
+  .dias-semana label:has(input:checked) {
+    border-color: var(--carteira);
+    background: var(--carteira-claro);
+    font-weight: 600;
+  }
+
+  table.mini tbody th {
+    white-space: nowrap;
+  }
+  .nota-tabela {
+    font-size: 0.78rem;
+    color: var(--tinta-2);
+    margin: 0.3rem 0 0;
+  }
+  @media (max-width: 880px) {
+    /* Espaço para a barra fixa não cobrir o fim da página */
+    main {
+      padding-bottom: 4.5rem;
+    }
+    table.mini {
+      font-size: 0.8rem;
+    }
+    table.mini th,
+    table.mini td {
+      padding: 0.4rem 0.25rem;
+    }
   }

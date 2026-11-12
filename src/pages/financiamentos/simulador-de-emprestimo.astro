@@ -1,0 +1,126 @@
+---
+import CalcPagina from "../../components/CalcPagina.astro";
+
+const perguntas = [
+  {
+    p: "Como descobrir a taxa de juros real de um empréstimo?",
+    r: "Escolha \"Sei o valor da parcela\" e informe o valor recebido, o número de parcelas e o valor de cada uma. A calculadora encontra a taxa mensal que faz essa conta fechar, já incluindo tarifas e seguros embutidos na parcela.",
+  },
+  {
+    p: "O que é CET?",
+    r: "O Custo Efetivo Total reúne juros, tarifas, seguros e impostos do empréstimo. Os bancos são obrigados a informá-lo. Quando você calcula a taxa a partir da parcela e do valor que realmente recebeu, chega perto do CET.",
+  },
+  {
+    p: "A simulação inclui IOF?",
+    r: "Não diretamente. Se o IOF foi descontado do valor recebido ou somado à parcela, informe os valores reais no modo \"Sei o valor da parcela\" para ver o custo completo.",
+  },
+  {
+    p: "Taxa ao mês ou ao ano?",
+    r: "Empréstimos costumam ser anunciados com taxa ao mês. A calculadora mostra também a taxa anual equivalente, com juros compostos: 2% ao mês correspondem a 26,8% ao ano, e não a 24%.",
+  },
+];
+---
+
+<CalcPagina
+  titulo="Simulador de empréstimo: parcela, juros e taxa real"
+  descricao="Simule empréstimo pessoal, consignado ou financiamento de veículo: descubra a parcela pela taxa, ou a taxa real a partir da parcela, com total de juros."
+  h1="Simulador de empréstimo"
+  categoria="financiamentos"
+  caminho="/financiamentos/simulador-de-emprestimo/"
+  nomeApp="Simulador de empréstimo e financiamento de veículo"
+  perguntas={perguntas}
+>
+  <Fragment slot="form">
+    <fieldset class="campo">
+      <legend>O que você sabe?</legend>
+      <div class="opcoes opcoes--linha">
+        <label><input type="radio" name="modo" value="taxa" checked /> Sei a taxa de juros</label>
+        <label><input type="radio" name="modo" value="parcela" /> Sei o valor da parcela</label>
+      </div>
+    </fieldset>
+    <div class="campo">
+      <label for="valor">Valor do empréstimo (recebido)</label>
+      <div class="moeda"><span aria-hidden="true">R$</span><input id="valor" inputmode="decimal" autocomplete="off" placeholder="10.000,00" /></div>
+    </div>
+    <div class="duas">
+      <div class="campo">
+        <label for="prazo">Número de parcelas</label>
+        <input id="prazo" type="number" min="1" max="420" inputmode="numeric" value="24" />
+      </div>
+      <div class="campo" id="campo-taxa">
+        <label for="taxa">Juros ao mês (%)</label>
+        <input id="taxa" inputmode="decimal" autocomplete="off" placeholder="2,5" />
+      </div>
+      <div class="campo" id="campo-parcela" hidden>
+        <label for="parcela">Valor da parcela</label>
+        <div class="moeda"><span aria-hidden="true">R$</span><input id="parcela" inputmode="decimal" autocomplete="off" placeholder="550,00" /></div>
+      </div>
+    </div>
+  </Fragment>
+
+  <Fragment slot="conteudo">
+    <h2>Como a simulação funciona</h2>
+    <p>
+      A calculadora usa a Tabela Price, o sistema de parcelas fixas usado em empréstimos pessoais, consignados e financiamentos de veículos. Com a taxa, ela calcula a parcela. Com a parcela, faz o
+      caminho inverso e encontra a taxa real cobrada, o melhor jeito de comparar ofertas de bancos diferentes.
+    </p>
+  </Fragment>
+</CalcPagina>
+
+<script>
+  import { $, destaqueHTML, destaqueTextoHTML, infoHTML, ligarAcoes, mostrar, parHTML, rodapeHTML, topoHTML, estadoURL } from "../../lib/ui/calc-ui";
+  import { ErroEmprestimo, parcelaDoEmprestimo, taxaDoEmprestimo } from "../../lib/financeiro/emprestimo";
+  import { formatarBRL, lerValor } from "../../lib/dinheiro";
+
+  const form = $<HTMLFormElement>("form");
+  const estado = estadoURL(form, { modo: "m", valor: "v", prazo: "n", taxa: "t", parcela: "p" });
+  const pct = (x: number) => `${(x * 100).toFixed(2).replace(".", ",")}%`;
+
+  function atualizar() {
+    const modo = form.querySelector<HTMLInputElement>("input[name=modo]:checked")!.value;
+    $("campo-taxa").hidden = modo !== "taxa";
+    $("campo-parcela").hidden = modo !== "parcela";
+    estado.salvar();
+    const valor = lerValor($<HTMLInputElement>("valor").value);
+    const prazo = Number($<HTMLInputElement>("prazo").value);
+    const taxa = lerValor($<HTMLInputElement>("taxa").value);
+    const parcela = lerValor($<HTMLInputElement>("parcela").value);
+    if (!(valor > 0)) return mostrar(null, { vazio: "Informe o valor do empréstimo." });
+    if (modo === "taxa" && !(taxa >= 0)) return mostrar(null, { vazio: "Informe a taxa de juros ao mês." });
+    if (modo === "parcela" && !(parcela > 0)) return mostrar(null, { vazio: "Informe o valor da parcela." });
+    try {
+      const r = modo === "taxa" ? parcelaDoEmprestimo(valor, prazo, taxa / 100) : taxaDoEmprestimo(valor, prazo, parcela);
+      const html =
+        topoHTML("Simulação de empréstimo", `${formatarBRL(valor)} em ${prazo} parcelas`) +
+        (modo === "taxa" ? destaqueHTML("Parcela", r.parcela) : destaqueTextoHTML("Taxa real", `${pct(r.taxaMensal)} ao mês`)) +
+        (modo === "taxa" ? parcelaTaxa(r) : parHTML("Parcela informada", formatarBRL(r.parcela))) +
+        parHTML("Taxa anual equivalente", pct(r.taxaAnual)) +
+        parHTML("Total pago", formatarBRL(r.totalPago)) +
+        parHTML("Total de juros", formatarBRL(r.totalJuros)) +
+        infoHTML([`Você paga ${formatarBRL(r.totalJuros)} de juros, ${pct(r.totalJuros / valor)} do valor emprestado.`]) +
+        rodapeHTML("Tabela Price. Não inclui IOF nem tarifas, a menos que já estejam na parcela informada.");
+      mostrar(html, {
+        barra: modo === "taxa" ? { rotulo: "Parcela", valor: r.parcela } : { rotulo: "Taxa real", valor: `${pct(r.taxaMensal)} a.m.` },
+        compartilhar: {
+          titulo: "Simulei um empréstimo",
+          detalhe: `${formatarBRL(valor)} em ${prazo} parcelas`,
+          itens: [
+            { rotulo: "Parcela", valor: r.parcela },
+            { rotulo: "Juros ao mês", valor: pct(r.taxaMensal) },
+            { rotulo: "Total de juros", valor: r.totalJuros },
+          ],
+        },
+      });
+    } catch (err) {
+      mostrar(null, { erro: err instanceof ErroEmprestimo ? err.message : "Não foi possível calcular com esses dados." });
+    }
+  }
+  const parcelaTaxa = (r: { taxaMensal: number }) => parHTML("Juros ao mês", pct(r.taxaMensal));
+
+  form.addEventListener("input", atualizar);
+  form.addEventListener("change", atualizar);
+  form.addEventListener("submit", (e) => e.preventDefault());
+  ligarAcoes();
+  estado.ler();
+  atualizar();
+</script>

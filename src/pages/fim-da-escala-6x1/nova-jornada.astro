@@ -1,0 +1,153 @@
+---
+import CalcPagina from "../../components/CalcPagina.astro";
+
+const perguntas = [
+  {
+    p: "Quando acaba a escala 6x1?",
+    r: "A Emenda Constitucional 141/2026 foi publicada em 16/10/2026. Dois meses depois, em 16/12/2026, passam a valer as duas folgas por semana e o limite de 42 horas semanais. A partir de 16/12/2027, o limite cai para 40 horas.",
+  },
+  {
+    p: "Meu salário pode diminuir com a redução da jornada?",
+    r: "Não. A emenda proíbe a redução de salários e de pisos salariais por causa da nova jornada. O salário mensal continua o mesmo; o que muda é o valor de cada hora trabalhada.",
+  },
+  {
+    p: "Por que o valor da minha hora aumenta?",
+    r: "Porque o mesmo salário passa a remunerar menos horas. Com 44 horas semanais, o salário é dividido por 220 horas no mês; com 40 horas, por 200. Isso aumenta em 10% o valor da hora e, por consequência, da hora extra.",
+  },
+  {
+    p: "Vou trabalhar 42 ou 40 horas a partir de dezembro de 2026?",
+    r: "A jornada diária continua limitada a 8 horas. Com duas folgas, isso dá 40 horas em cinco dias. Para trabalhar 42 horas (8h24 por dia), a empresa precisa de acordo ou convenção coletiva. Sem isso, na prática a jornada já é de 40 horas.",
+  },
+  {
+    p: "As duas folgas precisam ser no fim de semana?",
+    r: "Não. A emenda garante dois dias de repouso remunerado por semana, um deles preferencialmente no domingo. A empresa pode organizar as folgas em outros dias, como acontece no comércio.",
+  },
+];
+---
+
+<CalcPagina
+  titulo="Fim da escala 6x1: calcule sua nova jornada e o valor da sua hora"
+  descricao="Veja como fica sua jornada com o fim da escala 6x1: horas por semana, folgas, valor da hora e da hora extra em dezembro de 2026 e em 2027, sem redução de salário."
+  h1="Fim da escala 6x1: sua nova jornada"
+  apoio="Informe seu salário e sua jornada de hoje. Mostramos como ficam suas horas, folgas e o valor da sua hora em cada etapa da Emenda 141/2026."
+  categoria="fim-da-escala-6x1"
+  caminho="/fim-da-escala-6x1/nova-jornada/"
+  nomeApp="Calculadora do fim da escala 6x1"
+  perguntas={perguntas}
+>
+  <Fragment slot="form">
+    <div class="campo">
+      <label for="salario">Salário bruto mensal</label>
+      <div class="moeda"><span aria-hidden="true">R$</span><input id="salario" inputmode="decimal" autocomplete="off" placeholder="3.000,00" /></div>
+    </div>
+    <div class="duas">
+      <div class="campo">
+        <label for="jornada">Horas por semana hoje</label>
+        <input id="jornada" type="number" min="10" max="44" inputmode="numeric" value="44" />
+      </div>
+      <div class="campo">
+        <label for="dias">Dias de trabalho por semana</label>
+        <select id="dias">
+          <option value="6">6 dias (escala 6x1)</option>
+          <option value="5">5 dias (escala 5x2)</option>
+          <option value="4">4 dias</option>
+        </select>
+      </div>
+    </div>
+    <div class="campo">
+      <label class="marcar"><input type="checkbox" id="acordo" /> Minha categoria tem acordo coletivo para 42 horas na transição</label>
+    </div>
+  </Fragment>
+
+  <Fragment slot="conteudo">
+    <h2>O que muda com o fim da escala 6x1</h2>
+    <p>
+      A Emenda Constitucional 141/2026 reduz a jornada máxima de 44 para 40 horas semanais, em duas etapas, garante dois dias de descanso remunerado por semana e proíbe a redução de salário. A
+      jornada diária continua limitada a 8 horas.
+    </p>
+    <div class="tabela-rolagem">
+      <table>
+        <thead><tr><th scope="col">Período</th><th scope="col">Horas por semana</th><th scope="col">Folgas</th><th scope="col">Divisor do salário</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Até 15/12/2026</th><td>44</td><td>1 por semana</td><td>220</td></tr>
+          <tr><th scope="row">16/12/2026 a 15/12/2027</th><td>42 (40 sem acordo)</td><td>2 por semana</td><td>210 (200)</td></tr>
+          <tr><th scope="row">A partir de 16/12/2027</th><td>40</td><td>2 por semana</td><td>200</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>Exemplo</h3>
+    <p>
+      Quem ganha R$ 3.000 e trabalha 44 horas na escala 6x1 tem a hora valendo R$ 13,64 (R$ 3.000 ÷ 220). Com 40 horas, a hora passa a R$ 15,00 (R$ 3.000 ÷ 200), 10% a mais, e a hora extra a 50% sobe de
+      R$ 20,45 para R$ 22,50. São 208 horas e 52 dias de folga a mais por ano, com o mesmo salário.
+    </p>
+  </Fragment>
+</CalcPagina>
+
+<script>
+  import { $, destaqueTextoHTML, infoHTML, ligarAcoes, mostrar, rodapeHTML, tabelaHTML, topoHTML, estadoURL } from "../../lib/ui/calc-ui";
+  import { calcularNovaJornada, ErroJornada, formatarHoras } from "../../lib/jornada/nova-jornada";
+  import { formatarBRL, lerValor } from "../../lib/dinheiro";
+
+  const form = $<HTMLFormElement>("form");
+  const estado = estadoURL(form, { salario: "s", jornada: "j", dias: "d", acordo: "ac" });
+  const pct = (x: number) => `${x >= 0 ? "+" : ""}${(x * 100).toFixed(1).replace(".", ",").replace(",0", "")}%`;
+
+  function atualizar() {
+    estado.salvar();
+    const salario = lerValor($<HTMLInputElement>("salario").value);
+    if (!(salario > 0)) return mostrar(null, { vazio: "Informe o salário bruto." });
+    try {
+      const r = calcularNovaJornada({
+        salario,
+        jornadaAtual: Number($<HTMLInputElement>("jornada").value),
+        diasAtuais: Number($<HTMLSelectElement>("dias").value),
+        acordo42h: $<HTMLInputElement>("acordo").checked,
+      });
+      const [hoje, , fim] = r.fases;
+      const html =
+        topoHTML("Sua jornada com o fim da 6x1", `Salário de ${formatarBRL(salario)} mantido em todas as etapas`) +
+        tabelaHTML(
+          ["", "Hoje", "Dez/2026", "Dez/2027"],
+          [
+            ["Horas por semana", ...r.fases.map((f) => `${f.semanal}h`)],
+            ["Dias de trabalho", ...r.fases.map((f) => f.dias)],
+            ["Horas por dia", ...r.fases.map((f) => formatarHoras(f.horasPorDia))],
+            ["Valor da hora", ...r.fases.map((f) => formatarBRL(f.valorHora))],
+            ["Hora extra (50%)", ...r.fases.map((f) => formatarBRL(f.horaExtra50))],
+          ],
+        ) +
+        `<p class="nota-tabela">Hoje: até 15/12/2026. Dez/2026: de 16/12/2026 a 15/12/2027. Dez/2027: a partir de 16/12/2027.</p>` +
+        destaqueTextoHTML("Sua hora passa a valer", pct(r.aumentoValorHora)) +
+        infoHTML(
+          [
+            `Valor da hora: de ${formatarBRL(hoje.valorHora)} para ${formatarBRL(fim.valorHora)} em dezembro de 2027.`,
+            r.horasLivresAno > 0 ? `${r.horasLivresAno} horas a menos de trabalho por ano.` : "",
+            r.folgasExtrasAno > 0 ? `${r.folgasExtrasAno} dias de folga a mais por ano.` : "",
+          ].filter(Boolean),
+          r.alertas,
+        ) +
+        rodapeHTML("A hora extra considera o adicional mínimo de 50%. Convenções coletivas podem prever percentuais maiores.");
+      mostrar(html, {
+        barra: { rotulo: "Sua hora", valor: pct(r.aumentoValorHora) },
+        compartilhar: {
+          titulo: "Simulei minha jornada com o fim da 6x1",
+          detalhe: `Mesmo salário, ${hoje.semanal}h → ${fim.semanal}h por semana`,
+          itens: [
+            { rotulo: "Valor da hora hoje", valor: hoje.valorHora },
+            { rotulo: "Valor da hora em 2027", valor: fim.valorHora },
+            { rotulo: "Folgas a mais por ano", valor: `${r.folgasExtrasAno} dias` },
+          ],
+        },
+      });
+    } catch (err) {
+      mostrar(null, { erro: err instanceof ErroJornada ? err.message : "Não foi possível calcular com esses dados." });
+    }
+  }
+
+  form.addEventListener("input", atualizar);
+  form.addEventListener("change", atualizar);
+  form.addEventListener("submit", (e) => e.preventDefault());
+  ligarAcoes();
+  estado.ler();
+  atualizar();
+</script>

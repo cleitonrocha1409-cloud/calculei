@@ -24,6 +24,21 @@ export const subtotalHTML = (rotulo: string, valor: number, desconto = false) =>
 
 export const destaqueHTML = (rotulo: string, valor: number) => `<p class="liquido"><span>${esc(rotulo)}</span><strong>${formatarBRL(valor)}</strong></p>`;
 
+/** Destaque com texto livre (ex.: "3 pessoas", "+10%"). */
+export const destaqueTextoHTML = (rotulo: string, texto: string) => `<p class="liquido"><span>${esc(rotulo)}</span><strong>${esc(texto)}</strong></p>`;
+
+/** Linha simples rótulo/valor, sem memória de cálculo. */
+export const parHTML = (rotulo: string, valor: string, classe = "") => `<p class="subtotal ${classe}"><span>${esc(rotulo)}</span><span>${esc(valor)}</span></p>`;
+
+/** Tabela compacta dentro do resultado. A primeira coluna fica à esquerda. */
+export function tabelaHTML(cabecalho: string[], linhas: (string | number)[][], destacarLinha = -1) {
+  return `<div class="mini-rolagem"><table class="mini"><thead><tr>${cabecalho.map((c) => `<th scope="col">${esc(c)}</th>`).join("")}</tr></thead><tbody>${linhas
+    .map((l, i) => `<tr${i === destacarLinha ? ' class="atual"' : ""}>${l.map((c, j) => (j === 0 ? `<th scope="row">${esc(String(c))}</th>` : `<td>${esc(String(c))}</td>`)).join("")}</tr>`)
+    .join("")}</tbody></table></div>`;
+}
+
+export const esc2 = esc;
+
 export const topoHTML = (titulo: string, sub: string) =>
   `<header class="holerite__topo"><p class="holerite__titulo">${esc(titulo)}</p><p>${esc(sub)}</p></header>`;
 
@@ -35,7 +50,7 @@ export const rodapeHTML = (t = "Valores estimados com as tabelas de 2026. Toque 
 export interface Compartilhar {
   titulo: string; // ex.: "Simulei minha rescisão"
   detalhe?: string; // ex.: "Demissão sem justa causa"
-  itens: { rotulo: string; valor: number }[];
+  itens: { rotulo: string; valor: number | string }[];
 }
 
 /** Mensagem do WhatsApp: valores em negrito, link e assinatura do site. */
@@ -44,7 +59,7 @@ export function textoWhatsApp(c: Compartilhar, url: string) {
     `🧮 *${c.titulo} no Calculei*`,
     c.detalhe ? `_${c.detalhe}_` : "",
     "",
-    ...c.itens.map((i) => `▸ ${i.rotulo}: *${formatarBRL(i.valor)}*`),
+    ...c.itens.map((i) => `▸ ${i.rotulo}: *${typeof i.valor === "number" ? formatarBRL(i.valor) : i.valor}*`),
     "",
     "Veja a conta completa, linha por linha:",
     url,
@@ -55,7 +70,7 @@ export function textoWhatsApp(c: Compartilhar, url: string) {
 }
 
 /** Mostra o resultado, ou a mensagem de vazio/erro, e controla botões e barra fixa. */
-export function mostrar(html: string | null, opcoes: { vazio?: string; erro?: string; barra?: { rotulo: string; valor: number }; compartilhar?: Compartilhar } = {}) {
+export function mostrar(html: string | null, opcoes: { vazio?: string; erro?: string; barra?: { rotulo: string; valor: number | string }; compartilhar?: Compartilhar } = {}) {
   const holerite = $("holerite");
   const ok = html !== null && !opcoes.erro;
   if (opcoes.erro) holerite.innerHTML = `<p class="erro">${esc(opcoes.erro)}</p>`;
@@ -65,7 +80,7 @@ export function mostrar(html: string | null, opcoes: { vazio?: string; erro?: st
   $("barra").hidden = !ok || !opcoes.barra;
   if (ok && opcoes.barra) {
     $("barra-rotulo").textContent = opcoes.barra.rotulo;
-    $("barra-valor").textContent = formatarBRL(opcoes.barra.valor);
+    $("barra-valor").textContent = typeof opcoes.barra.valor === "number" ? formatarBRL(opcoes.barra.valor) : opcoes.barra.valor;
   }
   if (ok && opcoes.compartilhar) {
     $<HTMLAnchorElement>("whats").href = `https://wa.me/?text=${encodeURIComponent(textoWhatsApp(opcoes.compartilhar, location.href))}`;

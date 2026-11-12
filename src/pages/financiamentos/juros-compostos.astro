@@ -1,0 +1,119 @@
+---
+import CalcPagina from "../../components/CalcPagina.astro";
+
+const perguntas = [
+  {
+    p: "O que são juros compostos?",
+    r: "São juros calculados sobre o valor inicial mais os juros já acumulados: os juros rendem juros. Por isso o crescimento acelera com o tempo.",
+  },
+  {
+    p: "Como converter taxa anual em mensal?",
+    r: "Com juros compostos, a taxa mensal equivalente é (1 + taxa anual) elevado a 1/12, menos 1. Por exemplo, 12% ao ano equivalem a cerca de 0,95% ao mês, e não a 1%.",
+  },
+  {
+    p: "A simulação desconta imposto de renda?",
+    r: "Não. O resultado é bruto. Em aplicações como CDB e Tesouro Direto, o imposto de renda vai de 22,5% a 15% sobre o rendimento, conforme o prazo. Poupança e LCI/LCA são isentas para pessoa física.",
+  },
+];
+---
+
+<CalcPagina
+  titulo="Calculadora de juros compostos com aportes mensais"
+  descricao="Calcule juros compostos com valor inicial e aportes mensais: montante final, total investido e rendimento ano a ano."
+  h1="Juros compostos"
+  categoria="financiamentos"
+  caminho="/financiamentos/juros-compostos/"
+  nomeApp="Calculadora de juros compostos"
+  perguntas={perguntas}
+>
+  <Fragment slot="form">
+    <div class="campo">
+      <label for="inicial">Valor inicial</label>
+      <div class="moeda"><span aria-hidden="true">R$</span><input id="inicial" inputmode="decimal" autocomplete="off" placeholder="1.000,00" /></div>
+    </div>
+    <div class="campo">
+      <label for="aporte">Aporte mensal</label>
+      <div class="moeda"><span aria-hidden="true">R$</span><input id="aporte" inputmode="decimal" autocomplete="off" placeholder="200,00" /></div>
+    </div>
+    <div class="duas">
+      <div class="campo">
+        <label for="taxa">Taxa de juros (%)</label>
+        <input id="taxa" inputmode="decimal" autocomplete="off" placeholder="1" />
+      </div>
+      <div class="campo">
+        <label for="unidade">Período da taxa</label>
+        <select id="unidade">
+          <option value="mes">ao mês</option>
+          <option value="ano">ao ano</option>
+        </select>
+      </div>
+    </div>
+    <div class="campo">
+      <label for="anos">Prazo (anos)</label>
+      <input id="anos" type="number" min="1" max="100" inputmode="numeric" value="10" />
+    </div>
+  </Fragment>
+
+  <Fragment slot="conteudo">
+    <h2>Como funciona o cálculo</h2>
+    <p>
+      A cada mês, o saldo rende a taxa informada e recebe o aporte. Quando a taxa é anual, usamos a taxa mensal equivalente. O resultado mostra quanto você investiu do próprio bolso e quanto veio dos
+      juros, ano a ano.
+    </p>
+  </Fragment>
+</CalcPagina>
+
+<script>
+  import { $, destaqueHTML, ligarAcoes, mostrar, parHTML, rodapeHTML, tabelaHTML, topoHTML, estadoURL } from "../../lib/ui/calc-ui";
+  import { calcularJurosCompostos, ErroJuros } from "../../lib/financeiro/juros-compostos";
+  import { taxaMensalDeAnual } from "../../lib/financeiro/financiamento";
+  import { formatarBRL, lerValor } from "../../lib/dinheiro";
+
+  const form = $<HTMLFormElement>("form");
+  const estado = estadoURL(form, { inicial: "i", aporte: "a", taxa: "t", unidade: "u", anos: "n" });
+
+  function atualizar() {
+    estado.salvar();
+    const inicial = lerValor($<HTMLInputElement>("inicial").value) || 0;
+    const aporte = lerValor($<HTMLInputElement>("aporte").value) || 0;
+    const taxa = lerValor($<HTMLInputElement>("taxa").value);
+    if (inicial + aporte <= 0 || !(taxa >= 0)) return mostrar(null, { vazio: "Informe o valor inicial ou o aporte, e a taxa de juros." });
+    try {
+      const anual = $<HTMLSelectElement>("unidade").value === "ano";
+      const taxaMensal = anual ? taxaMensalDeAnual(taxa / 100) : taxa / 100;
+      const anos = Number($<HTMLInputElement>("anos").value) || 0;
+      const r = calcularJurosCompostos({ inicial, aporteMensal: aporte, taxaMensal, meses: Math.round(anos * 12) });
+      const html =
+        topoHTML("Juros compostos", `${(taxaMensal * 100).toFixed(3).replace(".", ",")}% ao mês por ${anos} anos`) +
+        destaqueHTML("Valor final", r.montante) +
+        parHTML("Total investido", formatarBRL(r.investido)) +
+        parHTML("Juros ganhos", formatarBRL(r.juros)) +
+        `<details class="ano-a-ano"><summary>Ver evolução ano a ano</summary>${tabelaHTML(
+          ["Ano", "Investido", "Juros", "Saldo"],
+          r.anos.map((a) => [`Ano ${a.ano}`, formatarBRL(a.investido), formatarBRL(a.juros), formatarBRL(a.saldo)]),
+        )}</details>` +
+        rodapeHTML("Valores brutos, sem imposto de renda e sem inflação.");
+      mostrar(html, {
+        barra: { rotulo: "Valor final", valor: r.montante },
+        compartilhar: {
+          titulo: "Simulei meus juros compostos",
+          detalhe: `${anos} anos`,
+          itens: [
+            { rotulo: "Total investido", valor: r.investido },
+            { rotulo: "Juros ganhos", valor: r.juros },
+            { rotulo: "Valor final", valor: r.montante },
+          ],
+        },
+      });
+    } catch (err) {
+      mostrar(null, { erro: err instanceof ErroJuros ? err.message : "Não foi possível calcular com esses dados." });
+    }
+  }
+
+  form.addEventListener("input", atualizar);
+  form.addEventListener("change", atualizar);
+  form.addEventListener("submit", (e) => e.preventDefault());
+  ligarAcoes();
+  estado.ler();
+  atualizar();
+</script>

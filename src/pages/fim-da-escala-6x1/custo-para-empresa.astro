@@ -1,0 +1,138 @@
+---
+import CalcPagina from "../../components/CalcPagina.astro";
+
+const perguntas = [
+  {
+    p: "Quanto aumenta o custo da hora de trabalho com o fim da 6x1?",
+    r: "Para quem trabalha 44 horas, o custo da hora sobe 10% quando a jornada cai para 40 horas (o salário é dividido por 200 horas, e não mais por 220). Na fase de 42 horas com acordo, o aumento é de cerca de 4,8%.",
+  },
+  {
+    p: "É mais barato pagar hora extra ou contratar?",
+    r: "Depende do tamanho da equipe. Hora extra custa pelo menos 50% a mais por hora, mais o reflexo no descanso remunerado e os encargos. Com poucas pessoas, a hora extra pode sair mais barata; quando as horas faltantes somam uma jornada inteira, contratar costuma compensar. A calculadora compara as duas opções.",
+  },
+  {
+    p: "Pequenas empresas terão alguma regra especial?",
+    r: "A emenda permite que uma lei complementar crie medidas temporárias para MEI, microempresas e empresas de pequeno porte, condicionadas à manutenção dos empregos. Até a publicação dessa lei, valem as regras gerais.",
+  },
+  {
+    p: "O que são os encargos sobre a folha?",
+    r: "São os custos além do salário: INSS patronal, RAT, contribuições a terceiros, FGTS e as provisões de férias, 1/3 e 13º. Em empresas do lucro presumido ou real, costumam passar de 60% do salário; no Simples Nacional, são menores. Ajuste o percentual para a sua empresa.",
+  },
+];
+---
+
+<CalcPagina
+  titulo="Custo do fim da escala 6x1 para a empresa: hora extra ou contratar?"
+  descricao="Calcule quanto o fim da escala 6x1 custa para sua empresa: horas a cobrir, custo com hora extra e com novas contratações, por mês e por ano."
+  h1="Custo do fim da 6x1 para a empresa"
+  apoio="Informe a equipe que trabalha mais de 40 horas hoje. Comparamos o custo de cobrir as horas com hora extra ou com novas contratações."
+  categoria="fim-da-escala-6x1"
+  caminho="/fim-da-escala-6x1/custo-para-empresa/"
+  nomeApp="Calculadora de custo do fim da escala 6x1"
+  perguntas={perguntas}
+>
+  <Fragment slot="form">
+    <div class="duas">
+      <div class="campo">
+        <label for="funcionarios">Funcionários afetados</label>
+        <input id="funcionarios" type="number" min="1" inputmode="numeric" placeholder="10" />
+      </div>
+      <div class="campo">
+        <label for="atual">Jornada atual (horas/semana)</label>
+        <input id="atual" type="number" min="41" max="44" inputmode="numeric" value="44" />
+      </div>
+    </div>
+    <div class="campo">
+      <label for="salario">Salário médio</label>
+      <div class="moeda"><span aria-hidden="true">R$</span><input id="salario" inputmode="decimal" autocomplete="off" placeholder="2.500,00" /></div>
+    </div>
+    <fieldset class="campo">
+      <legend>Nova jornada</legend>
+      <div class="opcoes">
+        <label><input type="radio" name="nova" value="40" checked /> 40 horas (regra final e sem acordo coletivo)</label>
+        <label><input type="radio" name="nova" value="42" /> 42 horas (com acordo, até 15/12/2027)</label>
+      </div>
+    </fieldset>
+    <div class="campo">
+      <label for="encargos">Encargos sobre a folha (%)</label>
+      <input id="encargos" type="number" min="0" max="150" inputmode="decimal" value="70" />
+    </div>
+  </Fragment>
+
+  <Fragment slot="conteudo">
+    <h2>Como o custo é calculado</h2>
+    <p>
+      As horas a cobrir são a diferença entre a jornada atual e a nova, vezes o número de funcionários e as 4,33 semanas de um mês. Na opção de hora extra, cada hora custa o valor da hora com a nova jornada,
+      mais 50%, mais o reflexo no descanso remunerado (2 dias de repouso para cada 5 trabalhados) e os encargos. Na opção de contratar, somamos o salário médio e os encargos das pessoas necessárias para
+      cobrir essas horas.
+    </p>
+    <p>
+      A conta não inclui custos de recrutamento, treinamento, vale-transporte e benefícios, nem ganhos de produtividade. Para pequenas empresas, uma lei complementar ainda pode criar regras de transição.
+    </p>
+  </Fragment>
+</CalcPagina>
+
+<script>
+  import { $, destaqueHTML, infoHTML, ligarAcoes, mostrar, parHTML, rodapeHTML, tabelaHTML, topoHTML, estadoURL } from "../../lib/ui/calc-ui";
+  import { calcularCustoEmpresa, ErroCusto } from "../../lib/jornada/custo-empresa";
+  import { formatarBRL, lerValor } from "../../lib/dinheiro";
+
+  const form = $<HTMLFormElement>("form");
+  const estado = estadoURL(form, { funcionarios: "f", atual: "a", salario: "s", nova: "n", encargos: "e" });
+  const n1 = (x: number) => x.toLocaleString("pt-BR", { maximumFractionDigits: 1 });
+
+  function atualizar() {
+    estado.salvar();
+    const funcionarios = Number($<HTMLInputElement>("funcionarios").value);
+    const salario = lerValor($<HTMLInputElement>("salario").value);
+    if (!(funcionarios > 0) || !(salario > 0)) return mostrar(null, { vazio: "Informe o número de funcionários e o salário médio." });
+    try {
+      const nova = Number(form.querySelector<HTMLInputElement>("input[name=nova]:checked")!.value);
+      const r = calcularCustoEmpresa({
+        funcionarios,
+        salarioMedio: salario,
+        jornadaAtual: Number($<HTMLInputElement>("atual").value) || 44,
+        jornadaNova: nova,
+        encargos: (Number($<HTMLInputElement>("encargos").value) || 0) / 100,
+      });
+      const melhor = r.horaExtra.mensal <= r.contratar.mensal ? r.horaExtra : r.contratar;
+      const html =
+        topoHTML("Custo do fim da 6x1", `${funcionarios} funcionário(s), ${$<HTMLInputElement>("atual").value}h → ${nova}h por semana`) +
+        parHTML("Horas a cobrir por mês", `${n1(r.horasPerdidasMes)} h`) +
+        parHTML("Equivale a", `${n1(r.pessoasEquivalentes)} pessoa(s) em tempo integral`) +
+        parHTML("Aumento do custo da hora", `+${(r.aumentoCustoHora * 100).toFixed(1).replace(".", ",")}%`) +
+        `<h3>Opções</h3>` +
+        tabelaHTML(
+          ["Opção", "Por mês", "Por ano"],
+          [
+            [r.horaExtra.nome, formatarBRL(r.horaExtra.mensal), formatarBRL(r.horaExtra.anual)],
+            [`${r.contratar.nome} ${r.contratar.contratacoes}`, formatarBRL(r.contratar.mensal), formatarBRL(r.contratar.anual)],
+          ],
+          melhor === r.horaExtra ? 0 : 1,
+        ) +
+        destaqueHTML(`Menor custo: ${melhor === r.horaExtra ? "hora extra" : "contratar"}`, melhor.mensal) +
+        infoHTML([r.horaExtra.detalhe + ".", r.contratar.detalhe + ".", `Folha atual com encargos: ${formatarBRL(r.folhaAtualMensal)} por mês.`]) +
+        rodapeHTML("Estimativa. Não inclui benefícios, recrutamento nem ganhos de produtividade.");
+      mostrar(html, {
+        barra: { rotulo: "Menor custo/mês", valor: melhor.mensal },
+        compartilhar: {
+          titulo: "Simulei o custo do fim da 6x1",
+          detalhe: `${funcionarios} funcionário(s), de ${$<HTMLInputElement>("atual").value}h para ${nova}h`,
+          itens: [
+            { rotulo: "Cobrir com hora extra", valor: `${formatarBRL(r.horaExtra.mensal)}/mês` },
+            { rotulo: `Contratar ${r.contratar.contratacoes}`, valor: `${formatarBRL(r.contratar.mensal)}/mês` },
+          ],
+        },
+      });
+    } catch (err) {
+      mostrar(null, { erro: err instanceof ErroCusto ? err.message : "Não foi possível calcular com esses dados." });
+    }
+  }
+
+  form.addEventListener("input", atualizar);
+  form.addEventListener("change", atualizar);
+  form.addEventListener("submit", (e) => e.preventDefault());
+  ligarAcoes();
+  estado.ler();
+  atualizar();
+</script>

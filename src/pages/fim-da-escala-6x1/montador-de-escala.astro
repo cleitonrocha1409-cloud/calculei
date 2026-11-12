@@ -1,0 +1,142 @@
+---
+import CalcPagina from "../../components/CalcPagina.astro";
+import { DIAS } from "../../lib/jornada/escala";
+
+const perguntas = [
+  {
+    p: "Como montar uma escala 5x2 para um comércio que abre todos os dias?",
+    r: "Cada pessoa trabalha 5 dias e folga 2 por semana. Some quantas pessoas você precisa em cada dia, divida pelo número de dias que cada um trabalha e arredonde para cima. A calculadora faz essa conta e distribui as folgas, girando o domingo entre a equipe.",
+  },
+  {
+    p: "A folga precisa cair no domingo?",
+    r: "Uma das duas folgas deve ser preferencialmente no domingo. No comércio, a regra geral da Lei 10.101/2000 exige folga no domingo pelo menos uma vez a cada três semanas.",
+  },
+  {
+    p: "Quantas horas cada pessoa pode trabalhar por dia?",
+    r: "Até 8 horas, sem contar o intervalo de almoço. Na fase de 42 horas (16/12/2026 a 15/12/2027), acordo ou convenção coletiva pode ampliar para 8h24, para caber as 42 horas em 5 dias.",
+  },
+  {
+    p: "E a escala 12x36?",
+    r: "A 12x36 depende de acordo ou convenção coletiva e tem regras próprias. Como ela pode passar de 40 horas em algumas semanas, muitas categorias vão precisar rever os plantões até dezembro de 2027.",
+  },
+];
+---
+
+<CalcPagina
+  titulo="Montador de escala 5x2: quantos funcionários preciso com o fim da 6x1"
+  descricao="Descubra quantas pessoas sua empresa precisa com o fim da escala 6x1 e gere uma escala 5x2 com duas folgas por semana e rodízio de domingos."
+  h1="Montador de escala 5x2"
+  apoio="Informe quando a empresa funciona e quantas pessoas precisam estar trabalhando ao mesmo tempo. Calculamos a equipe mínima e montamos as folgas de 4 semanas."
+  categoria="fim-da-escala-6x1"
+  caminho="/fim-da-escala-6x1/montador-de-escala/"
+  nomeApp="Montador de escala 5x2"
+  perguntas={perguntas}
+>
+  <Fragment slot="form">
+    <fieldset class="campo">
+      <legend>Dias de funcionamento</legend>
+      <div class="dias-semana">
+        {DIAS.map((d, i) => <label><input type="checkbox" id={`dia${i}`} checked={i < 6} />{d}</label>)}
+      </div>
+    </fieldset>
+    <div class="duas">
+      <div class="campo">
+        <label for="horas">Horas abertas por dia</label>
+        <input id="horas" type="number" min="1" max="24" step="0.5" inputmode="decimal" value="8" />
+      </div>
+      <div class="campo">
+        <label for="pessoas">Pessoas ao mesmo tempo</label>
+        <input id="pessoas" type="number" min="1" max="200" inputmode="numeric" value="2" />
+      </div>
+    </div>
+    <fieldset class="campo">
+      <legend>Jornada de cada pessoa</legend>
+      <div class="opcoes">
+        <label><input type="radio" name="regra" value="40" checked /> 8 horas por dia, 5 dias (40h)</label>
+        <label><input type="radio" name="regra" value="42" /> 8h24 por dia, 5 dias (42h, com acordo coletivo, até 15/12/2027)</label>
+      </div>
+    </fieldset>
+  </Fragment>
+
+  <Fragment slot="conteudo">
+    <h2>Como a calculadora monta a escala</h2>
+    <p>
+      Primeiro, ela divide o horário de funcionamento pela jornada diária para saber quantos turnos são necessários. Depois soma as pessoas exigidas em todos os dias da semana e divide pelos 5 dias que
+      cada um trabalha. O resultado, arredondado para cima, é a equipe mínima. As folgas são distribuídas para que todos os dias tenham cobertura, com o domingo de folga girando entre a equipe.
+    </p>
+    <p>A conta considera horas de trabalho efetivo. O intervalo de almoço não entra na jornada e precisa ser coberto com sobreposição de turnos.</p>
+  </Fragment>
+</CalcPagina>
+
+<script>
+  import { $, destaqueTextoHTML, esc2, infoHTML, ligarAcoes, mostrar, parHTML, rodapeHTML, topoHTML, estadoURL } from "../../lib/ui/calc-ui";
+  import { calcularMinimo, DIAS, ErroEscala, montarEscala } from "../../lib/jornada/escala";
+
+  const form = $<HTMLFormElement>("form");
+  const campos: Record<string, string> = { horas: "h", pessoas: "p", regra: "r" };
+  DIAS.forEach((_, i) => (campos[`dia${i}`] = `d${i}`));
+  const estado = estadoURL(form, campos);
+
+  function grade(semana: ("T" | "F" | "X")[][], s: number) {
+    const cab = `<tr><th scope="col">Pessoa</th>${DIAS.map((d) => `<th scope="col">${d}</th>`).join("")}</tr>`;
+    const linhas = semana
+      .map((p, i) => `<tr><th scope="row">Pessoa ${i + 1}</th>${p.map((c) => `<td class="${c}">${c === "T" ? "T" : c === "F" ? "F" : "–"}</td>`).join("")}</tr>`)
+      .join("");
+    return `<p class="escala-semana">Semana ${s + 1}</p><table class="escala">${cab}${linhas}</table>`;
+  }
+
+  function atualizar() {
+    // Pela URL, checkbox desmarcado não aparece; marcamos os dias a partir dela só na primeira leitura.
+    estado.salvar();
+    const diasAbertos = DIAS.map((_, i) => $<HTMLInputElement>(`dia${i}`).checked);
+    const regra = Number(form.querySelector<HTMLInputElement>("input[name=regra]:checked")!.value);
+    const horasDia = regra === 42 ? 8.4 : 8;
+    try {
+      const entrada = {
+        diasAbertos,
+        horasAbertas: Number($<HTMLInputElement>("horas").value),
+        pessoasPorTurno: Number($<HTMLInputElement>("pessoas").value),
+        horasPorDiaPessoa: horasDia,
+        diasTrabalhoPessoa: 5,
+      };
+      const r = montarEscala(entrada);
+      // Comparação com a escala 6x1 de hoje: 44h em 6 dias (7h20 por dia).
+      const antes = calcularMinimo({ ...entrada, horasPorDiaPessoa: 44 / 6, diasTrabalhoPessoa: 6 });
+      const dif = r.minimoPessoas - antes.minimo;
+      const html =
+        topoHTML("Escala 5x2", `${diasAbertos.filter(Boolean).length} dias de funcionamento, ${r.turnosPorDia} turno(s) por dia`) +
+        destaqueTextoHTML("Equipe mínima", `${r.minimoPessoas} ${r.minimoPessoas === 1 ? "pessoa" : "pessoas"}`) +
+        parHTML("Na escala 6x1 de hoje", `${antes.minimo} ${antes.minimo === 1 ? "pessoa" : "pessoas"}`) +
+        parHTML("Diferença", dif > 0 ? `+${dif}` : dif === 0 ? "nenhuma" : String(dif)) +
+        r.escala.map((s, i) => grade(s, i)).join("") +
+        `<p class="legenda"><span class="lT">T trabalha</span><span class="lF">F folga</span><span class="lX">– fechado</span></p>` +
+        infoHTML(
+          [`Cada pessoa trabalha ${horasDia === 8 ? "8h" : "8h24"} por dia, 5 dias por semana, com 2 folgas.`],
+          r.avisos.map((a) => esc2(a)),
+        ) +
+        rodapeHTML("Escala sugerida. Ajuste às convenções da sua categoria e às preferências da equipe.");
+      mostrar(html, {
+        barra: { rotulo: "Equipe mínima", valor: `${r.minimoPessoas} pessoas` },
+        compartilhar: {
+          titulo: "Montei uma escala 5x2",
+          detalhe: "Com o fim da escala 6x1",
+          itens: [
+            { rotulo: "Equipe mínima na 5x2", valor: `${r.minimoPessoas} pessoas` },
+            { rotulo: "Na 6x1 de hoje", valor: `${antes.minimo} pessoas` },
+          ],
+        },
+      });
+    } catch (err) {
+      mostrar(null, { erro: err instanceof ErroEscala ? err.message : "Não foi possível montar a escala com esses dados." });
+    }
+  }
+
+  form.addEventListener("input", atualizar);
+  form.addEventListener("change", atualizar);
+  form.addEventListener("submit", (e) => e.preventDefault());
+  ligarAcoes();
+  // Se a URL trouxer os dias, ela define quais estão abertos.
+  if (new URLSearchParams(location.search).has("h")) DIAS.forEach((_, i) => ($<HTMLInputElement>(`dia${i}`).checked = false));
+  estado.ler();
+  atualizar();
+</script>
