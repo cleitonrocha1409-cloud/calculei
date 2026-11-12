@@ -78,3 +78,28 @@ describe("CBS e IBS", () => {
     expect(simularCbsIbs({ valor: 50, valorInformado: "sem", reducao: "zero" })[1].total).toBe(0);
   });
 });
+
+import { acumuladoPeriodo, ultimos12, somarMeses } from "../src/lib/aluguel/reajuste";
+describe("período escolhido pelo usuário", () => {
+  const serie = [
+    { mes: "2026-01", valor: 1 },
+    { mes: "2026-02", valor: -0.5 },
+    { mes: "2026-03", valor: 0.5 },
+  ];
+  it("acumula mês a mês, com juros compostos", () => {
+    const a = acumuladoPeriodo(serie, "2026-01", "2026-03")!;
+    expect(a.percentual).toBeCloseTo(1.01 * 0.995 * 1.005 - 1, 10);
+    expect(a.meses).toHaveLength(3);
+    expect(a.meses[1].acumulado).toBeCloseTo(1.01 * 0.995 - 1, 10);
+  });
+  it("aponta meses ainda não divulgados", () => {
+    expect(acumuladoPeriodo(serie, "2026-02", "2026-05")!.faltando).toEqual(["2026-04", "2026-05"]);
+  });
+  it("período invertido é inválido", () => expect(acumuladoPeriodo(serie, "2026-03", "2026-01")).toBeNull());
+  it("últimos 12 meses e soma de meses na virada do ano", () => {
+    expect(somarMeses("2026-01", -1)).toBe("2025-12");
+    expect(somarMeses("2025-12", 1)).toBe("2026-01");
+    const s = Array.from({ length: 15 }, (_, i) => ({ mes: somarMeses("2025-08", i), valor: 0.2 }));
+    expect(ultimos12(s)).toEqual({ de: "2025-11", ate: "2026-10" });
+  });
+});

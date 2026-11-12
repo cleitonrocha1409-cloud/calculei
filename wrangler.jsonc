@@ -1,9 +1,11 @@
 {
-  // Publicação no Cloudflare Workers (site estático).
+  // Publicação no Cloudflare Workers: site estático + rota /api/indices.
   "name": "calculei",
+  "main": "worker/index.js",
   "compatibility_date": "2026-11-12",
   "assets": {
     "directory": "./dist",
+    "binding": "ASSETS",
     "not_found_handling": "404-page"
   }
 }

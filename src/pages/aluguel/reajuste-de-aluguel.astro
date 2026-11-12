@@ -2,19 +2,21 @@
 import CalcPagina from "../../components/CalcPagina.astro";
 import { buscarSeries, SERIES } from "../../lib/aluguel/indices";
 
-// Os índices são buscados no Banco Central a cada publicação do site.
-const series = await buscarSeries(36);
-const temSeries = Object.keys(series).length > 0;
-const atualizado = new Date().toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
+// Tenta trazer os índices já na publicação. Se não der, o navegador do visitante busca no Banco Central.
+const series = await buscarSeries(60);
 
 const perguntas = [
   {
     p: "Como calcular o reajuste do aluguel?",
-    r: "Multiplique o aluguel atual pelo índice acumulado nos 12 meses anteriores ao mês do reajuste. Se o IGP-M acumulado for de 4%, um aluguel de R$ 2.000 passa para R$ 2.080.",
+    r: "Escolha o índice do contrato e o período, normalmente os 12 meses anteriores ao aniversário do contrato. A calculadora busca as variações mensais no Banco Central, acumula mês a mês e aplica ao aluguel. Com IGP-M acumulado de 4%, um aluguel de R$ 2.000 passa para R$ 2.080.",
   },
   {
     p: "Qual índice usar: IGP-M ou IPCA?",
     r: "O que estiver no contrato. O IGP-M é o mais comum em contratos antigos, mas oscila mais por causa do dólar e das commodities. Muitos contratos novos usam o IPCA, a inflação oficial, que costuma ser mais estável.",
+  },
+  {
+    p: "Por que o acumulado não é a soma dos meses?",
+    r: "Porque a inflação de cada mês incide sobre o valor já corrigido no mês anterior. Por isso as variações são multiplicadas (juros compostos), e não somadas.",
   },
   {
     p: "O aluguel pode diminuir se o IGP-M for negativo?",
@@ -22,119 +24,249 @@ const perguntas = [
   },
   {
     p: "De quanto em quanto tempo o aluguel pode ser reajustado?",
-    r: "Uma vez a cada 12 meses, no aniversário do contrato (Lei 10.192/2001). Fora disso, só por acordo entre as partes ou ação revisional depois de 3 anos.",
+    r: "Uma vez a cada 12 meses, no aniversário do contrato (Lei 10.192/2001). Fora disso, só por acordo entre as partes ou ação revisional depois de 3 anos (Lei 8.245/1991, art. 19).",
   },
 ];
 ---
 
 <CalcPagina
-  titulo="Reajuste de aluguel: calculadora com IGP-M, IPCA e INPC atualizados"
-  descricao="Calcule o reajuste do aluguel pelo IGP-M, IPCA ou INPC acumulado em 12 meses, com os índices oficiais do Banco Central, e compare os três."
+  titulo="Reajuste de aluguel: calculadora com IGP-M, IPCA e INPC do Banco Central"
+  descricao="Calcule o reajuste do aluguel pelo IGP-M, IPCA, INPC ou IGP-DI. Escolha o índice e o período: buscamos os índices no Banco Central e mostramos o acumulado mês a mês."
   h1="Reajuste de aluguel"
+  apoio="Escolha o índice do contrato e o período. Buscamos as variações no Banco Central, acumulamos mês a mês e aplicamos ao seu aluguel."
   categoria="aluguel"
   caminho="/aluguel/reajuste-de-aluguel/"
   nomeApp="Calculadora de reajuste de aluguel"
   perguntas={perguntas}
 >
   <Fragment slot="form">
-    <script type="application/json" id="series" set:html={JSON.stringify(series)} />
+    <script type="application/json" id="series-build" set:html={JSON.stringify(series)} />
     <div class="campo">
       <label for="aluguel">Aluguel atual</label>
       <div class="moeda"><span aria-hidden="true">R$</span><input id="aluguel" inputmode="decimal" autocomplete="off" placeholder="2.000,00" /></div>
     </div>
-    <div class="campo">
-      <label for="mes">Mês do reajuste (aniversário do contrato)</label>
-      <input id="mes" type="month" />
-    </div>
     <fieldset class="campo">
       <legend>Índice do contrato</legend>
       <div class="opcoes opcoes--linha">
-        {Object.entries(SERIES).map(([k, s], i) => <label><input type="radio" name="indice" value={k} checked={temSeries && i === 0} disabled={!series[k as keyof typeof series]} /> {s.nome}</label>)}
-        <label><input type="radio" name="indice" value="outro" checked={!temSeries} /> Outro percentual</label>
+        {Object.entries(SERIES).map(([k, s], i) => <label><input type="radio" name="indice" value={k} checked={i === 0} /> {s.nome}</label>)}
+        <label><input type="radio" name="indice" value="outro" /> Outro percentual</label>
+      </div>
+      <p class="status-indices" id="status" aria-live="polite">Buscando os índices no Banco Central…</p>
+      <button type="button" class="tentar" id="tentar" hidden>Tentar de novo</button>
+    </fieldset>
+    <fieldset class="campo" id="campo-periodo">
+      <legend>Período</legend>
+      <div class="opcoes opcoes--linha">
+        <label><input type="radio" name="periodo" value="12" checked /> Últimos 12 meses divulgados</label>
+        <label><input type="radio" name="periodo" value="escolher" /> Escolher o período</label>
+      </div>
+      <div class="duas" id="campos-periodo" hidden>
+        <div>
+          <label for="de" class="sub">De</label>
+          <input id="de" type="month" />
+        </div>
+        <div>
+          <label for="ate" class="sub">Até</label>
+          <input id="ate" type="month" />
+        </div>
       </div>
     </fieldset>
-    <div class="campo" id="campo-percentual" hidden={temSeries}>
+    <div class="campo" id="campo-percentual" hidden>
       <label for="percentual">Percentual de reajuste (%)</label>
       <input id="percentual" inputmode="decimal" autocomplete="off" placeholder="4,5" />
     </div>
     <div class="campo">
       <label class="marcar"><input type="checkbox" id="naoreduzir" checked /> Não reduzir o aluguel se o índice for negativo</label>
     </div>
-    {temSeries ? <p class="nota-tabela">Índices do Banco Central atualizados em {atualizado}.</p> : <p class="nota-tabela">Os índices não puderam ser carregados agora. Informe o percentual do seu contrato.</p>}
   </Fragment>
 
   <Fragment slot="conteudo">
     <h2>Como funciona o reajuste</h2>
     <p>
-      O reajuste usa a variação acumulada do índice nos 12 meses anteriores ao mês de aniversário do contrato. A calculadora multiplica as 12 variações mensais (juros compostos), e não apenas soma. Quando o
-      índice do mês anterior ainda não foi divulgado, usamos os 12 meses mais recentes disponíveis e avisamos.
+      O reajuste usa a variação acumulada do índice no período do contrato, em geral os 12 meses anteriores ao aniversário. A calculadora busca as variações mensais oficiais no Banco Central (IGP-M e IGP-DI
+      da FGV; IPCA e INPC do IBGE) e multiplica mês a mês. Você vê a variação de cada mês e o acumulado.
     </p>
     <h3>Exemplo</h3>
-    <p>Aluguel de R$ 2.000 com índice acumulado de 4,5%: R$ 2.000 × 1,045 = R$ 2.090. O aumento é de R$ 90 por mês.</p>
+    <p>Aluguel de R$ 2.000 com índice acumulado de 4,5% em 12 meses: R$ 2.000 × 1,045 = R$ 2.090. O aumento é de R$ 90 por mês, ou R$ 1.080 por ano.</p>
   </Fragment>
 </CalcPagina>
 
+<style is:global>
+  .status-indices {
+    font-size: 0.85rem;
+    color: var(--tinta-2);
+    margin: 0.6rem 0 0;
+  }
+  .status-indices.erro-indices {
+    color: var(--negativo);
+  }
+  .tentar {
+    margin-top: 0.5rem;
+    font: 600 0.9rem var(--texto);
+    padding: 0.5rem 0.9rem;
+    border-radius: 8px;
+    border: 1.5px solid var(--carteira);
+    background: var(--papel);
+    color: var(--carteira);
+    cursor: pointer;
+  }
+</style>
+
 <script>
   import { $, destaqueHTML, infoHTML, ligarAcoes, mostrar, parHTML, rodapeHTML, tabelaHTML, topoHTML, estadoURL } from "../../lib/ui/calc-ui";
-  import { acumulado12, calcularReajuste, nomeMes } from "../../lib/aluguel/reajuste";
-  import { SERIES, type Indice, type Serie } from "../../lib/aluguel/indices";
+  import { acumuladoPeriodo, calcularReajuste, nomeMes, nomeMesCurto, somarMeses, ultimos12 } from "../../lib/aluguel/reajuste";
+  import { buscarSeries, buscarSeriesViaSite, SERIES, ultimoMes, type Indice, type Series } from "../../lib/aluguel/indices";
   import { formatarBRL, lerValor } from "../../lib/dinheiro";
 
-  const series = JSON.parse($("series").textContent || "{}") as Partial<Record<Indice, Serie>>;
   const form = $<HTMLFormElement>("form");
-  const estado = estadoURL(form, { aluguel: "a", mes: "m", indice: "i", percentual: "p", naoreduzir: "nr" });
+  const estado = estadoURL(form, { aluguel: "a", indice: "i", periodo: "pe", de: "de", ate: "ate", percentual: "p", naoreduzir: "nr" });
   const pct = (x: number) => `${(x * 100).toFixed(2).replace(".", ",")}%`;
-  const hoje = new Date();
-  const mesInput = $<HTMLInputElement>("mes");
-  if (!mesInput.value) mesInput.value = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}`;
+  const status = $("status");
+  const CHAVE = "calculei-indices-v2";
+  let series: Series = {};
+
+  const mesAtual = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  };
+  // Dados com mais de 2 meses de atraso são considerados desatualizados.
+  const atualizado = (s: Series) => {
+    const u = ultimoMes(s);
+    return !!u && u >= somarMeses(mesAtual(), -2);
+  };
+
+  function lerCache(): Series | null {
+    try {
+      const c = JSON.parse(localStorage.getItem(CHAVE) || "null");
+      if (c && Date.now() - c.quando < 12 * 3600_000) return c.series;
+    } catch {
+      /* sem armazenamento */
+    }
+    return null;
+  }
+  function gravarCache(s: Series) {
+    try {
+      localStorage.setItem(CHAVE, JSON.stringify({ quando: Date.now(), series: s }));
+    } catch {
+      /* sem armazenamento */
+    }
+  }
+
+  function aplicarDisponibilidade() {
+    const tem = Object.keys(series).length > 0;
+    form.querySelectorAll<HTMLInputElement>("input[name=indice]").forEach((r) => {
+      if (r.value !== "outro") r.disabled = !series[r.value as Indice];
+    });
+    const marcado = form.querySelector<HTMLInputElement>("input[name=indice]:checked");
+    if (!tem || (marcado && marcado.disabled)) {
+      const primeiro = form.querySelector<HTMLInputElement>("input[name=indice]:not([disabled])");
+      if (primeiro) primeiro.checked = true;
+    }
+    const u = ultimoMes(series);
+    if (tem && u) {
+      status.className = "status-indices";
+      status.textContent = `Índices oficiais do Banco Central, divulgados até ${nomeMes(u)}.`;
+      $("tentar").hidden = true;
+    } else {
+      status.className = "status-indices erro-indices";
+      status.textContent = "Não conseguimos acessar o Banco Central agora. Tente de novo em instantes ou informe o percentual.";
+      $("tentar").hidden = false;
+    }
+  }
+
+  async function carregar() {
+    status.className = "status-indices";
+    status.textContent = "Buscando os índices no Banco Central…";
+    $("tentar").hidden = true;
+    const doBuild = JSON.parse($("series-build").textContent || "{}") as Series;
+    const cache = lerCache();
+    if (atualizado(doBuild)) series = doBuild;
+    else if (cache && atualizado(cache)) series = cache;
+    else {
+      // 1º pela rota do site; se não vier nada, direto do navegador no Banco Central.
+      let novas = await buscarSeriesViaSite();
+      if (!Object.keys(novas).length) novas = await buscarSeries(60);
+      series = Object.keys(novas).length ? novas : Object.keys(doBuild).length ? doBuild : cache ?? {};
+      if (Object.keys(novas).length) gravarCache(novas);
+    }
+    aplicarDisponibilidade();
+    atualizar();
+  }
 
   function atualizar() {
     const indice = form.querySelector<HTMLInputElement>("input[name=indice]:checked")?.value ?? "outro";
+    const escolher = form.querySelector<HTMLInputElement>("input[name=periodo]:checked")?.value === "escolher";
     $("campo-percentual").hidden = indice !== "outro";
+    $("campo-periodo").hidden = indice === "outro";
+    $("campos-periodo").hidden = !escolher;
+    const serie = indice !== "outro" ? series[indice as Indice] : undefined;
+    // Ao abrir "Escolher o período", começa pelos últimos 12 meses.
+    if (serie && escolher && (!$<HTMLInputElement>("de").value || !$<HTMLInputElement>("ate").value)) {
+      const u = ultimos12(serie);
+      if (u) {
+        $<HTMLInputElement>("de").value = u.de;
+        $<HTMLInputElement>("ate").value = u.ate;
+      }
+    }
     estado.salvar();
+
     const aluguel = lerValor($<HTMLInputElement>("aluguel").value);
     if (!(aluguel > 0)) return mostrar(null, { vazio: "Informe o valor atual do aluguel." });
     const naoReduzir = $<HTMLInputElement>("naoreduzir").checked;
-    const mes = mesInput.value;
+
     let percentual: number;
-    let periodo = "";
+    let periodo: { de: string; ate: string } | null = null;
+    let detalhe = "";
     const avisos: string[] = [];
+    let mesesTabela: (string | number)[][] = [];
+
     if (indice === "outro") {
       percentual = lerValor($<HTMLInputElement>("percentual").value) / 100;
       if (!Number.isFinite(percentual)) return mostrar(null, { vazio: "Informe o percentual de reajuste." });
+      detalhe = `Percentual informado: ${pct(percentual)}`;
     } else {
-      const a = series[indice as Indice] && acumulado12(series[indice as Indice]!, mes);
-      if (!a) return mostrar(null, { erro: "Não há dados do índice para esse mês. Escolha outro mês ou informe o percentual." });
+      if (!serie) return mostrar(null, { vazio: "Aguarde os índices ou escolha \"Outro percentual\"." });
+      periodo = escolher ? { de: $<HTMLInputElement>("de").value, ate: $<HTMLInputElement>("ate").value } : ultimos12(serie);
+      if (!periodo || !periodo.de || !periodo.ate) return mostrar(null, { vazio: "Escolha o mês inicial e o final." });
+      if (periodo.de > periodo.ate) return mostrar(null, { erro: "O mês inicial precisa ser antes do mês final." });
+      const a = acumuladoPeriodo(serie, periodo.de, periodo.ate);
+      if (!a) return mostrar(null, { erro: `Não há dados do ${SERIES[indice as Indice].nome} nesse período. Os índices disponíveis vão de ${nomeMes(serie[0].mes)} a ${nomeMes(serie[serie.length - 1].mes)}.` });
       percentual = a.percentual;
-      periodo = `${SERIES[indice as Indice].nome} de ${nomeMes(a.de)} a ${nomeMes(a.ate)}`;
-      if (a.aproximado) avisos.push(`O índice do mês anterior ao reajuste ainda não foi divulgado. Usamos os 12 meses mais recentes: ${nomeMes(a.de)} a ${nomeMes(a.ate)}.`);
+      const nMeses = a.meses.length;
+      detalhe = `${SERIES[indice as Indice].nome} de ${nomeMes(a.meses[0].mes)} a ${nomeMes(a.meses[nMeses - 1].mes)} (${nMeses} ${nMeses === 1 ? "mês" : "meses"})`;
+      if (a.faltando.length) avisos.push(`Ainda não divulgado: ${a.faltando.map(nomeMesCurto).join(", ")}. O acumulado considera só os meses disponíveis.`);
+      mesesTabela = a.meses.map((m) => [nomeMesCurto(m.mes), pct(m.valor / 100), pct(m.acumulado)]);
     }
+
     try {
       const r = calcularReajuste({ aluguel, percentual, naoReduzir });
       if (r.travado) avisos.push("O índice acumulado ficou negativo. Como você marcou para não reduzir, o aluguel continua o mesmo.");
-      // Comparação entre os índices disponíveis, para o mesmo mês.
-      const comparacao = (Object.keys(SERIES) as Indice[])
-        .map((k) => {
-          const a = series[k] && acumulado12(series[k]!, mes);
-          if (!a) return null;
-          const c = calcularReajuste({ aluguel, percentual: a.percentual, naoReduzir });
-          return [SERIES[k].nome, pct(a.percentual), formatarBRL(c.novo)];
-        })
-        .filter(Boolean) as string[][];
+      // Comparação entre os índices no mesmo período.
+      const comparacao = periodo
+        ? ((Object.keys(SERIES) as Indice[])
+            .map((k) => {
+              const s = series[k];
+              const a = s && acumuladoPeriodo(s, periodo!.de, periodo!.ate);
+              if (!a || a.faltando.length) return null;
+              return [SERIES[k].nome, pct(a.percentual), formatarBRL(calcularReajuste({ aluguel, percentual: a.percentual, naoReduzir }).novo)];
+            })
+            .filter(Boolean) as string[][])
+        : [];
       const html =
-        topoHTML("Reajuste de aluguel", periodo || `Percentual informado: ${pct(percentual)}`) +
+        topoHTML("Reajuste de aluguel", detalhe) +
         parHTML("Aluguel atual", formatarBRL(aluguel)) +
-        parHTML("Índice acumulado em 12 meses", pct(percentual)) +
+        parHTML("Índice acumulado", pct(percentual)) +
         parHTML("Aumento por mês", formatarBRL(r.aumento)) +
         destaqueHTML("Novo aluguel", r.novo) +
-        (comparacao.length > 1 ? `<h3>Comparação entre índices</h3>${tabelaHTML(["Índice", "Acumulado", "Novo aluguel"], comparacao)}` : "") +
+        (mesesTabela.length ? `<details class="ano-a-ano"><summary>Ver a variação mês a mês</summary>${tabelaHTML(["Mês", "Variação", "Acumulado"], mesesTabela)}</details>` : "") +
+        (comparacao.length > 1 ? `<h3>No mesmo período, por índice</h3>${tabelaHTML(["Índice", "Acumulado", "Novo aluguel"], comparacao)}` : "") +
         infoHTML([`Por ano, a diferença é de ${formatarBRL(r.aumento * 12)}.`], avisos) +
-        rodapeHTML("Índices mensais do Banco Central (FGV e IBGE). Confira o índice e a data-base no seu contrato.");
+        rodapeHTML("Variações mensais oficiais do Banco Central (FGV e IBGE). Confira o índice e a data-base no seu contrato.");
       mostrar(html, {
         barra: { rotulo: "Novo aluguel", valor: r.novo },
         compartilhar: {
           titulo: "Simulei o reajuste do aluguel",
-          detalhe: periodo || `Reajuste de ${pct(percentual)}`,
+          detalhe,
           itens: [
             { rotulo: "Aluguel atual", valor: aluguel },
             { rotulo: "Reajuste", valor: pct(r.aplicado) },
@@ -150,7 +282,16 @@ const perguntas = [
   form.addEventListener("input", atualizar);
   form.addEventListener("change", atualizar);
   form.addEventListener("submit", (e) => e.preventDefault());
+  $("tentar").addEventListener("click", () => {
+    try {
+      localStorage.removeItem(CHAVE);
+    } catch {
+      /* sem armazenamento */
+    }
+    carregar();
+  });
   ligarAcoes();
   estado.ler();
   atualizar();
+  carregar();
 </script>
