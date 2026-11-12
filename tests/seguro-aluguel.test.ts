@@ -54,3 +54,27 @@ describe("reajuste de aluguel", () => {
     expect(calcularReajuste({ aluguel: 2000, percentual: 0.045 }).novo).toBe(2090);
   });
 });
+
+import { simularCbsIbs } from "../src/lib/reforma/cbs-ibs";
+describe("CBS e IBS", () => {
+  it("R$ 100 sem tributos em 2027, alíquota padrão: CBS 11,2% + IBS 0,1%", () => {
+    const r = simularCbsIbs({ valor: 100, valorInformado: "sem", reducao: "padrao" });
+    const a = r.find((x) => x.ano === 2027)!;
+    expect(a.cbs).toBe(11.2);
+    expect(a.ibs).toBe(0.1);
+    expect(a.precoFinal).toBe(111.3);
+  });
+  it("2026 é teste: 0,9% + 0,1%", () => {
+    const a = simularCbsIbs({ valor: 1000, valorInformado: "sem", reducao: "padrao" })[0];
+    expect(a.cbs).toBe(9);
+    expect(a.ibs).toBe(1);
+  });
+  it("redução de 60% e caminho inverso a partir do preço final", () => {
+    const a = simularCbsIbs({ valor: 104.52, valorInformado: "com", reducao: "r60" }).find((x) => x.ano === 2027)!;
+    expect(a.base).toBeCloseTo(100, 2);
+    expect(a.cbs).toBeCloseTo(4.48, 2);
+  });
+  it("cesta básica: zero", () => {
+    expect(simularCbsIbs({ valor: 50, valorInformado: "sem", reducao: "zero" })[1].total).toBe(0);
+  });
+});

@@ -1,0 +1,157 @@
+---
+import CalcPagina from "../../components/CalcPagina.astro";
+import { REFORMA, REDUCOES } from "../../data/reforma";
+
+const ref = (REFORMA.cbsReferencia2027 * 100).toFixed(1).replace(".", ",");
+const perguntas = [
+  {
+    p: "Qual é a alíquota da CBS em 2027?",
+    r: `O TCU calculou a alíquota de referência em ${ref}% em 28/10/2026. O Senado fixa o valor definitivo até 15/12/2026; se não votar, vale o cálculo do TCU. Em 2027 e 2028, a CBS é cobrada com 0,1 ponto a menos, porque o IBS entra com 0,1%.`,
+  },
+  {
+    p: "O que é a CBS?",
+    r: "A Contribuição sobre Bens e Serviços é o tributo federal criado pela reforma tributária. Ela substitui o PIS e a Cofins a partir de 1º de janeiro de 2027. Junto com o IBS, de estados e municípios, forma o IVA dual brasileiro.",
+  },
+  {
+    p: "O que acontece em 2026?",
+    r: "É o ano de teste: as notas fiscais destacam CBS de 0,9% e IBS de 0,1%, mas esses valores são compensados com PIS e Cofins. Na prática, não há aumento de carga.",
+  },
+  {
+    p: "Quando o IBS substitui o ICMS e o ISS?",
+    r: "Entre 2029 e 2032, ICMS e ISS caem 10% a cada ano (para 90%, 80%, 70% e 60% das alíquotas atuais), enquanto o IBS sobe na mesma proporção. Em 2033, ICMS e ISS deixam de existir.",
+  },
+  {
+    p: "Empresas do Simples Nacional pagam CBS?",
+    r: "Continuam recolhendo pelo DAS, dentro do Simples. A partir de 2027, podem optar por recolher CBS e IBS por fora do Simples, para que os clientes aproveitem créditos.",
+  },
+];
+---
+
+<CalcPagina
+  titulo="CBS e IBS no preço: simulador da reforma tributária 2026 a 2028"
+  descricao={`Calcule quanto de CBS e IBS vai no preço de produtos e serviços em 2026, 2027 e 2028, com a alíquota de referência de ${ref}% proposta pelo TCU e as reduções da reforma.`}
+  h1="CBS e IBS no preço"
+  apoio="Informe um valor e o tipo de produto ou serviço. Mostramos a CBS e o IBS em cada ano da transição que já tem regras definidas."
+  categoria="reforma-tributaria"
+  caminho="/reforma-tributaria/cbs-ibs-no-preco/"
+  nomeApp="Simulador de CBS e IBS"
+  perguntas={perguntas}
+>
+  <Fragment slot="form">
+    <div class="campo">
+      <label for="valor">Valor</label>
+      <div class="moeda"><span aria-hidden="true">R$</span><input id="valor" inputmode="decimal" autocomplete="off" placeholder="100,00" /></div>
+    </div>
+    <fieldset class="campo">
+      <legend>Esse valor já inclui CBS e IBS?</legend>
+      <div class="opcoes opcoes--linha">
+        <label><input type="radio" name="tipo" value="sem" checked /> Não, é o valor sem os tributos</label>
+        <label><input type="radio" name="tipo" value="com" /> Sim, é o preço final</label>
+      </div>
+    </fieldset>
+    <fieldset class="campo">
+      <legend>Tipo de produto ou serviço</legend>
+      <div class="opcoes">
+        {Object.entries(REDUCOES).map(([k, r], i) => <label><input type="radio" name="reducao" value={k} checked={i === 0} /> <span><strong>{r.rotulo}</strong><br /><small>{r.exemplos}</small></span></label>)}
+      </div>
+    </fieldset>
+    <details class="mais">
+      <summary>Mais opções: alíquota de referência da CBS</summary>
+      <div class="campo">
+        <label for="ref">Alíquota de referência da CBS em 2027 (%)</label>
+        <input id="ref" inputmode="decimal" autocomplete="off" value={ref} />
+        <p class="nota-tabela">{REFORMA.statusCbs}</p>
+      </div>
+    </details>
+  </Fragment>
+
+  <Fragment slot="conteudo">
+    <h2>Cronograma da reforma tributária</h2>
+    <div class="tabela-rolagem">
+      <table>
+        <thead><tr><th scope="col">Ano</th><th scope="col">O que acontece</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">2026</th><td style="white-space: normal">Teste: CBS de 0,9% e IBS de 0,1% destacados na nota e compensados</td></tr>
+          <tr><th scope="row">2027</th><td style="white-space: normal">CBS cobrada; PIS e Cofins extintos; IPI zerado (exceto Zona Franca); começa o Imposto Seletivo</td></tr>
+          <tr><th scope="row">2027 e 2028</th><td style="white-space: normal">IBS de 0,1%; CBS com 0,1 ponto a menos</td></tr>
+          <tr><th scope="row">2029 a 2032</th><td style="white-space: normal">ICMS e ISS caem para 90%, 80%, 70% e 60%; o IBS sobe na mesma medida</td></tr>
+          <tr><th scope="row">2033</th><td style="white-space: normal">ICMS e ISS extintos; novo sistema completo</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>CBS e IBS são cobrados "por fora"</h3>
+    <p>
+      Diferente do ICMS e do PIS/Cofins de hoje, que entram na própria base de cálculo, CBS e IBS são calculados sobre o valor sem eles. Por isso, R$ 100 com CBS de 11,2% e IBS de 0,1% resultam em preço final
+      de R$ 111,30, e os tributos representam 10,15% desse preço.
+    </p>
+    <p>
+      Esta simulação mostra o tributo destacado na venda. Empresas do regime regular descontam os créditos de CBS e IBS pagos nas compras, então o valor recolhido ao governo é menor. Os anos de 2029 em
+      diante dependem de alíquotas que ainda serão fixadas.
+    </p>
+  </Fragment>
+</CalcPagina>
+
+<script>
+  import { $, destaqueHTML, infoHTML, ligarAcoes, mostrar, rodapeHTML, tabelaHTML, topoHTML, estadoURL } from "../../lib/ui/calc-ui";
+  import { ErroCbs, simularCbsIbs } from "../../lib/reforma/cbs-ibs";
+  import { REDUCOES, REFORMA, type Reducao } from "../../data/reforma";
+  import { formatarBRL, lerValor } from "../../lib/dinheiro";
+
+  const form = $<HTMLFormElement>("form");
+  const estado = estadoURL(form, { valor: "v", tipo: "t", reducao: "r", ref: "a" });
+  const pct = (x: number, c = 2) => `${(x * 100).toFixed(c).replace(".", ",")}%`;
+
+  function atualizar() {
+    estado.salvar();
+    const valor = lerValor($<HTMLInputElement>("valor").value);
+    if (!(valor > 0)) return mostrar(null, { vazio: "Informe o valor do produto ou serviço." });
+    try {
+      const reducao = form.querySelector<HTMLInputElement>("input[name=reducao]:checked")!.value as Reducao;
+      const tipo = form.querySelector<HTMLInputElement>("input[name=tipo]:checked")!.value as "sem" | "com";
+      const refTexto = $<HTMLInputElement>("ref").value;
+      const referencia = refTexto ? lerValor(refTexto) / 100 : REFORMA.cbsReferencia2027;
+      const anos = simularCbsIbs({ valor, valorInformado: tipo, reducao, cbsReferencia: referencia });
+      const a27 = anos[1];
+      const html =
+        topoHTML("CBS e IBS no preço", `${REDUCOES[reducao].rotulo}, CBS de referência ${pct(referencia, 1)}`) +
+        tabelaHTML(
+          ["", "2026 (teste)", "2027", "2028"],
+          [
+            ["Valor sem tributos", ...anos.map((a) => formatarBRL(a.base))],
+            ["CBS", ...anos.map((a) => `${formatarBRL(a.cbs)}`)],
+            ["Alíquota CBS", ...anos.map((a) => pct(a.aliqCbs))],
+            ["IBS", ...anos.map((a) => formatarBRL(a.ibs))],
+            ["Preço final", ...anos.map((a) => formatarBRL(a.precoFinal))],
+            ["Peso no preço", ...anos.map((a) => pct(a.cargaNoPreco))],
+          ],
+        ) +
+        destaqueHTML("CBS + IBS em 2027", a27.total) +
+        infoHTML(
+          ["Em 2026, os valores são só destacados na nota e compensados com PIS e Cofins.", "Em 2027, PIS e Cofins deixam de existir e a CBS passa a ser cobrada."],
+          [REFORMA.statusCbs],
+        ) +
+        rodapeHTML("Valor destacado na venda, antes dos créditos das compras. Não inclui ICMS, ISS, IPI nem o Imposto Seletivo.");
+      mostrar(html, {
+        barra: { rotulo: "CBS + IBS 2027", valor: a27.total },
+        compartilhar: {
+          titulo: "Simulei a CBS da reforma tributária",
+          detalhe: REDUCOES[reducao].rotulo,
+          itens: [
+            { rotulo: "Valor sem tributos", valor: a27.base },
+            { rotulo: "CBS + IBS em 2027", valor: a27.total },
+            { rotulo: "Preço final em 2027", valor: a27.precoFinal },
+          ],
+        },
+      });
+    } catch (err) {
+      mostrar(null, { erro: err instanceof ErroCbs ? err.message : "Não foi possível calcular com esses dados." });
+    }
+  }
+
+  form.addEventListener("input", atualizar);
+  form.addEventListener("change", atualizar);
+  form.addEventListener("submit", (e) => e.preventDefault());
+  ligarAcoes();
+  estado.ler();
+  atualizar();
+</script>

@@ -87,9 +87,9 @@ export const CATEGORIAS: Categoria[] = [
   {
     slug: "reforma-tributaria",
     nome: "Reforma tributária",
-    descricao: "A CBS começa em 1º de janeiro de 2027 e substitui PIS e Cofins.",
+    descricao: "A CBS começa a ser cobrada em 1º de janeiro de 2027 e substitui o PIS e a Cofins. O IBS substitui o ICMS e o ISS entre 2029 e 2033.",
     calculadoras: [
-      { titulo: "CBS e IBS no preço", resumo: "Quanto de imposto em cada ano da transição", busca: ["cbs", "ibs", "iva"] },
+      { titulo: "CBS e IBS no preço", resumo: "Quanto de CBS e IBS em 2026, 2027 e 2028", url: "/reforma-tributaria/cbs-ibs-no-preco/", busca: ["cbs", "ibs", "iva", "reforma tributaria", "imposto", "pis", "cofins"] },
     ],
   },
 ];
