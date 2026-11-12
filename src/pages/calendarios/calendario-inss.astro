@@ -1,0 +1,126 @@
+---
+import CalcPagina from "../../components/CalcPagina.astro";
+import { CALENDARIOS } from "../../data/calendarios";
+import { dataCurta, MESES } from "../../lib/calendario/pagamentos";
+
+const tabela = CALENDARIOS.inss[2026];
+const finais = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
+const curta = (d: string) => dataCurta(d, false) + (d.startsWith("2027") ? "/27" : "");
+
+const perguntas = [
+  {
+    p: "Como sei o final do meu benefício?",
+    r: "É o último número antes do traço no número do benefício (NB). Em 123.456.789-0, o final é 9: o 0 depois do traço é só o dígito verificador. O número está no cartão do benefício, no extrato de pagamento e no aplicativo Meu INSS.",
+  },
+  {
+    p: "Por que quem ganha mais de um salário mínimo recebe depois?",
+    r: "O INSS paga primeiro os benefícios de até um salário mínimo (R$ 1.621,00 em 2026), nos últimos dias úteis do mês. Os demais começam nos primeiros dias úteis do mês seguinte, em pares de finais: 1 e 6, 2 e 7, 3 e 8, 4 e 9, 5 e 0.",
+  },
+  {
+    p: "O calendário vale para BPC/Loas, auxílios e pensões?",
+    r: "Sim. Aposentadorias, pensões, auxílios e o BPC seguem a mesma tabela, pelo final do benefício e pela faixa de valor.",
+  },
+  {
+    p: "Quando sai o calendário do INSS de 2027?",
+    r: "O de 2026 foi divulgado em 17 de dezembro de 2025. O de 2027 deve sair em meados de dezembro de 2026, e esta página é atualizada assim que ele for publicado.",
+  },
+  {
+    p: "O 13º do INSS ainda vai ser pago em 2026?",
+    r: "Não. Em 2026 o 13º foi antecipado: a primeira parcela saiu com o benefício de abril (24/04 a 08/05) e a segunda com o de maio (25/05 a 08/06). Desconfie de mensagens que prometem uma parcela extra no fim do ano.",
+  },
+];
+---
+
+<CalcPagina
+  titulo="Calendário do INSS 2026: datas de pagamento pelo final do benefício"
+  descricao="Veja quando cai a aposentadoria, pensão ou BPC do INSS pelo final do cartão de benefício. Próximo pagamento, tabela de 2026 e lembrete na agenda do celular."
+  h1="Calendário de pagamento do INSS"
+  apoio="Escolha o final do seu benefício e a faixa de valor. Você vê o próximo depósito e pode colocar as datas na agenda do celular."
+  categoria="calendarios"
+  caminho="/calendarios/calendario-inss/"
+  nomeApp="Calendário de pagamento do INSS 2026"
+  perguntas={perguntas}
+>
+  <Fragment slot="form">
+    <fieldset class="campo">
+      <legend>Final do benefício (o último número antes do traço)</legend>
+      <div class="opcoes opcoes--linha finais">
+        {finais.map((f) => <label><input type="radio" name="final" value={f} /> {f}</label>)}
+      </div>
+      <p class="ajuda">No número 123.456.789-0, o final é 9.</p>
+    </fieldset>
+    <fieldset class="campo">
+      <legend>Quanto você recebe</legend>
+      <div class="opcoes">
+        <label><input type="radio" name="faixa" value="piso" checked /> Até 1 salário mínimo (R$ 1.621,00)</label>
+        <label><input type="radio" name="faixa" value="acima" /> Mais de 1 salário mínimo</label>
+      </div>
+    </fieldset>
+  </Fragment>
+
+  <Fragment slot="conteudo">
+    <h2>Tabela do INSS 2026: até 1 salário mínimo</h2>
+    <p>O mês da linha é o mês de competência. Os primeiros finais recebem no fim do próprio mês; os últimos, no começo do mês seguinte.</p>
+    <div class="tabela-rolagem">
+      <table class="calendario-tabela">
+        <thead><tr><th scope="col">Mês</th>{finais.map((f) => <th scope="col">{f}</th>)}</tr></thead>
+        <tbody>
+          {Object.entries(tabela).map(([m, datas]) => (
+            <tr><th scope="row">{MESES[Number(m) - 1]}</th>{datas.map((d) => <td>{curta(d)}</td>)}</tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <h2>Tabela do INSS 2026: acima de 1 salário mínimo</h2>
+    <div class="tabela-rolagem">
+      <table class="calendario-tabela">
+        <thead><tr><th scope="col">Mês</th><th scope="col">1 e 6</th><th scope="col">2 e 7</th><th scope="col">3 e 8</th><th scope="col">4 e 9</th><th scope="col">5 e 0</th></tr></thead>
+        <tbody>
+          {Object.entries(tabela).map(([m, datas]) => (
+            <tr><th scope="row">{MESES[Number(m) - 1]}</th>{datas.slice(5).map((d) => <td>{curta(d)}</td>)}</tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p>Fonte: {CALENDARIOS.inss.fonte}. Datas conferidas em {CALENDARIOS.atualizadoEm.split("-").reverse().join("/")}.</p>
+  </Fragment>
+</CalcPagina>
+
+<script>
+  import { $, estadoURL, ligarAcoes, mostrar } from "../../lib/ui/calc-ui";
+  import { datasINSS, type FaixaINSS } from "../../lib/calendario/pagamentos";
+  import { ligarAgenda, mostrarCalendario } from "../../lib/calendario/ui";
+  import { CALENDARIOS } from "../../data/calendarios";
+
+  const form = $<HTMLFormElement>("form");
+  const estado = estadoURL(form, { final: "f", faixa: "v" });
+  const marcado = (n: string) => form.querySelector<HTMLInputElement>(`input[name=${n}]:checked`)?.value;
+
+  function atualizar() {
+    estado.salvar();
+    const f = marcado("final");
+    if (f === undefined) return mostrar(null, { vazio: "Escolha o final do seu benefício." });
+    const final = Number(f);
+    const faixa = (marcado("faixa") ?? "piso") as FaixaINSS;
+    const par = faixa === "acima" ? (final >= 1 && final <= 5 ? `${final} e ${final + 5}` : `${final === 0 ? 5 : final - 5} e ${final}`) : String(final);
+    mostrarCalendario({
+      titulo: "INSS",
+      sub: `Final ${par}, ${faixa === "piso" ? "até 1 salário mínimo" : "acima de 1 salário mínimo"}`,
+      lista: datasINSS(final, faixa),
+      rotuloColuna: "Competência",
+      avisos: [
+        "Vale para aposentadorias, pensões, auxílios e BPC.",
+        "Se o depósito não aparecer na data, confira o extrato no Meu INSS ou ligue 135.",
+      ],
+      rodape: `Fonte: ${CALENDARIOS.inss.fonte}. Atualizado em ${CALENDARIOS.atualizadoEm.split("-").reverse().join("/")}.`,
+      arquivo: `inss-final-${final}.ics`,
+    });
+  }
+
+  form.addEventListener("change", atualizar);
+  form.addEventListener("submit", (e) => e.preventDefault());
+  ligarAcoes();
+  ligarAgenda();
+  estado.ler();
+  atualizar();
+</script>

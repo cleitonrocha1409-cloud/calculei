@@ -1,0 +1,109 @@
+---
+import CalcPagina from "../../components/CalcPagina.astro";
+import { CALENDARIOS } from "../../data/calendarios";
+import { dataCurta, MESES } from "../../lib/calendario/pagamentos";
+
+const pares = [[1], [2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12]];
+const nomes = (ms: number[]) => ms.map((m) => MESES[m - 1]).join(" e ");
+
+const perguntas = [
+  {
+    p: "Quem tem direito ao abono salarial?",
+    r: "Quem trabalhou com carteira assinada pelo menos 30 dias no ano-base, ganhou em média até o limite fixado para aquele ano (R$ 2.765,92 no abono de 2026), está inscrito no PIS/Pasep há pelo menos 5 anos e teve os dados enviados pelo empregador no eSocial.",
+  },
+  {
+    p: "Qual o valor do abono?",
+    r: "Até um salário mínimo, proporcional aos meses trabalhados no ano-base: cada mês vale 1/12 do salário mínimo do ano do pagamento. Quem trabalhou 6 meses recebe metade.",
+  },
+  {
+    p: "Até quando posso sacar o abono de 2026?",
+    r: "Até 30 de dezembro de 2026, para todos os meses de nascimento. Depois disso, o valor só pode ser pedido por convocação ou recurso ao Ministério do Trabalho.",
+  },
+  {
+    p: "O calendário de 2027 já saiu?",
+    r: "O Codefat passou a usar uma regra fixa: o pagamento sai no dia 15 do mês (ou no dia útil seguinte), de fevereiro a agosto, pelo mês de nascimento. As datas de 2027 desta página seguem essa regra e são confirmadas assim que o calendário oficial for publicado.",
+  },
+  {
+    p: "E o Pasep, de servidores públicos?",
+    r: "O Pasep é pago pelo Banco do Brasil e segue o número final da inscrição, não o mês de nascimento. Confira a data no app Carteira de Trabalho Digital ou no Banco do Brasil.",
+  },
+];
+---
+
+<CalcPagina
+  titulo="Calendário do PIS 2026 e 2027: abono salarial pelo mês de nascimento"
+  descricao="Veja quando cai o abono salarial PIS pelo mês de nascimento, o prazo para sacar o de 2026 e a previsão de 2027, com lembrete na agenda do celular."
+  h1="Calendário do PIS (abono salarial)"
+  apoio="Escolha o mês em que você nasceu. Você vê a data do abono, o prazo de saque e a previsão do próximo ano."
+  categoria="calendarios"
+  caminho="/calendarios/calendario-pis/"
+  nomeApp="Calendário do abono salarial PIS"
+  perguntas={perguntas}
+>
+  <Fragment slot="form">
+    <div class="campo">
+      <label for="mes">Mês de nascimento</label>
+      <select id="mes">
+        <option value="">Escolha o mês</option>
+        {MESES.map((m, i) => <option value={i + 1}>{m.charAt(0).toUpperCase() + m.slice(1)}</option>)}
+      </select>
+    </div>
+  </Fragment>
+
+  <Fragment slot="conteudo">
+    <h2>Calendário do PIS por mês de nascimento</h2>
+    <div class="tabela-rolagem">
+      <table class="calendario-tabela">
+        <thead><tr><th scope="col">Nascidos em</th><th scope="col">Abono 2026</th><th scope="col">Abono 2027 (previsão)</th></tr></thead>
+        <tbody>
+          {pares.map((ms) => (
+            <tr><th scope="row">{nomes(ms)}</th><td>{dataCurta(CALENDARIOS.pis[2026][ms[0]])}</td><td>{dataCurta(CALENDARIOS.pis[2027][ms[0]])}</td></tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p>Prazo para sacar o abono de 2026: 30/12/2026. As datas de 2027 seguem a regra fixa do Codefat (dia 15 ou o dia útil seguinte) e serão confirmadas quando o calendário oficial for publicado.</p>
+  </Fragment>
+</CalcPagina>
+
+<script>
+  import { $, estadoURL, ligarAcoes, mostrar } from "../../lib/ui/calc-ui";
+  import { dataPIS, MESES } from "../../lib/calendario/pagamentos";
+  import { ligarAgenda, mostrarCalendario } from "../../lib/calendario/ui";
+  import { CALENDARIOS } from "../../data/calendarios";
+
+  const form = $<HTMLFormElement>("form");
+  const estado = estadoURL(form, { mes: "m" });
+
+  function atualizar() {
+    estado.salvar();
+    const mes = Number($<HTMLSelectElement>("mes").value);
+    if (!mes) return mostrar(null, { vazio: "Escolha o mês em que você nasceu." });
+    mostrarCalendario({
+      titulo: "PIS",
+      sub: `Nascidos em ${MESES[mes - 1]}`,
+      lista: [
+        { rotulo: "Abono 2026 liberado", data: dataPIS(mes, 2026) },
+        { rotulo: "Último dia para sacar o abono 2026", data: CALENDARIOS.pis.prazo2026 },
+        { rotulo: "Abono 2027 (previsão)", data: dataPIS(mes, 2027) },
+      ],
+      rotuloColuna: "Evento",
+      rotuloProximo: "Próxima data",
+      rotuloData: "Data",
+      avisos: [
+        "Confira se você tem direito e o valor no app Carteira de Trabalho Digital ou pelo telefone 158.",
+        "O PIS é pago pela Caixa. Servidores públicos recebem o Pasep pelo Banco do Brasil, pelo final da inscrição.",
+      ],
+      alertas: ["A data de 2027 é uma previsão pela regra fixa do Codefat e será confirmada quando o calendário oficial sair."],
+      rodape: `Fonte: ${CALENDARIOS.pis.fonte}. Atualizado em ${CALENDARIOS.atualizadoEm.split("-").reverse().join("/")}.`,
+      arquivo: `pis-mes-${mes}.ics`,
+    });
+  }
+
+  form.addEventListener("change", atualizar);
+  form.addEventListener("submit", (e) => e.preventDefault());
+  ligarAcoes();
+  ligarAgenda();
+  estado.ler();
+  atualizar();
+</script>

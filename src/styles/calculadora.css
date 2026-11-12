@@ -607,3 +607,81 @@
       padding: 0.4rem 0.25rem;
     }
   }
+
+  /* Calendários de pagamento */
+  .holerite .proxima {
+    margin: 1rem 0 0.25rem;
+    padding: 1rem;
+    border-radius: var(--raio);
+    background: var(--marca-texto);
+  }
+  .holerite .proxima span {
+    display: block;
+    font: 600 0.9rem var(--texto);
+  }
+  .holerite .proxima strong {
+    display: block;
+    font: 700 1.9rem/1.15 var(--titulo);
+    margin-top: 0.15rem;
+  }
+  .holerite .proxima small {
+    font-size: 0.95rem;
+  }
+  .botao-agenda {
+    display: block;
+    width: 100%;
+    margin: 1rem 0 0.5rem;
+    min-height: 48px;
+    font: 600 1rem var(--texto);
+    border-radius: 8px;
+    border: 0;
+    background: var(--carteira);
+    color: #fff;
+    cursor: pointer;
+  }
+  .botao-agenda:hover {
+    background: var(--carteira-escuro);
+  }
+  table.mini tr.passou {
+    color: var(--tinta-2);
+    opacity: 0.6;
+  }
+  @media print {
+    .botao-agenda {
+      display: none;
+    }
+  }
+  .opcoes.finais {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+  .opcoes.finais label {
+    position: relative;
+    justify-content: center;
+    font: 700 1.3rem var(--titulo);
+    padding: 0.5rem 0;
+  }
+  .opcoes.finais input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .opcoes.finais label:has(input:focus-visible) {
+    outline: 3px solid var(--carteira);
+    outline-offset: 2px;
+  }
+  .opcoes.finais label:has(input:checked) {
+    background: var(--carteira);
+    color: #fff;
+  }
+  .ajuda {
+    margin: 0.5rem 0 0;
+    font-size: 0.9rem;
+    color: var(--tinta-2);
+  }
+  .calendario-tabela {
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
+  .calendario-tabela th[scope="row"] {
+    text-transform: capitalize;
+  }

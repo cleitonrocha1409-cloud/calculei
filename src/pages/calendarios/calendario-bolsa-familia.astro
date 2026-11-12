@@ -1,0 +1,99 @@
+---
+import CalcPagina from "../../components/CalcPagina.astro";
+import { CALENDARIOS } from "../../data/calendarios";
+import { dataCurta, MESES } from "../../lib/calendario/pagamentos";
+
+const tabela = CALENDARIOS.bolsa[2026];
+const finais = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
+
+const perguntas = [
+  {
+    p: "Como sei o final do meu NIS?",
+    r: "É o último número do NIS (Número de Identificação Social), que aparece no cartão do Bolsa Família, no aplicativo Bolsa Família e no Caixa Tem. Diferente do INSS, aqui vale o último número mesmo.",
+  },
+  {
+    p: "Quando o Bolsa Família é pago?",
+    r: "Nos últimos 10 dias úteis de cada mês, começando pelo NIS final 1 e terminando no final 0. Em dezembro o calendário é antecipado e termina antes do Natal: em 2026, de 10 a 23 de dezembro.",
+  },
+  {
+    p: "Minha cidade está em calamidade. Muda alguma coisa?",
+    r: "Sim. Em municípios em situação de emergência ou calamidade reconhecida pelo Governo Federal, todas as famílias recebem no primeiro dia do calendário do mês, independentemente do final do NIS.",
+  },
+  {
+    p: "Quando sai o calendário de 2027?",
+    r: "O de 2026 foi definido em dezembro de 2025. O de 2027 deve ser publicado pelo Ministério do Desenvolvimento Social em dezembro de 2026, e esta página é atualizada assim que sair.",
+  },
+];
+---
+
+<CalcPagina
+  titulo="Calendário do Bolsa Família 2026: datas pelo final do NIS"
+  descricao="Veja quando cai o Bolsa Família pelo final do NIS: próximo pagamento, tabela completa de 2026 e lembrete na agenda do celular."
+  h1="Calendário do Bolsa Família"
+  apoio="Escolha o último número do seu NIS. Você vê o próximo depósito e pode colocar as datas na agenda do celular."
+  categoria="calendarios"
+  caminho="/calendarios/calendario-bolsa-familia/"
+  nomeApp="Calendário do Bolsa Família 2026"
+  perguntas={perguntas}
+>
+  <Fragment slot="form">
+    <fieldset class="campo">
+      <legend>Último número do NIS</legend>
+      <div class="opcoes opcoes--linha finais">
+        {finais.map((f) => <label><input type="radio" name="final" value={f} /> {f}</label>)}
+      </div>
+      <p class="ajuda">O NIS está no cartão do programa e no aplicativo Caixa Tem.</p>
+    </fieldset>
+    <label class="marcar"><input type="checkbox" id="calamidade" /> Minha cidade está em situação de calamidade</label>
+  </Fragment>
+
+  <Fragment slot="conteudo">
+    <h2>Tabela do Bolsa Família 2026</h2>
+    <div class="tabela-rolagem">
+      <table class="calendario-tabela">
+        <thead><tr><th scope="col">Mês</th>{finais.map((f) => <th scope="col">{f}</th>)}</tr></thead>
+        <tbody>
+          {Object.entries(tabela).map(([m, datas]) => (
+            <tr><th scope="row">{MESES[Number(m) - 1]}</th>{datas.map((d) => <td>{dataCurta(d, false)}</td>)}</tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p>Fonte: {CALENDARIOS.bolsa.fonte}. Datas conferidas em {CALENDARIOS.atualizadoEm.split("-").reverse().join("/")}.</p>
+  </Fragment>
+</CalcPagina>
+
+<script>
+  import { $, estadoURL, ligarAcoes, mostrar } from "../../lib/ui/calc-ui";
+  import { datasBolsa } from "../../lib/calendario/pagamentos";
+  import { ligarAgenda, mostrarCalendario } from "../../lib/calendario/ui";
+  import { CALENDARIOS } from "../../data/calendarios";
+
+  const form = $<HTMLFormElement>("form");
+  const estado = estadoURL(form, { final: "f", calamidade: "c" });
+
+  function atualizar() {
+    estado.salvar();
+    const f = form.querySelector<HTMLInputElement>("input[name=final]:checked")?.value;
+    if (f === undefined) return mostrar(null, { vazio: "Escolha o último número do seu NIS." });
+    const final = Number(f);
+    const calamidade = $<HTMLInputElement>("calamidade").checked;
+    mostrarCalendario({
+      titulo: "Bolsa Família",
+      sub: calamidade ? `NIS final ${final}, cidade em calamidade` : `NIS final ${final}`,
+      lista: datasBolsa(calamidade ? 1 : final),
+      rotuloColuna: "Mês",
+      avisos: ["O valor fica disponível no Caixa Tem a partir do dia do depósito.", "Dúvidas: Atendimento Caixa ao Cidadão, 111, ou Disque Social 121."],
+      alertas: calamidade ? ["Em cidades em calamidade reconhecida, todas as famílias recebem no primeiro dia do calendário."] : [],
+      rodape: `Fonte: ${CALENDARIOS.bolsa.fonte}. Atualizado em ${CALENDARIOS.atualizadoEm.split("-").reverse().join("/")}.`,
+      arquivo: `bolsa-familia-nis-${final}.ics`,
+    });
+  }
+
+  form.addEventListener("change", atualizar);
+  form.addEventListener("submit", (e) => e.preventDefault());
+  ligarAcoes();
+  ligarAgenda();
+  estado.ler();
+  atualizar();
+</script>

@@ -51,6 +51,7 @@ export interface Compartilhar {
   titulo: string; // ex.: "Simulei minha rescisão"
   detalhe?: string; // ex.: "Demissão sem justa causa"
   itens: { rotulo: string; valor: number | string }[];
+  chamada?: string; // padrão: "Veja a conta completa, linha por linha:"
 }
 
 /** Mensagem do WhatsApp: valores em negrito, link e assinatura do site. */
@@ -61,7 +62,7 @@ export function textoWhatsApp(c: Compartilhar, url: string) {
     "",
     ...c.itens.map((i) => `▸ ${i.rotulo}: *${typeof i.valor === "number" ? formatarBRL(i.valor) : i.valor}*`),
     "",
-    "Veja a conta completa, linha por linha:",
+    c.chamada ?? "Veja a conta completa, linha por linha:",
     url,
     "",
     "Calculei: faça a sua conta em segundos, grátis.",

@@ -43,6 +43,16 @@ export const CATEGORIAS: Categoria[] = [
     ],
   },
   {
+    slug: "calendarios",
+    nome: "Calendários de pagamento",
+    descricao: "Quando cai o INSS, o Bolsa Família e o PIS pelo final do seu cartão, NIS ou mês de nascimento, com lembrete na agenda do celular.",
+    calculadoras: [
+      { titulo: "Calendário do INSS", resumo: "Aposentadoria e pensão pelo final do benefício", url: "/calendarios/calendario-inss/", busca: ["inss", "aposentadoria", "pensão", "bpc", "loas", "pagamento", "final do cartão", "benefício"] },
+      { titulo: "Calendário do Bolsa Família", resumo: "Datas pelo final do NIS", url: "/calendarios/calendario-bolsa-familia/", busca: ["bolsa familia", "bolsa família", "nis", "caixa tem", "pagamento"] },
+      { titulo: "Calendário do PIS/Pasep", resumo: "Abono salarial pelo mês de nascimento", url: "/calendarios/calendario-pis/", busca: ["pis", "pasep", "abono", "abono salarial"] },
+    ],
+  },
+  {
     slug: "financiamentos",
     nome: "Financiamentos e empréstimos",
     descricao: "Simule parcelas, juros e o custo total antes de assinar.",
