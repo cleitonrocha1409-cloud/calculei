@@ -1,9 +1,10 @@
 ---
 import CalcPagina from "../../components/CalcPagina.astro";
-import { buscarSeries, SERIES } from "../../lib/aluguel/indices";
+import { SERIES } from "../../lib/aluguel/indices";
+import historico from "../../data/indices.json";
 
-// Tenta trazer os índices já na publicação. Se não der, o navegador do visitante busca no Banco Central.
-const series = await buscarSeries(60);
+// Histórico oficial guardado no próprio site (atualizado todo mês). O navegador ainda tenta trazer meses mais novos.
+const series = historico.series;
 
 const perguntas = [
   {
@@ -51,7 +52,7 @@ const perguntas = [
         {Object.entries(SERIES).map(([k, s], i) => <label><input type="radio" name="indice" value={k} checked={i === 0} /> {s.nome}</label>)}
         <label><input type="radio" name="indice" value="outro" /> Outro percentual</label>
       </div>
-      <p class="status-indices" id="status" aria-live="polite">Buscando os índices no Banco Central…</p>
+      <p class="status-indices" id="status" aria-live="polite"></p>
       <button type="button" class="tentar" id="tentar" hidden>Tentar de novo</button>
     </fieldset>
     <fieldset class="campo" id="campo-periodo">
@@ -115,7 +116,7 @@ const perguntas = [
 <script>
   import { $, destaqueHTML, infoHTML, ligarAcoes, mostrar, parHTML, rodapeHTML, tabelaHTML, topoHTML, estadoURL } from "../../lib/ui/calc-ui";
   import { acumuladoPeriodo, calcularReajuste, nomeMes, nomeMesCurto, somarMeses, ultimos12 } from "../../lib/aluguel/reajuste";
-  import { buscarSeries, buscarSeriesViaSite, SERIES, ultimoMes, type Indice, type Series } from "../../lib/aluguel/indices";
+  import { buscarSeries, buscarSeriesViaSite, mesclar, SERIES, ultimoMes, type Indice, type Series } from "../../lib/aluguel/indices";
   import { formatarBRL, lerValor } from "../../lib/dinheiro";
 
   const form = $<HTMLFormElement>("form");
@@ -129,10 +130,10 @@ const perguntas = [
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
   };
-  // Dados com mais de 2 meses de atraso são considerados desatualizados.
+  // Atualizado = já tem o mês anterior ao atual (o índice de um mês sai no fim dele ou no começo do seguinte).
   const atualizado = (s: Series) => {
     const u = ultimoMes(s);
-    return !!u && u >= somarMeses(mesAtual(), -2);
+    return !!u && u >= somarMeses(mesAtual(), -1);
   };
 
   function lerCache(): Series | null {
@@ -155,7 +156,10 @@ const perguntas = [
   function aplicarDisponibilidade() {
     const tem = Object.keys(series).length > 0;
     form.querySelectorAll<HTMLInputElement>("input[name=indice]").forEach((r) => {
-      if (r.value !== "outro") r.disabled = !series[r.value as Indice];
+      if (r.value !== "outro") {
+        r.disabled = !series[r.value as Indice];
+        r.closest("label")!.hidden = r.disabled;
+      }
     });
     const marcado = form.querySelector<HTMLInputElement>("input[name=indice]:checked");
     if (!tem || (marcado && marcado.disabled)) {
@@ -165,7 +169,7 @@ const perguntas = [
     const u = ultimoMes(series);
     if (tem && u) {
       status.className = "status-indices";
-      status.textContent = `Índices oficiais do Banco Central, divulgados até ${nomeMes(u)}.`;
+      status.textContent = `Índices oficiais (FGV e IBGE), atualizados até ${nomeMes(u)}.`;
       $("tentar").hidden = true;
     } else {
       status.className = "status-indices erro-indices";
@@ -175,22 +179,25 @@ const perguntas = [
   }
 
   async function carregar() {
-    status.className = "status-indices";
-    status.textContent = "Buscando os índices no Banco Central…";
-    $("tentar").hidden = true;
-    const doBuild = JSON.parse($("series-build").textContent || "{}") as Series;
-    const cache = lerCache();
-    if (atualizado(doBuild)) series = doBuild;
-    else if (cache && atualizado(cache)) series = cache;
-    else {
-      // 1º pela rota do site; se não vier nada, direto do navegador no Banco Central.
-      let novas = await buscarSeriesViaSite();
-      if (!Object.keys(novas).length) novas = await buscarSeries(60);
-      series = Object.keys(novas).length ? novas : Object.keys(doBuild).length ? doBuild : cache ?? {};
-      if (Object.keys(novas).length) gravarCache(novas);
-    }
+    // 1) Histórico guardado no site: as opções ficam disponíveis na hora.
+    const doSite = JSON.parse($("series-build").textContent || "{}") as Series;
+    series = doSite;
     aplicarDisponibilidade();
     atualizar();
+    if (atualizado(doSite)) return;
+    // 2) Se houver mês mais novo divulgado, tenta trazer: cache, rota do site e Banco Central direto.
+    const cache = lerCache();
+    let novas: Series = cache ?? {};
+    if (!cache) {
+      novas = await buscarSeriesViaSite();
+      if (!Object.keys(novas).length) novas = await buscarSeries(24);
+      if (Object.keys(novas).length) gravarCache(novas);
+    }
+    if (Object.keys(novas).length) {
+      series = mesclar(doSite, novas);
+      aplicarDisponibilidade();
+      atualizar();
+    }
   }
 
   function atualizar() {

@@ -103,3 +103,20 @@ describe("período escolhido pelo usuário", () => {
     expect(ultimos12(s)).toEqual({ de: "2025-11", ate: "2026-10" });
   });
 });
+
+import { mesclar } from "../src/lib/aluguel/indices";
+import historico from "../src/data/indices.json";
+describe("histórico guardado no site", () => {
+  it("IGP-M nov/2025 a out/2026 bate com o publicado pela FGV (5,24%)", () => {
+    const a = acumuladoPeriodo(historico.series.igpm, "2025-11", "2026-10")!;
+    expect(Math.abs(a.percentual * 100 - 5.24)).toBeLessThan(0.02);
+  });
+  it("IPCA de 2025 bate com o IBGE (4,26%)", () => {
+    const a = acumuladoPeriodo(historico.series.ipca, "2025-01", "2025-12")!;
+    expect(Math.abs(a.percentual * 100 - 4.26)).toBeLessThan(0.02);
+  });
+  it("mescla meses novos sem perder o histórico", () => {
+    const r = mesclar({ ipca: [{ mes: "2026-09", valor: 0.82 }] }, { ipca: [{ mes: "2026-10", valor: 0.2 }] });
+    expect(r.ipca).toEqual([{ mes: "2026-09", valor: 0.82 }, { mes: "2026-10", valor: 0.2 }]);
+  });
+});

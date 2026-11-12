@@ -79,6 +79,17 @@ export async function buscarSeriesViaSite(): Promise<Series> {
   }
 }
 
+/** Junta duas fontes: a mais nova prevalece mês a mês e acrescenta os meses que faltam. */
+export function mesclar(base: Series, novas: Series): Series {
+  const r: Series = { ...base };
+  for (const k of Object.keys(novas) as Indice[]) {
+    const mapa = new Map((base[k] ?? []).map((p) => [p.mes, p.valor]));
+    for (const p of novas[k] ?? []) mapa.set(p.mes, p.valor);
+    r[k] = [...mapa.entries()].map(([mes, valor]) => ({ mes, valor })).sort((a, b) => a.mes.localeCompare(b.mes));
+  }
+  return r;
+}
+
 /** Último mês disponível entre as séries (para saber se os dados estão atualizados). */
 export function ultimoMes(series: Series): string | null {
   const meses = Object.values(series)
