@@ -1,4 +1,4 @@
-# Calculei (nome provisório)
+# Cálculo em Dia (calculoemdia.com.br)
 
 Site de calculadoras trabalhistas, financeiras e de aluguel, com foco no fim da escala 6x1.
 

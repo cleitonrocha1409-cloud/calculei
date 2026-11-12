@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://calculei.com.br/sitemap-index.xml
+Sitemap: https://calculoemdia.com.br/sitemap-index.xml

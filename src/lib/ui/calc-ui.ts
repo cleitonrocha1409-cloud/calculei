@@ -57,7 +57,7 @@ export interface Compartilhar {
 /** Mensagem do WhatsApp: valores em negrito, link e assinatura do site. */
 export function textoWhatsApp(c: Compartilhar, url: string) {
   const linhas = [
-    `🧮 *${c.titulo} no Calculei*`,
+    `🧮 *${c.titulo}, no Cálculo em Dia*`,
     c.detalhe ? `_${c.detalhe}_` : "",
     "",
     ...c.itens.map((i) => `▸ ${i.rotulo}: *${typeof i.valor === "number" ? formatarBRL(i.valor) : i.valor}*`),
@@ -65,7 +65,7 @@ export function textoWhatsApp(c: Compartilhar, url: string) {
     c.chamada ?? "Veja a conta completa, linha por linha:",
     url,
     "",
-    "Calculei: faça a sua conta em segundos, grátis.",
+    "Cálculo em Dia: faça a sua conta em segundos, grátis.",
   ];
   return linhas.filter((l, i, a) => !(l === "" && a[i - 1] === "")).join("\n").replace(/^\n/, "");
 }

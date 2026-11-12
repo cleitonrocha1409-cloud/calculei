@@ -66,7 +66,7 @@ describe("utilitários", () => {
     expect(dataCurta("2026-11-24")).toBe("24/11 (terça)");
   });
   it("arquivo .ics com evento de dia inteiro e aviso", () => {
-    const ics = gerarICS([{ rotulo: "Benefício de novembro", data: "2026-11-24" }], "INSS", "Final 1", "https://calculei.com.br/x/");
+    const ics = gerarICS([{ rotulo: "Benefício de novembro", data: "2026-11-24" }], "INSS", "Final 1", "https://calculoemdia.com.br/x/");
     expect(ics).toContain("DTSTART;VALUE=DATE:20261124");
     expect(ics).toContain("DTEND;VALUE=DATE:20261125");
     expect(ics).toContain("TRIGGER:PT8H");

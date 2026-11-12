@@ -10,7 +10,7 @@ interface Props {
 }
 const { titulo, descricao = SITE.descricao, jsonld = [] } = Astro.props;
 const canonica = new URL(Astro.url.pathname, SITE.dominio).href;
-const tituloCompleto = Astro.url.pathname === "/" ? `${SITE.nome}: calculadoras do dia a dia` : `${titulo} | ${SITE.nome}`;
+const tituloCompleto = Astro.url.pathname === "/" ? `${SITE.nome}: calculadoras trabalhistas, financeiras e do INSS` : `${titulo} | ${SITE.nome}`;
 ---
 
 <!doctype html>
@@ -33,7 +33,7 @@ const tituloCompleto = Astro.url.pathname === "/" ? `${SITE.nome}: calculadoras 
     <a class="pular" href="#conteudo">Pular para o conteúdo</a>
     <header class="topo">
       <div class="envelope topo__linha">
-        <a class="marca" href="/">{SITE.nome}<span aria-hidden="true">=</span></a>
+        <a class="marca" href="/" aria-label={SITE.nome}>{SITE.marca[0]} <span>{SITE.marca[1]}</span></a>
         <nav aria-label="Categorias">
           <ul>
             {CATEGORIAS.map((c) => <li><a href={`/${c.slug}/`}>{c.nome}</a></li>)}
@@ -47,7 +47,7 @@ const tituloCompleto = Astro.url.pathname === "/" ? `${SITE.nome}: calculadoras 
     <footer class="rodape">
       <div class="envelope rodape__grade">
         <div>
-          <p class="marca marca--rodape">{SITE.nome}<span aria-hidden="true">=</span></p>
+          <p class="marca marca--rodape">{SITE.marca[0]} <span>{SITE.marca[1]}</span></p>
           <p>Resultados são simulações e não substituem a orientação de um contador ou advogado.</p>
         </div>
         <ul>
@@ -90,8 +90,11 @@ const tituloCompleto = Astro.url.pathname === "/" ? `${SITE.nome}: calculadoras 
     flex-shrink: 0;
   }
   .marca span {
-    color: var(--marca-texto);
-    margin-left: 2px;
+    background: var(--marca-texto);
+    color: var(--carteira);
+    padding: 0.05em 0.28em 0.1em;
+    border-radius: 3px;
+    margin-left: 0.05em;
   }
   .topo nav {
     overflow-x: auto;

@@ -72,13 +72,13 @@ const escICS = (t: string) => t.replace(/\\/g, "\\\\").replace(/;/g, "\\;").repl
  * Funciona no Google Agenda, no iPhone e no Outlook, sem aplicativo.
  */
 export function gerarICS(eventos: Pagamento[], titulo: string, descricao: string, url: string, carimbo = "20261112T000000Z") {
-  const linhas = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Calculei//Calendario de pagamentos//PT-BR", "CALSCALE:GREGORIAN", "METHOD:PUBLISH"];
+  const linhas = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Calculo em Dia//Calendario de pagamentos//PT-BR", "CALSCALE:GREGORIAN", "METHOD:PUBLISH"];
   for (const e of eventos) {
     const d = e.data.replace(/-/g, "");
     const fim = new Date(Date.UTC(+e.data.slice(0, 4), +e.data.slice(5, 7) - 1, +e.data.slice(8, 10) + 1)).toISOString().slice(0, 10).replace(/-/g, "");
     linhas.push(
       "BEGIN:VEVENT",
-      `UID:${d}-${titulo.toLowerCase().replace(/[^a-z0-9]+/g, "-")}@calculei.com.br`,
+      `UID:${d}-${titulo.toLowerCase().replace(/[^a-z0-9]+/g, "-")}@calculoemdia.com.br`,
       `DTSTAMP:${carimbo}`,
       `DTSTART;VALUE=DATE:${d}`,
       `DTEND;VALUE=DATE:${fim}`,

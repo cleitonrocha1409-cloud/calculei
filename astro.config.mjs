@@ -2,7 +2,7 @@ import { defineConfig } from "astro/config";
 import sitemap from "@astrojs/sitemap";
 
 export default defineConfig({
-  site: "https://calculei.com.br",
+  site: "https://calculoemdia.com.br",
   trailingSlash: "always",
   build: { format: "directory" },
   integrations: [sitemap({ filter: (page) => !page.includes("/404") })],

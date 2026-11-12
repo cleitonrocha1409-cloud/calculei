@@ -1,4 +1,4 @@
-// Worker do Calculei: serve o site estático e a rota /api/indices,
+// Worker do Cálculo em Dia: serve o site estático e a rota /api/indices,
 // que busca os índices de preços no Banco Central e guarda em cache por 6 horas.
 
 const SERIES = { igpm: 189, ipca: 433, inpc: 188, igpdi: 190 };
@@ -15,7 +15,7 @@ async function indices(request, ctx) {
     Object.entries(SERIES).map(async ([nome, codigo]) => {
       try {
         const r = await fetch(`https://api.bcb.gov.br/dados/serie/bcdata.sgs.${codigo}/dados/ultimos/60?formato=json`, {
-          headers: { Accept: "application/json", "User-Agent": "Mozilla/5.0 (compatible; Calculei/1.0; +https://calculei.com.br)" },
+          headers: { Accept: "application/json", "User-Agent": "Mozilla/5.0 (compatible; CalculoEmDia/1.0; +https://calculoemdia.com.br)" },
         });
         if (r.ok) {
           const json = await r.json();
@@ -42,6 +42,11 @@ async function indices(request, ctx) {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    // Endereço único: www.calculoemdia.com.br leva para calculoemdia.com.br (melhor para o Google).
+    if (url.hostname === "www.calculoemdia.com.br") {
+      url.hostname = "calculoemdia.com.br";
+      return Response.redirect(url.toString(), 301);
+    }
     if (url.pathname === "/api/indices" || url.pathname === "/api/indices/") return indices(request, ctx);
     return env.ASSETS.fetch(request);
   },
