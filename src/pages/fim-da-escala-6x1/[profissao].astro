@@ -1,0 +1,135 @@
+---
+import Base from "../../layouts/Base.astro";
+import Selo from "../../components/Selo.astro";
+import "../../styles/calculadora.css";
+import { SITE } from "../../config";
+import { PROFISSOES, type Profissao } from "../../data/profissoes";
+import { formatarBRL } from "../../lib/dinheiro";
+
+export function getStaticPaths() {
+  return PROFISSOES.map((p) => ({ params: { profissao: p.slug }, props: { p } }));
+}
+const { p } = Astro.props as { p: Profissao };
+const caminho = `/fim-da-escala-6x1/${p.slug}/`;
+const s = p.salarioExemplo;
+
+// Valor da hora = salário ÷ divisor (jornada semanal × 5). Hora extra com 50%.
+const linhas = [
+  { periodo: "Hoje, 44h", horas: 44 },
+  { periodo: "Dez/2026, 42h (com acordo)", horas: 42 },
+  { periodo: "Dez/2026, 40h (sem acordo)", horas: 40 },
+  { periodo: "Dez/2027, 40h", horas: 40 },
+].map((l) => ({ ...l, divisor: l.horas * 5, hora: s / (l.horas * 5), extra: (s / (l.horas * 5)) * 1.5 }));
+const aumento = Math.round((220 / 200 - 1) * 100);
+const outras = PROFISSOES.filter((o) => o.slug !== p.slug);
+
+const jsonld = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: p.h1,
+    description: p.descricao,
+    inLanguage: "pt-BR",
+    dateModified: "2026-11-12",
+    publisher: { "@type": "Organization", name: SITE.nome, url: SITE.dominio },
+    mainEntityOfPage: SITE.dominio + caminho,
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: p.perguntas.map((q) => ({ "@type": "Question", name: q.p, acceptedAnswer: { "@type": "Answer", text: q.r } })),
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Início", item: SITE.dominio + "/" },
+      { "@type": "ListItem", position: 2, name: "Fim da escala 6x1", item: `${SITE.dominio}/fim-da-escala-6x1/` },
+      { "@type": "ListItem", position: 3, name: p.nome },
+    ],
+  },
+];
+---
+
+<Base titulo={p.titulo} descricao={p.descricao} jsonld={jsonld}>
+  <div class="envelope cabecalho">
+    <p class="trilha"><a href="/">Início</a> / <a href="/fim-da-escala-6x1/">Fim da escala 6x1</a> / {p.nome}</p>
+    <h1>{p.h1}</h1>
+    <p class="cabecalho__apoio">{p.resposta}</p>
+    <Selo regras="Jornada da EC 141/2026: 42 horas em dezembro de 2026 e 40 horas em dezembro de 2027" />
+  </div>
+
+  <article class="envelope conteudo texto-longo profissao">
+    {
+      p.secoes.map((sec) => (
+        <section>
+          <h2>{sec.h2}</h2>
+          {sec.paragrafos.map((t) => <p>{t}</p>)}
+        </section>
+      ))
+    }
+
+    <h2>Quanto passa a valer a sua hora</h2>
+    <p>
+      {p.escala === "12x36" ? "Para quem tem contrato de 44 horas em 6x1, o" : "O"} salário continua o mesmo e passa a ser dividido por menos horas. Exemplo com salário de {formatarBRL(s)}{" "}
+      (apenas para mostrar a conta). O divisor é a jornada semanal × 5: 220 horas com 44h, 210 com 42h e 200 com 40h.
+    </p>
+    <div class="tabela-rolagem">
+      <table>
+        <thead><tr><th scope="col">Período</th><th scope="col">Hora</th><th scope="col">Hora extra</th></tr></thead>
+        <tbody>
+          {
+            linhas.map((l, i) => (
+              <tr class={i === 0 ? "atual" : undefined}>
+                <th scope="row">{l.periodo}</th>
+                <td>{formatarBRL(l.hora)}</td>
+                <td>{formatarBRL(l.extra)}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+    <p>A hora extra tem acréscimo de 50%. Com 40 horas, a hora fica {aumento}% mais cara para a empresa e mais valiosa para você, sem mudar o salário do mês.</p>
+    <a class="botao-agenda botao-link" href={`/fim-da-escala-6x1/nova-jornada/?s=${s}&j=44&d=6`}>Calcular com o meu salário</a>
+
+    <h2>Perguntas frequentes</h2>
+    {
+      p.perguntas.map((q) => (
+        <details class="faq">
+          <summary>{q.p}</summary>
+          <p>{q.r}</p>
+        </details>
+      ))
+    }
+
+    <h2>Calculadoras do fim da 6x1</h2>
+    <ul class="relacionadas">
+      <li><a href="/fim-da-escala-6x1/nova-jornada/">Minha nova jornada</a>: horas, folgas e valor da hora</li>
+      <li><a href="/trabalhista/calculo-hora-extra/">Hora extra com a nova jornada</a>: 50%, 100% e DSR</li>
+      <li><a href="/fim-da-escala-6x1/montador-de-escala/">Montador de escala 5x2</a>: quantas pessoas a equipe precisa</li>
+      <li><a href="/fim-da-escala-6x1/custo-para-empresa/">Custo para a empresa</a>: hora extra ou contratar?</li>
+    </ul>
+
+    <h2>Outras profissões</h2>
+    <ul class="relacionadas">
+      {outras.map((o) => <li><a href={`/fim-da-escala-6x1/${o.slug}/`}>{o.nome}</a></li>)}
+    </ul>
+  </article>
+</Base>
+
+<style>
+  .profissao {
+    margin-top: 1.5rem;
+  }
+  .profissao .tabela-rolagem th:first-child {
+    white-space: normal;
+  }
+  .botao-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    max-width: 360px;
+  }
+</style>

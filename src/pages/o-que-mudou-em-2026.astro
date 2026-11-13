@@ -1,0 +1,68 @@
+---
+import Texto from "../layouts/Texto.astro";
+import { SITE } from "../config";
+---
+
+<Texto
+  titulo="O que mudou em 2026 nos seus cálculos"
+  descricao="Imposto de renda isento até R$ 5.000, nova tabela do INSS, salário mínimo de R$ 1.621, fim da escala 6x1 e reforma tributária: o que mudou em 2026 e por que outros sites mostram valores diferentes."
+>
+  <p class="lead">
+    Em 2026, o imposto de renda deixou de ser cobrado de quem ganha até R$ 5.000 por mês, a tabela do INSS e o salário mínimo foram reajustados, a escala 6x1 acabou por emenda constitucional e a reforma
+    tributária começou o período de teste. Estas mudanças alteram rescisão, férias, 13º, salário líquido e preços, e todas as calculadoras do {SITE.nome} já as usam.
+  </p>
+
+  <h2>Imposto de renda: isenção até R$ 5.000</h2>
+  <p>
+    Desde janeiro de 2026, a Lei 15.270/2025 dá uma redução no imposto retido que zera o IR de quem recebe até R$ 5.000 no mês. Entre R$ 5.000 e R$ 7.350, a redução diminui aos poucos. Acima de R$ 7.350,
+    vale a tabela progressiva normal. Na rescisão, um saldo de salário de até R$ 5.000 não tem desconto de IR.
+  </p>
+  <p><a href="/trabalhista/salario-liquido/">Calcular o salário líquido</a> · <a href="/trabalhista/calculo-de-rescisao/">Calcular a rescisão</a></p>
+
+  <h2>INSS: nova tabela e teto de R$ 8.475,55</h2>
+  <p>
+    As faixas da contribuição do empregado passaram a ser de 7,5% até R$ 1.621,00; 9% até R$ 2.902,84; 12% até R$ 4.354,27; e 14% até o teto de R$ 8.475,55. O desconto máximo é de R$ 988,09 por mês,
+    mesmo para quem ganha mais.
+  </p>
+
+  <h2>Salário mínimo de R$ 1.621</h2>
+  <p>
+    O salário mínimo de 2026 é de R$ 1.621,00. Ele também é o piso das aposentadorias do INSS e do seguro-desemprego, que vai de R$ 1.621,00 a R$ 2.518,65 por parcela.
+  </p>
+  <p><a href="/trabalhista/seguro-desemprego/">Calcular o seguro-desemprego</a></p>
+
+  <h2>Fim da escala 6x1</h2>
+  <p>
+    A Emenda Constitucional 141/2026 garante dois dias de repouso por semana a partir de 16/12/2026, com jornada máxima de 42 horas, e reduz o limite para 40 horas em 16/12/2027. O salário não pode
+    ser reduzido. Como o mesmo salário passa a pagar menos horas, a hora normal e a hora extra ficam até 10% mais valiosas.
+  </p>
+  <p><a href="/fim-da-escala-6x1/nova-jornada/">Ver a sua nova jornada</a> · <a href="/fim-da-escala-6x1/">Como fica cada profissão</a></p>
+
+  <h2>Aposentadoria: novas exigências de 2026</h2>
+  <p>
+    As regras de transição da Reforma da Previdência sobem todo ano. Em 2026, a regra de pontos exige 93 pontos para mulheres e 103 para homens, e a idade mínima progressiva é de 59 anos e 6 meses
+    para mulheres e 64 anos e 6 meses para homens.
+  </p>
+  <p><a href="/aposentadoria/simulador-de-aposentadoria/">Simular a aposentadoria</a></p>
+
+  <h2>Reforma tributária: ano de teste</h2>
+  <p>
+    Em 2026, a CBS (0,9%) e o IBS (0,1%) aparecem nas notas fiscais apenas como teste, compensados com PIS e Cofins. Em 2027, a CBS passa a ser cobrada de verdade e o PIS e a Cofins acabam.
+  </p>
+  <p><a href="/reforma-tributaria/cbs-ibs-no-preco/">Simular CBS e IBS no preço</a></p>
+
+  <h2>Por que outros sites mostram valores diferentes</h2>
+  <p>
+    Se uma calculadora ainda usa as tabelas de anos anteriores, ela cobra imposto de renda de quem hoje é isento e desconta o INSS com faixas antigas. Outro erro comum é descontar INSS sobre o aviso
+    prévio indenizado, o que não se faz desde a decisão do STJ no Tema 478. Quando o resultado for diferente, confira na memória de cálculo qual tabela foi usada.
+  </p>
+  <p>
+    Cada calculadora do {SITE.nome} mostra as regras que usa e a data da última conferência. A lista completa das tabelas está em <a href="/sobre/#tabelas">Quem somos e metodologia</a>.
+  </p>
+</Texto>
+
+<style>
+  .lead {
+    font-size: 1.1rem;
+  }
+</style>

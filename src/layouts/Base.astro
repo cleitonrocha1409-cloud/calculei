@@ -28,6 +28,23 @@ const tituloCompleto = Astro.url.pathname === "/" ? `${SITE.nome}: calculadoras 
     <meta name="theme-color" content="#1f3b7a" />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%231f3b7a'/><text x='16' y='23' font-size='19' text-anchor='middle' fill='%23ffe27a' font-family='sans-serif' font-weight='700'>=</text></svg>" />
     {jsonld.map((j) => <script type="application/ld+json" set:html={JSON.stringify(j)} />)}
+    <script is:inline define:vars={{ ga4: SITE.ga4 }}>
+      // Consent Mode v2: tudo negado até a pessoa escolher no aviso de cookies.
+      window.dataLayer = window.dataLayer || [];
+      window.gtag = function () { dataLayer.push(arguments); };
+      var escolha = null;
+      try { escolha = localStorage.getItem("cookies"); } catch (e) {}
+      var sim = escolha === "aceito" ? "granted" : "denied";
+      gtag("consent", "default", { ad_storage: sim, ad_user_data: sim, ad_personalization: sim, analytics_storage: sim, wait_for_update: 500 });
+      if (ga4) {
+        var s = document.createElement("script");
+        s.async = true;
+        s.src = "https://www.googletagmanager.com/gtag/js?id=" + ga4;
+        document.head.appendChild(s);
+        gtag("js", new Date());
+        gtag("config", ga4);
+      }
+    </script>
   </head>
   <body>
     <a class="pular" href="#conteudo">Pular para o conteúdo</a>
@@ -51,12 +68,42 @@ const tituloCompleto = Astro.url.pathname === "/" ? `${SITE.nome}: calculadoras 
           <p>Resultados são simulações e não substituem a orientação de um contador ou advogado.</p>
         </div>
         <ul>
+          <li><a href="/o-que-mudou-em-2026/">O que mudou em 2026</a></li>
           <li><a href="/sobre/">Quem somos e metodologia</a></li>
           <li><a href="/privacidade/">Política de privacidade</a></li>
           <li><a href="/termos/">Termos de uso</a></li>
+          <li><button type="button" class="link-cookies" data-abrir-cookies>Preferências de cookies</button></li>
         </ul>
       </div>
     </footer>
+    <div class="cookies" id="cookies" role="dialog" aria-label="Aviso de cookies" hidden>
+      <p>
+        Usamos cookies para medir a audiência e, no futuro, exibir anúncios. Os valores que você digita nas calculadoras não saem do seu aparelho. <a href="/privacidade/">Saiba mais</a>
+      </p>
+      <div class="cookies__botoes">
+        <button type="button" data-cookies="recusado">Recusar</button>
+        <button type="button" data-cookies="aceito" class="cookies__aceitar">Aceitar</button>
+      </div>
+    </div>
+    <script is:inline>
+      (function () {
+        var caixa = document.getElementById("cookies");
+        var ler = function () { try { return localStorage.getItem("cookies"); } catch (e) { return null; } };
+        if (!ler()) caixa.hidden = false;
+        caixa.addEventListener("click", function (ev) {
+          var b = ev.target.closest("[data-cookies]");
+          if (!b) return;
+          var v = b.getAttribute("data-cookies");
+          try { localStorage.setItem("cookies", v); } catch (e) {}
+          var sim = v === "aceito" ? "granted" : "denied";
+          gtag("consent", "update", { ad_storage: sim, ad_user_data: sim, ad_personalization: sim, analytics_storage: sim });
+          caixa.hidden = true;
+        });
+        document.addEventListener("click", function (ev) {
+          if (ev.target.closest("[data-abrir-cookies]")) { caixa.hidden = false; caixa.querySelector("button").focus(); }
+        });
+      })();
+    </script>
   </body>
 </html>
 
@@ -159,5 +206,54 @@ const tituloCompleto = Astro.url.pathname === "/" ? `${SITE.nome}: calculadoras 
     .rodape__grade {
       grid-template-columns: 1fr;
     }
+  }
+  .link-cookies {
+    background: none;
+    border: 0;
+    padding: 0;
+    font: inherit;
+    color: inherit;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  .cookies {
+    position: fixed;
+    left: 1rem;
+    right: 1rem;
+    bottom: 1rem;
+    z-index: 30;
+    max-width: 560px;
+    margin: 0 auto;
+    background: var(--papel);
+    border: 1px solid var(--linha);
+    border-radius: var(--raio);
+    box-shadow: 0 6px 24px rgba(22, 32, 42, 0.18);
+    padding: 1rem 1.1rem;
+    font-size: 0.92rem;
+    color: var(--tinta);
+  }
+  .cookies[hidden] {
+    display: none;
+  }
+  .cookies p {
+    margin: 0 0 0.8rem;
+  }
+  .cookies__botoes {
+    display: flex;
+    gap: 0.6rem;
+    justify-content: flex-end;
+  }
+  .cookies__botoes button {
+    font: 600 0.95rem var(--texto);
+    padding: 0.55rem 1.2rem;
+    border-radius: 8px;
+    border: 1px solid var(--carteira);
+    background: var(--papel);
+    color: var(--carteira);
+    cursor: pointer;
+  }
+  .cookies__botoes .cookies__aceitar {
+    background: var(--carteira);
+    color: #fff;
   }
 </style>

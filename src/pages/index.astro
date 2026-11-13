@@ -21,6 +21,10 @@ const jsonld = [{ "@context": "https://schema.org", "@type": "WebSite", name: SI
   </section>
 
   <div class="envelope aviso-6x1">
+    <p class="aviso-13" data-ate="2026-12-18">
+      <strong>13º salário: a 1ª parcela sai até 30/11 e a 2ª até 18/12.</strong> Veja quanto você recebe em cada uma, já com INSS e IR.{" "}
+      <a href="/trabalhista/calculo-decimo-terceiro/">Calcular o 13º</a>
+    </p>
     <p>
       <strong>A jornada máxima cai para 42 horas em dezembro.</strong> Veja como fica o seu valor-hora, a hora extra e a escala com o fim da 6x1.{" "}
       <a href="/fim-da-escala-6x1/">Calculadoras do fim da 6x1</a>
@@ -59,6 +63,11 @@ const jsonld = [{ "@context": "https://schema.org", "@type": "WebSite", name: SI
 </Base>
 
 <script>
+  // Esconde avisos com prazo vencido (a página é estática).
+  const hoje = new Date().toISOString().slice(0, 10);
+  document.querySelectorAll<HTMLElement>("[data-ate]").forEach((el) => {
+    if (hoje > el.dataset.ate!) el.hidden = true;
+  });
   const campo = document.getElementById("busca") as HTMLInputElement;
   const vazio = document.getElementById("busca-vazio")!;
   const norm = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
@@ -121,6 +130,13 @@ const jsonld = [{ "@context": "https://schema.org", "@type": "WebSite", name: SI
     padding: 1rem 1.25rem;
     margin: 0;
     max-width: 760px;
+  }
+  .aviso-6x1 {
+    display: grid;
+    gap: 0.75rem;
+  }
+  .aviso-13 {
+    background: var(--carteira-claro) !important;
   }
   .aviso-6x1 a {
     color: var(--tinta);

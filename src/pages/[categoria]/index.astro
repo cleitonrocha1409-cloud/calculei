@@ -1,6 +1,7 @@
 ---
 import Base from "../../layouts/Base.astro";
 import { CATEGORIAS, type Categoria } from "../../data/catalogo";
+import { PROFISSOES } from "../../data/profissoes";
 
 export function getStaticPaths() {
   return CATEGORIAS.map((c) => ({ params: { categoria: c.slug }, props: { c } }));
@@ -32,10 +33,30 @@ const { c } = Astro.props as { c: Categoria };
         ))
       }
     </ul>
+    {
+      c.slug === "fim-da-escala-6x1" && (
+        <>
+          <h2 class="sub">Como fica a sua profissão</h2>
+          <ul class="lista">
+            {PROFISSOES.map((p) => (
+              <li>
+                <a href={`/fim-da-escala-6x1/${p.slug}/`}>
+                  <strong>{p.nome}</strong>
+                  <span>{p.escala === "12x36" ? "Escala 12x36, plantões e folgas" : "Folgas, domingos e valor da hora"}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </>
+      )
+    }
   </div>
 </Base>
 
 <style>
+  .sub {
+    margin-top: 2.5rem;
+  }
   .pagina {
     padding-top: 2.5rem;
   }
