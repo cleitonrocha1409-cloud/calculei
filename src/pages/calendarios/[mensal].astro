@@ -1,0 +1,153 @@
+---
+// Páginas mensais de calendário (busca sazonal: "calendário INSS dezembro 2026").
+import Base from "../../layouts/Base.astro";
+import Selo from "../../components/Selo.astro";
+import "../../styles/calculadora.css";
+import { SITE } from "../../config";
+import { CALENDARIOS } from "../../data/calendarios";
+import { dataCurta, MESES } from "../../lib/calendario/pagamentos";
+
+type Programa = "inss" | "bolsa-familia";
+const MESES_PUBLICADOS = [11, 12]; // 2026
+
+export function getStaticPaths() {
+  const programas: Programa[] = ["inss", "bolsa-familia"];
+  return programas.flatMap((programa) => [11, 12].map((mes) => ({ params: { mensal: `${programa}-${MESES[mes - 1]}-2026` }, props: { programa, mes } })));
+}
+
+const { programa, mes } = Astro.props as { programa: Programa; mes: number };
+const nomeMes = MESES[mes - 1];
+const caminho = `/calendarios/${programa}-${nomeMes}-2026/`;
+const finais = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
+const data = (d: string) => dataCurta(d, true, d.startsWith("2027"));
+const atual = programa === "inss" ? CALENDARIOS.inss[2026] : CALENDARIOS.bolsa[2026];
+const datas = atual[mes];
+
+// INSS: acima do piso, finais em pares (1 e 6…) nas datas dos finais 6 a 0 do piso.
+const acima = programa === "inss" ? [0, 1, 2, 3, 4].map((i) => ({ finais: `${finais[i]} e ${finais[i + 5]}`, data: datas[i + 5] })) : [];
+const anterior = programa === "inss" && mes > 1 ? CALENDARIOS.inss[2026][mes - 1] : null;
+
+const ehInss = programa === "inss";
+const titulo = ehInss
+  ? `Calendário INSS ${nomeMes} 2026: datas de pagamento pelo final do benefício`
+  : `Bolsa Família ${nomeMes} 2026: datas de pagamento pelo final do NIS`;
+const h1 = ehInss ? `Pagamento do INSS de ${nomeMes} de 2026` : `Bolsa Família de ${nomeMes} de 2026`;
+const descricao = ehInss
+  ? `Datas do INSS do benefício de ${nomeMes} de 2026: quem ganha até um salário mínimo recebe de ${data(datas[0])} a ${data(datas[9])}; acima do piso, de ${data(datas[5])} a ${data(datas[9])}.`
+  : `O Bolsa Família de ${nomeMes} de 2026 é pago em ${data(datas[0])} (NIS final 1), ${data(datas[1])} (final 2) e ${data(datas[2])} (finais 3 a 0), no calendário extraordinário do MDS.`;
+const resposta = ehInss
+  ? `O benefício do INSS de ${nomeMes} de 2026 é pago de ${dataCurta(datas[0], false)} a ${dataCurta(datas[4], false)} para quem ganha até um salário mínimo com final 1 a 5, e de ${dataCurta(datas[5], false)} a ${dataCurta(datas[9], false, datas[9].startsWith("2027"))} para os finais 6 a 0 e para quem ganha acima do piso.`
+  : `O Bolsa Família de ${nomeMes} de 2026 é pago em três dias: ${dataCurta(datas[0], false)} para o NIS com final 1, ${dataCurta(datas[1], false)} para o final 2 e ${dataCurta(datas[2], false)} para os finais 3 a 0.`;
+
+const perguntas = ehInss
+  ? [
+      { p: "Como sei o final do meu benefício?", r: "É o último número antes do traço no número do benefício. Em 123.456.789-0, o final é 9." },
+      { p: "Tem 13º do INSS no fim do ano?", r: "Não em 2026. O 13º foi antecipado e pago com os benefícios de abril e maio. Desconfie de mensagens que prometem uma parcela extra." },
+    ]
+  : [
+      { p: "Por que o pagamento está concentrado em três dias?", r: "De outubro a dezembro de 2026, o MDS adotou um calendário extraordinário por causa dos efeitos do El Niño, antecipando o pagamento para a maioria das famílias." },
+      { p: "Onde vejo o final do NIS?", r: "É o último número do NIS, impresso no cartão do Bolsa Família e no aplicativo Bolsa Família ou Caixa Tem." },
+    ];
+
+const jsonld = [
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: perguntas.map((q) => ({ "@type": "Question", name: q.p, acceptedAnswer: { "@type": "Answer", text: q.r } })),
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Início", item: SITE.dominio + "/" },
+      { "@type": "ListItem", position: 2, name: "Calendários de pagamento", item: `${SITE.dominio}/calendarios/` },
+      { "@type": "ListItem", position: 3, name: h1 },
+    ],
+  },
+];
+const principal = ehInss ? "/calendarios/calendario-inss/" : "/calendarios/calendario-bolsa-familia/";
+const outros = MESES_PUBLICADOS.filter((m) => m !== mes);
+---
+
+<Base titulo={titulo} descricao={descricao} jsonld={jsonld}>
+  <div class="envelope cabecalho">
+    <p class="trilha"><a href="/">Início</a> / <a href="/calendarios/">Calendários de pagamento</a> / {h1}</p>
+    <h1>{h1}</h1>
+    <p class="cabecalho__apoio">{resposta}</p>
+    <Selo regras={ehInss ? "Tabela de pagamentos 2026 do INSS" : "Calendário do MDS, com as datas extraordinárias de outubro a dezembro"} />
+  </div>
+
+  <article class="envelope conteudo texto-longo mensal">
+    {
+      ehInss ? (
+        <>
+          <h2>Quem ganha até 1 salário mínimo (R$ 1.621)</h2>
+          <div class="tabela-rolagem">
+            <table class="calendario-tabela">
+              <thead><tr><th scope="col">Final do benefício</th><th scope="col">Data</th></tr></thead>
+              <tbody>{finais.map((f, i) => <tr><th scope="row">{f}</th><td>{data(datas[i])}</td></tr>)}</tbody>
+            </table>
+          </div>
+          <h2>Quem ganha mais de 1 salário mínimo</h2>
+          <div class="tabela-rolagem">
+            <table class="calendario-tabela">
+              <thead><tr><th scope="col">Finais</th><th scope="col">Data</th></tr></thead>
+              <tbody>{acima.map((l) => <tr><th scope="row">{l.finais}</th><td>{data(l.data)}</td></tr>)}</tbody>
+            </table>
+          </div>
+          {anterior && (
+            <p>
+              Em {nomeMes} também cai o fim do pagamento do benefício de {MESES[mes - 2]}: os finais 6 a 0 do piso e todos os benefícios acima do piso recebem de {data(anterior[5])} a {data(anterior[9])}.
+            </p>
+          )}
+        </>
+      ) : (
+        <>
+          <h2>Datas pelo final do NIS</h2>
+          <div class="tabela-rolagem">
+            <table class="calendario-tabela">
+              <thead><tr><th scope="col">Final do NIS</th><th scope="col">Data</th></tr></thead>
+              <tbody>{finais.map((f, i) => <tr><th scope="row">{f}</th><td>{data(datas[i])}</td></tr>)}</tbody>
+            </table>
+          </div>
+          <p>O valor fica disponível no aplicativo Caixa Tem a partir da data do seu final.</p>
+        </>
+      )
+    }
+
+    <a class="botao-agenda botao-link" href={principal}>Ver o próximo pagamento e pôr na agenda</a>
+
+    <h2>Perguntas frequentes</h2>
+    {
+      perguntas.map((q) => (
+        <details class="faq">
+          <summary>{q.p}</summary>
+          <p>{q.r}</p>
+        </details>
+      ))
+    }
+
+    <h2>Outros meses</h2>
+    <ul class="relacionadas">
+      {outros.map((m) => <li><a href={`/calendarios/${programa}-${MESES[m - 1]}-2026/`}>{ehInss ? "INSS" : "Bolsa Família"} de {MESES[m - 1]} de 2026</a></li>)}
+      <li><a href={principal}>Calendário completo de 2026</a></li>
+    </ul>
+  </article>
+</Base>
+
+<style>
+  .mensal {
+    margin-top: 1.5rem;
+  }
+  .mensal th[scope="row"] {
+    text-transform: none;
+  }
+  .botao-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    max-width: 380px;
+    margin-top: 1.5rem;
+  }
+</style>
