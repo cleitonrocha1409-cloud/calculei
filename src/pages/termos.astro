@@ -1,19 +1,35 @@
 ---
 import Texto from "../layouts/Texto.astro";
 import { SITE } from "../config";
+const email = `contato@${SITE.dominio.replace("https://", "")}`;
 ---
 
-<Texto titulo="Termos de uso">
-  <p><em>Rascunho para revisão jurídica antes da publicação.</em></p>
-  <p>Ao usar o {SITE.nome}, você concorda com estes termos.</p>
+<Texto titulo="Termos de uso" descricao={`Regras de uso do ${SITE.nome}: as calculadoras dão estimativas e não substituem um profissional.`}>
+  <p>Atualizados em 13/11/2026.</p>
+  <p>Ao usar o {SITE.nome}, você concorda com estes termos. O uso do site é gratuito.</p>
+
   <h2>Natureza dos resultados</h2>
   <p>
-    As calculadoras produzem estimativas com base na legislação vigente e nos dados que você informa. Elas não substituem a análise de um profissional e não têm valor de documento oficial.
+    As calculadoras produzem estimativas com base na legislação em vigor e nos dados que você informa. Elas não substituem a análise de um contador, advogado ou do órgão responsável e não têm valor de
+    documento oficial. Valores de rescisão, benefícios e impostos podem mudar por regras da convenção coletiva, decisões judiciais ou dados que a calculadora não conhece.
   </p>
-  <h2>Responsabilidade</h2>
+
+  <h2>Atualização das regras</h2>
   <p>
-    Trabalhamos para manter as fórmulas e tabelas corretas e atualizadas, mas não nos responsabilizamos por decisões tomadas apenas com base nas simulações.
+    Conferimos as tabelas e fórmulas sempre que a lei muda, e cada calculadora mostra a data da última conferência. Se você encontrar um erro, avise em <a href={`mailto:${email}`}>{email}</a>.
   </p>
+
+  <h2>Responsabilidade</h2>
+  <p>Não nos responsabilizamos por decisões tomadas apenas com base nas simulações. Confira os valores com um profissional antes de assinar acordos, rescisões ou contratos.</p>
+
   <h2>Uso do conteúdo</h2>
-  <p>Você pode compartilhar links e resultados livremente. A cópia do site ou de suas calculadoras para outros sites depende de autorização.</p>
+  <p>
+    Você pode compartilhar links e resultados livremente. A cópia do site, dos textos ou das calculadoras para outros sites depende de autorização. Links de outros sites para o {SITE.nome} são bem-vindos.
+  </p>
+
+  <h2>Anúncios e links externos</h2>
+  <p>O site pode exibir anúncios e links para sites de terceiros. Não controlamos o conteúdo desses sites nem as ofertas dos anunciantes.</p>
+
+  <h2>Lei aplicável</h2>
+  <p>Estes termos seguem a lei brasileira.</p>
 </Texto>

@@ -1,22 +1,59 @@
 ---
 import Texto from "../layouts/Texto.astro";
 import { SITE } from "../config";
+const email = `contato@${SITE.dominio.replace("https://", "")}`;
 ---
 
-<Texto titulo="Política de privacidade">
-  <p><em>Rascunho para revisão jurídica antes da publicação.</em></p>
+<Texto titulo="Política de privacidade" descricao={`Como o ${SITE.nome} trata dados pessoais: cálculos feitos no seu aparelho, cookies só com consentimento e seus direitos pela LGPD.`}>
+  <p>Atualizada em 13/11/2026.</p>
   <p>
-    Esta política explica como o {SITE.nome} trata dados pessoais, conforme a Lei Geral de Proteção de Dados (Lei 13.709/2018).
+    Esta política explica como o {SITE.nome} ({SITE.dominio.replace("https://", "")}) trata dados pessoais, conforme a Lei Geral de Proteção de Dados (Lei 13.709/2018, LGPD). Em resumo: os valores
+    que você digita nas calculadoras não saem do seu aparelho, e cookies de medição e publicidade só são usados se você aceitar.
   </p>
+
   <h2>Dados digitados nas calculadoras</h2>
   <p>
-    Os cálculos são feitos no seu próprio navegador. Salário, datas e outros valores que você digita não são enviados nem armazenados pelo {SITE.nome}. Eles aparecem apenas no endereço da página, para que você possa
-    salvar ou compartilhar o link.
+    Os cálculos são feitos no seu próprio navegador. Salário, datas e outros valores que você digita não são enviados nem armazenados por nós. Eles aparecem apenas no endereço da página, para que
+    você possa salvar ou compartilhar o link. Quem recebe esse link vê os mesmos valores, por isso compartilhe só com quem você quiser.
   </p>
-  <h2>Cookies e medição de audiência</h2>
+
+  <h2>Dados coletados automaticamente</h2>
   <p>
-    Usamos ferramentas de medição de audiência e, futuramente, de publicidade, que podem usar cookies. Você pode aceitar ou recusar cookies não essenciais no aviso exibido na primeira visita e mudar a escolha a qualquer momento em "Preferências de cookies", no rodapé. Enquanto você não aceitar, nenhuma ferramenta de medição ou publicidade grava cookies no seu navegador.
+    Como qualquer site, o servidor recebe informações técnicas de cada acesso, como endereço IP, navegador e página visitada. O site é hospedado na Cloudflare, que usa esses dados para entregar as
+    páginas e proteger o site contra ataques. Essas informações não são usadas para identificar você.
   </p>
+
+  <h2>Cookies, medição de audiência e publicidade</h2>
+  <p>
+    Se você aceitar no aviso de cookies, usamos o Google Analytics para saber quantas pessoas visitam o site, quais calculadoras são mais usadas e de que tipo de aparelho. No futuro, o site poderá
+    exibir anúncios do Google, que também usam cookies. Esses dados são tratados pelo Google, inclusive fora do Brasil, conforme a política de privacidade dele.
+  </p>
+  <p>
+    Se você recusar, nenhum cookie de medição ou publicidade é gravado no seu navegador. Você pode mudar a escolha a qualquer momento em "Preferências de cookies", no rodapé. A sua escolha fica
+    guardada no próprio navegador.
+  </p>
+
+  <h2>Para que usamos os dados e com que base legal</h2>
+  <ul>
+    <li>Entregar o site e mantê-lo seguro: legítimo interesse (art. 7º, IX, da LGPD).</li>
+    <li>Medir a audiência e exibir anúncios: consentimento, dado no aviso de cookies (art. 7º, I).</li>
+    <li>Responder mensagens que você nos enviar: execução do seu pedido e legítimo interesse.</li>
+  </ul>
+
+  <h2>Por quanto tempo guardamos</h2>
+  <p>
+    Os dados do Google Analytics ficam guardados por até 14 meses. Mensagens enviadas por e-mail ficam guardadas enquanto forem necessárias para responder e resolver o seu pedido.
+  </p>
+
   <h2>Seus direitos</h2>
-  <p>Você pode pedir informações, correção ou exclusão de dados pessoais pelo e-mail contato@{SITE.dominio.replace("https://", "")}.</p>
+  <p>
+    Pela LGPD (art. 18), você pode pedir confirmação de que tratamos seus dados, acesso, correção, anonimização ou exclusão, informações sobre compartilhamento e a revogação do consentimento. Escreva
+    para <a href={`mailto:${email}`}>{email}</a>. Você também pode reclamar à Autoridade Nacional de Proteção de Dados (ANPD).
+  </p>
+
+  <h2>Crianças e adolescentes</h2>
+  <p>O site é feito para adultos e não coleta, de propósito, dados de crianças e adolescentes.</p>
+
+  <h2>Mudanças nesta política</h2>
+  <p>Quando esta política mudar, a data no topo da página será atualizada.</p>
 </Texto>
