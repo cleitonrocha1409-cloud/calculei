@@ -1,5 +1,5 @@
 // Resultado comum das páginas de calendário (lado do navegador).
-import { $, esc2 as esc, infoHTML, mostrar, rodapeHTML, topoHTML } from "../ui/calc-ui";
+import { $, esc2 as esc, infoHTML, medir, mostrar, rodapeHTML, topoHTML } from "../ui/calc-ui";
 import { dataCurta, diasAte, gerarICS, hojeBrasilia, proximos, type Pagamento } from "./pagamentos";
 
 export interface Calendario {
@@ -57,6 +57,7 @@ export function ligarAgenda() {
   $("holerite").addEventListener("click", (ev) => {
     const alvo = ev.target as HTMLElement;
     if (alvo.id !== "agenda" || !atual) return;
+    medir("lembrete_agenda");
     const eventos = proximos(atual.lista, hojeBrasilia(), 12);
     const ics = gerarICS(eventos, atual.titulo, atual.sub, location.href);
     const url = URL.createObjectURL(new Blob([ics], { type: "text/calendar;charset=utf-8" }));

@@ -10,6 +10,22 @@ export interface LinhaUI {
   base?: string;
 }
 
+/** Evento do Google Analytics (só vale se a pessoa aceitou os cookies; o Consent Mode cuida disso). */
+export function medir(evento: string, params: Record<string, string | number> = {}) {
+  const g = (window as unknown as { gtag?: (...a: unknown[]) => void }).gtag;
+  if (g) g("event", evento, { pagina: location.pathname, ...params });
+}
+
+// "Cálculo feito" conta uma vez por visita à página, depois que a pessoa mexe no formulário
+// (resultado de exemplo ou de link compartilhado não conta).
+let interagiu = false;
+let calculoMedido = false;
+if (typeof document !== "undefined") {
+  const marcar = () => (interagiu = true);
+  document.addEventListener("input", marcar, { once: true });
+  document.addEventListener("change", marcar, { once: true });
+}
+
 const esc = (t: string) => t.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
 
 export function linhaHTML(l: LinhaUI, desconto = false) {
@@ -83,6 +99,10 @@ export function mostrar(html: string | null, opcoes: { vazio?: string; erro?: st
     $("barra-rotulo").textContent = opcoes.barra.rotulo;
     $("barra-valor").textContent = typeof opcoes.barra.valor === "number" ? formatarBRL(opcoes.barra.valor) : opcoes.barra.valor;
   }
+  if (ok && interagiu && !calculoMedido) {
+    calculoMedido = true;
+    medir("calculo");
+  }
   if (ok && opcoes.compartilhar) {
     $<HTMLAnchorElement>("whats").href = `https://wa.me/?text=${encodeURIComponent(textoWhatsApp(opcoes.compartilhar, location.href))}`;
   }
@@ -90,10 +110,15 @@ export function mostrar(html: string | null, opcoes: { vazio?: string; erro?: st
 
 /** Liga os botões de PDF e copiar link. */
 export function ligarAcoes() {
-  $("pdf").addEventListener("click", () => window.print());
+  $("pdf").addEventListener("click", () => {
+    medir("compartilhar", { metodo: "pdf" });
+    window.print();
+  });
+  $("whats")?.addEventListener("click", () => medir("compartilhar", { metodo: "whatsapp" }));
   window.addEventListener("beforeprint", () => $("holerite").querySelectorAll("details").forEach((d) => (d.open = true)));
   $("copiar").addEventListener("click", async () => {
     const b = $<HTMLButtonElement>("copiar");
+    medir("compartilhar", { metodo: "link" });
     try {
       await navigator.clipboard.writeText(location.href);
       b.textContent = "Link copiado";
