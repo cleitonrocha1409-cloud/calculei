@@ -1,5 +1,5 @@
 {
-"atualizadoEm": "2026-11-12",
+"atualizadoEm": "2026-11-13",
 "fonte": "FGV (IGP-M) e IBGE (IPCA, INPC); variações mensais oficiais",
 "series": {
 "igpm": [
@@ -752,6 +752,10 @@
 {
 "mes": "2026-09",
 "valor": 0.82
+},
+{
+"mes": "2026-10",
+"valor": 0.14
 }
 ],
 "inpc": [
@@ -1126,6 +1130,10 @@
 {
 "mes": "2026-09",
 "valor": 0.82
+},
+{
+"mes": "2026-10",
+"valor": 0.22
 }
 ]
 }
