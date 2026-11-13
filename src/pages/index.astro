@@ -4,7 +4,10 @@ import { CATEGORIAS } from "../data/catalogo";
 import { SITE } from "../config";
 
 const normalizar = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
-const jsonld = [{ "@context": "https://schema.org", "@type": "WebSite", name: SITE.nome, url: SITE.dominio }];
+const jsonld = [
+  { "@context": "https://schema.org", "@type": "WebSite", name: SITE.nome, url: SITE.dominio },
+  { "@context": "https://schema.org", "@type": "Organization", name: SITE.nome, url: SITE.dominio, logo: `${SITE.dominio}/icon-512.png` },
+];
 ---
 
 <Base titulo="Início" jsonld={jsonld}>
