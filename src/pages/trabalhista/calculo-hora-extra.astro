@@ -147,6 +147,10 @@ const perguntas = [
         dsr: comDSR ? { diasUteis: Number($<HTMLInputElement>("uteis").value) || 0, diasDescanso: Number($<HTMLInputElement>("descanso").value) || 0 } : undefined,
       });
       const info = [`Jornada de ${r.semanal}h por semana: o salário é dividido por ${r.divisor} horas, e a hora vale ${formatarBRL(r.valorHora)}.`];
+      if (comDSR && p !== "atual")
+        info.push(
+          "No 5x2, há duas leituras sobre o sábado não trabalhado: dia útil ou dia de descanso. Usamos o sábado como descanso (mais favorável ao trabalhador). Até sair uma lei ou uma decisão do TST, confirme com o sindicato da sua categoria.",
+        );
       if (r.comparacao)
         info.push(`Pelas regras atuais (divisor ${r.comparacao.divisorAntes}), as mesmas horas renderiam ${formatarBRL(r.comparacao.totalAntes)}. Com a nova jornada, você recebe ${formatarBRL(r.comparacao.diferenca)} a mais.`);
       const html =

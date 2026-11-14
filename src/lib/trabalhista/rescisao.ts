@@ -123,7 +123,7 @@ export function calcularRescisao(e: EntradaRescisao): ResultadoRescisao {
 
   // Dias de aviso indenizado que projetam o contrato (OJ 82 da SDI-1 do TST).
   let diasIndenizados = 0;
-  if (aviso === "indenizado") diasIndenizados = tipo === "acordo" ? Math.floor(diasAviso / 2) : diasAviso;
+  if (aviso === "indenizado") diasIndenizados = diasAviso; // No acordo, a projeção do aviso é integral; só o valor cai pela metade.
   const projetada = somarDias(saida, diasIndenizados);
 
   const proventos: Linha[] = [];

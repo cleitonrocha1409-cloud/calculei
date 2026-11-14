@@ -45,13 +45,16 @@ export function calcularIRRF(
   const base = Math.max(0, rendimento - deducao);
 
   const faixa = IRRF_2026.faixas.find((f) => base <= f.ate)!;
-  const impostoTabela = Math.max(0, arred(base * faixa.aliquota - faixa.deduzir));
+  // Arredonda só no fim (como a Receita): a tabela e a redução entram sem arredondar no imposto.
+  const tabelaBruta = Math.max(0, base * faixa.aliquota - faixa.deduzir);
+  const impostoTabela = arred(tabelaBruta);
 
   const r = IRRF_2026.reducao;
   let reducaoBruta = 0;
   if (rendimento <= r.limiteIsencao) reducaoBruta = r.reducaoMaxima;
   else if (rendimento <= r.limiteReducao) reducaoBruta = r.constante - r.fator * rendimento;
-  const reducao = arred(Math.min(impostoTabela, Math.max(0, reducaoBruta)));
+  const reducaoExata = Math.min(tabelaBruta, Math.max(0, reducaoBruta));
+  const imposto = arred(tabelaBruta - reducaoExata);
 
-  return { base: arred(base), impostoTabela, reducao, imposto: arred(impostoTabela - reducao), usouSimplificado };
+  return { base: arred(base), impostoTabela, reducao: arred(impostoTabela - imposto), imposto, usouSimplificado };
 }

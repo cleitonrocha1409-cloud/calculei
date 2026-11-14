@@ -69,9 +69,9 @@ describe("rescisão — sem justa causa, aviso indenizado", () => {
 
 describe("rescisão — outros tipos", () => {
   const base = { salario: 3000, admissao: "2023-03-10", saida: "2026-11-11" } as const;
-  it("acordo paga metade do valor do aviso (39 dias → 19,5) e multa de 20%", () => {
+  it("acordo paga metade do valor do aviso (39 dias → 19,5), projeta o aviso inteiro e multa de 20%", () => {
     const r = calcularRescisao({ ...base, tipo: "acordo", aviso: "indenizado" });
-    expect(r.info.diasAvisoProjetados).toBe(19);
+    expect(r.info.diasAvisoProjetados).toBe(39);
     expect(v(r, "aviso")).toBe(1950);
     expect(r.fgts.percentualMulta).toBe(0.2);
     expect(r.seguroDesemprego).toBe(false);
@@ -106,5 +106,12 @@ describe("rescisão — projeção do aviso", () => {
     expect(v("ferias-integrais")).toBe(2500);
     expect(v("terco-integrais")).toBe(833.33);
     expect(v("13")).toBe(2291.67); // 11/12
+  });
+});
+
+describe("IRRF arredonda só no fim", () => {
+  it("R$ 7.000 sem dependentes dá R$ 754,75", async () => {
+    const { calcularINSS, calcularIRRF } = await import("../src/lib/trabalhista/impostos");
+    expect(calcularIRRF(7000, calcularINSS(7000)).imposto).toBe(754.75);
   });
 });
