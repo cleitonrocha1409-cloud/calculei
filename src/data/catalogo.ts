@@ -59,6 +59,7 @@ export const CATEGORIAS: Categoria[] = [
     descricao: "Quando você pode se aposentar e quanto vai receber em cada regra da reforma da Previdência.",
     calculadoras: [
       { titulo: "Simulador de aposentadoria", resumo: "Compare pontos, idade progressiva, pedágios e idade", url: "/aposentadoria/simulador-de-aposentadoria/", busca: ["aposentadoria", "inss", "aposentar", "regra de transição", "pontos", "pedágio", "idade mínima", "tempo de contribuição", "simulador"] },
+      { titulo: "Aposentadoria de professor", resumo: "Pontos e idade mínima do magistério em 2026", url: "/aposentadoria/aposentadoria-de-professor/", busca: ["professor", "professora", "magistério", "aposentadoria", "educação básica", "pontos", "idade mínima"] },
     ],
   },
   {

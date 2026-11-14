@@ -25,10 +25,29 @@ export const PREVIDENCIA = {
   fonte: "Emenda Constitucional 103/2019 (arts. 15 a 20 e 26)",
 };
 
-/** Pontos exigidos no ano (mulher 93 e homem 103 em 2026). */
-export const pontosNoAno = (ano: number, s: Sexo) =>
-  Math.min(PREVIDENCIA.pontos.base2019[s] + Math.max(0, ano - 2019), PREVIDENCIA.pontos.teto[s]);
+/**
+ * Professor da educação infantil, do ensino fundamental ou médio, com tempo de efetivo magistério
+ * (EC 103/2019: art. 15, § 3º; art. 16, § 2º; art. 19, § 1º, II; art. 20, § 1º). Vale para o INSS (rede privada).
+ * Em 2026: 88/98 pontos, 54a6m/59a6m na idade progressiva, 52/55 anos no pedágio de 100%.
+ */
+export const PROFESSOR = {
+  tempoTransicao: { f: 25, m: 30 },
+  pontos: { base2019: { f: 81, m: 91 }, teto: { f: 92, m: 100 } },
+  idadeProgressiva: { base2019: { f: 51, m: 56 }, teto: { f: 57, m: 60 } },
+  pedagio100Idade: { f: 52, m: 55 },
+  /** Regra permanente (quem começou depois da reforma): idade e 25 anos de magistério. */
+  permanente: { idade: { f: 57, m: 60 }, tempo: 25 },
+  fonte: "Emenda Constitucional 103/2019 (arts. 15, § 3º; 16, § 2º; 19, § 1º, II; 20, § 1º; e 26)",
+};
 
-/** Idade exigida no ano, em meses (mulher 59 anos e 6 meses e homem 64 anos e 6 meses em 2026). */
-export const idadeProgressivaNoAno = (ano: number, s: Sexo) =>
-  Math.min(PREVIDENCIA.idadeProgressiva.base2019[s] * 12 + Math.max(0, ano - 2019) * 6, PREVIDENCIA.idadeProgressiva.teto[s] * 12);
+export type Categoria = "geral" | "professor";
+type RegrasTransicao = { pontos: typeof PREVIDENCIA.pontos; idadeProgressiva: typeof PREVIDENCIA.idadeProgressiva };
+const regras = (c: Categoria): RegrasTransicao => (c === "professor" ? PROFESSOR : PREVIDENCIA);
+
+/** Pontos exigidos no ano (mulher 93 e homem 103 em 2026; professor 88 e 98). */
+export const pontosNoAno = (ano: number, s: Sexo, c: Categoria = "geral") =>
+  Math.min(regras(c).pontos.base2019[s] + Math.max(0, ano - 2019), regras(c).pontos.teto[s]);
+
+/** Idade exigida no ano, em meses (mulher 59a6m e homem 64a6m em 2026; professor 54a6m e 59a6m). */
+export const idadeProgressivaNoAno = (ano: number, s: Sexo, c: Categoria = "geral") =>
+  Math.min(regras(c).idadeProgressiva.base2019[s] * 12 + Math.max(0, ano - 2019) * 6, regras(c).idadeProgressiva.teto[s] * 12);

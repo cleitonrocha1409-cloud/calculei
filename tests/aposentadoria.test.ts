@@ -95,3 +95,30 @@ describe("leitura de valores", () => {
     expect(lerValor("2.5")).toBe(2.5);
   });
 });
+
+describe("professor (educação básica, INSS)", () => {
+  it("tabelas: 88/98 pontos e 54a6m/59a6m em 2026; tetos 92/100 e 57/60", () => {
+    expect([pontosNoAno(2026, "f", "professor"), pontosNoAno(2026, "m", "professor")]).toEqual([88, 98]);
+    expect([pontosNoAno(2030, "f", "professor"), pontosNoAno(2028, "m", "professor")]).toEqual([92, 100]);
+    expect([pontosNoAno(2040, "f", "professor"), pontosNoAno(2040, "m", "professor")]).toEqual([92, 100]);
+    expect([idadeProgressivaNoAno(2026, "f", "professor"), idadeProgressivaNoAno(2026, "m", "professor")]).toEqual([654, 714]);
+    expect([idadeProgressivaNoAno(2040, "f", "professor"), idadeProgressivaNoAno(2040, "m", "professor")]).toEqual([684, 720]);
+  });
+  it("professora de 54a9m com 26 anos de magistério já cumpre a idade progressiva, com 82% da média", () => {
+    const r = simularAposentadoria({ sexo: "f", nascimento: lerData("1972-01-15"), hoje, tempoHoje: 26 * 12, contribuindo: true, media: 4000, categoria: "professor" });
+    const ip = regra(r, "idadeProgressiva");
+    expect(ip.jaCumpre).toBe(true);
+    expect(ip.coeficiente).toBe(0.82);
+    expect(ip.valor).toBe(3280);
+    expect(regra(r, "pedagio50").aplica).toBe(false);
+    expect(regra(r, "pontos").jaCumpre).toBe(false);
+  });
+  it("professor que começou depois da reforma: 60 anos e 25 anos de magistério", () => {
+    const r = simularAposentadoria({ sexo: "m", nascimento: lerData("1970-06-01"), hoje, tempoHoje: 6 * 12, tempo2019: 0, contribuindo: true, media: 3000, categoria: "professor" });
+    const p = regra(r, "professorPermanente");
+    expect(p.aplica).toBe(true);
+    // 25 anos de magistério só em nov/2045 (hoje 6 anos); a idade de 60 chega antes
+    expect(iso(p.data)).toBe("2045-11-12");
+    expect(regra(r, "pontos").aplica).toBe(false);
+  });
+});

@@ -1,0 +1,80 @@
+---
+import SimuladorAposentadoria from "../../components/SimuladorAposentadoria.astro";
+import { idadeProgressivaNoAno, pontosNoAno, PREVIDENCIA, PROFESSOR } from "../../data/previdencia";
+import { anosMeses } from "../../lib/previdencia/aposentadoria";
+import { formatarBRL } from "../../lib/dinheiro";
+
+const anos = [2026, 2027, 2028, 2029, 2030, 2031];
+
+const perguntas = [
+  {
+    p: "Qual a idade mínima para o professor se aposentar em 2026?",
+    r: "Na regra de transição da idade mínima progressiva, 54 anos e 6 meses para professoras e 59 anos e 6 meses para professores, com 25 e 30 anos de magistério. A idade sobe 6 meses por ano até 57 (mulher) e 60 anos (homem). Na regra de pontos não há idade mínima: a soma de idade e tempo precisa chegar a 88 pontos (mulher) ou 98 (homem) em 2026.",
+  },
+  {
+    p: "Quem tem direito à aposentadoria de professor?",
+    r: "Quem comprova tempo de efetivo exercício de magistério na educação infantil, no ensino fundamental ou no ensino médio. Conta o tempo em sala de aula e também em direção, coordenação e assessoramento pedagógico dentro da escola. Professor de ensino superior segue as regras comuns.",
+  },
+  {
+    p: "Como é calculado o valor da aposentadoria do professor?",
+    r: "Nas regras de pontos, idade progressiva e na regra permanente, o valor é 60% da média dos salários desde julho de 1994, mais 2% por ano de contribuição acima de 15 anos (mulher) ou 20 anos (homem). No pedágio de 100%, o valor é 100% da média. O benefício fica entre o salário mínimo e o teto do INSS.",
+  },
+  {
+    p: "Vale para professor de escola pública?",
+    r: "Estas são as regras do INSS, que valem para professores de escolas particulares e para servidores sem regime próprio. Professores de escolas públicas com regime próprio (estadual ou municipal) seguem as regras do seu estado ou município, que podem ser diferentes.",
+  },
+  {
+    p: "Comecei a dar aula depois da reforma. Qual regra vale?",
+    r: "A regra permanente: 57 anos de idade (mulher) ou 60 anos (homem), com 25 anos de magistério, para os dois sexos.",
+  },
+];
+---
+
+<SimuladorAposentadoria
+  professor
+  selo="Regras do professor na Reforma da Previdência (EC 103/2019) e teto do INSS de 2026"
+  titulo="Aposentadoria de professor 2026: simulador com pontos e idade mínima"
+  descricao="Simule a aposentadoria do professor pelo INSS: 88/98 pontos e idade mínima de 54 anos e 6 meses (mulher) ou 59 anos e 6 meses (homem) em 2026. Veja quando e quanto você recebe."
+  h1="Aposentadoria de professor"
+  apoio="Em 2026, a professora pode se aposentar com 88 pontos (idade + tempo) ou com 54 anos e 6 meses, e o professor com 98 pontos ou 59 anos e 6 meses, desde que tenham 25 e 30 anos de magistério na educação básica. Informe seus dados: comparamos todas as regras."
+  caminho="/aposentadoria/aposentadoria-de-professor/"
+  nomeApp="Simulador de aposentadoria do professor"
+  perguntas={perguntas}
+>
+  <Fragment slot="conteudo">
+    <h2>Pontos e idade mínima do professor, ano a ano</h2>
+    <p>
+      As duas regras sobem todo 1º de janeiro. Além da pontuação ou da idade, exigem {PROFESSOR.tempoTransicao.f} anos de magistério para professoras e {PROFESSOR.tempoTransicao.m} para professores.
+    </p>
+    <div class="tabela-rolagem">
+      <table>
+        <thead>
+          <tr><th scope="col">Ano</th><th scope="col">Pontos (professora)</th><th scope="col">Pontos (professor)</th><th scope="col">Idade (professora)</th><th scope="col">Idade (professor)</th></tr>
+        </thead>
+        <tbody>
+          {anos.map((a) => (
+            <tr>
+              <th scope="row">{a}</th>
+              <td>{pontosNoAno(a, "f", "professor")}</td>
+              <td>{pontosNoAno(a, "m", "professor")}</td>
+              <td>{anosMeses(idadeProgressivaNoAno(a, "f", "professor"))}</td>
+              <td>{anosMeses(idadeProgressivaNoAno(a, "m", "professor"))}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <h2>As regras do professor</h2>
+    <ul>
+      <li><strong>Pontos:</strong> idade + tempo de magistério. Sobe 1 ponto por ano até {PROFESSOR.pontos.teto.f} (professora) e {PROFESSOR.pontos.teto.m} (professor).</li>
+      <li><strong>Idade mínima progressiva:</strong> sobe 6 meses por ano até {PROFESSOR.idadeProgressiva.teto.f} anos (professora) e {PROFESSOR.idadeProgressiva.teto.m} (professor).</li>
+      <li><strong>Pedágio de 100%:</strong> {PROFESSOR.pedagio100Idade.f} anos (professora) ou {PROFESSOR.pedagio100Idade.m} (professor), com o tempo mínimo e mais o mesmo tempo que faltava em 13/11/2019. Valor de 100% da média.</li>
+      <li><strong>Regra permanente:</strong> para quem começou depois da reforma, {PROFESSOR.permanente.idade.f} anos (professora) ou {PROFESSOR.permanente.idade.m} (professor), com {PROFESSOR.permanente.tempo} anos de magistério.</li>
+      <li><strong>Pedágio de 50%:</strong> não tem versão para professor.</li>
+    </ul>
+    <p>
+      O valor é 60% da média + 2% por ano acima de 15 (mulher) ou 20 (homem), exceto no pedágio de 100%. O benefício fica entre {formatarBRL(PREVIDENCIA.piso)} e {formatarBRL(PREVIDENCIA.teto)} em 2026. Fonte: {PROFESSOR.fonte}.
+    </p>
+    <p>Não é professor da educação básica? Use o <a href="/aposentadoria/simulador-de-aposentadoria/">simulador de aposentadoria</a> com as regras comuns.</p>
+  </Fragment>
+</SimuladorAposentadoria>

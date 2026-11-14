@@ -1,6 +1,6 @@
 // Simulador de aposentadoria do INSS pelas regras da EC 103/2019.
 // Trabalha em meses: tempo de contribuição e idade em meses completos; a busca anda mês a mês a partir de hoje.
-import { idadeProgressivaNoAno, pontosNoAno, PREVIDENCIA, REFORMA_DATA, type Sexo } from "../../data/previdencia";
+import { idadeProgressivaNoAno, pontosNoAno, PREVIDENCIA, PROFESSOR, REFORMA_DATA, type Categoria, type Sexo } from "../../data/previdencia";
 import { arred } from "../dinheiro";
 import { lerData, somarMeses } from "../datas";
 
@@ -16,9 +16,11 @@ export interface DadosAposentadoria {
   contribuindo: boolean;
   /** Média dos salários de contribuição (desde 07/1994). */
   media: number;
+  /** Professor da educação básica: regras com tempo e idade menores (o tempo informado é de magistério). */
+  categoria?: Categoria;
 }
 
-export type IdRegra = "pontos" | "idadeProgressiva" | "pedagio50" | "pedagio100" | "idade";
+export type IdRegra = "pontos" | "idadeProgressiva" | "pedagio50" | "pedagio100" | "idade" | "professorPermanente";
 
 export interface ResultadoRegra {
   id: IdRegra;
@@ -76,7 +78,10 @@ const LIMITE_MESES = 50 * 12;
 
 export function simularAposentadoria(d: DadosAposentadoria): ResultadoAposentadoria {
   const s = d.sexo;
-  const req = PREVIDENCIA.tempoTransicao[s] * 12;
+  const cat: Categoria = d.categoria ?? "geral";
+  const prof = cat === "professor";
+  const R = prof ? PROFESSOR : PREVIDENCIA;
+  const req = R.tempoTransicao[s] * 12;
   const desdeReforma = mesesCompletos(lerData(REFORMA_DATA), d.hoje);
   const tempo2019 = d.tempo2019 ?? Math.max(0, d.tempoHoje - desdeReforma);
   const novoSegurado = tempo2019 === 0;
@@ -140,19 +145,19 @@ export function simularAposentadoria(d: DadosAposentadoria): ResultadoAposentado
   montar(
     "pontos",
     "Regra de pontos",
-    `${PREVIDENCIA.tempoTransicao[s]} anos de contribuição e idade + tempo somando ${pontosNoAno(d.hoje.getUTCFullYear(), s)} pontos em ${d.hoje.getUTCFullYear()} (sobe 1 por ano até ${PREVIDENCIA.pontos.teto[s]})`,
+    `${R.tempoTransicao[s]} anos de ${prof ? "magistério" : "contribuição"} e idade + tempo somando ${pontosNoAno(d.hoje.getUTCFullYear(), s, cat)} pontos em ${d.hoje.getUTCFullYear()} (sobe 1 por ano até ${R.pontos.teto[s]})`,
     transicao,
     motivoNovo,
-    (x) => x.tempo >= req && (x.idade + x.tempo) / 12 >= pontosNoAno(x.ano, s),
+    (x) => x.tempo >= req && (x.idade + x.tempo) / 12 >= pontosNoAno(x.ano, s, cat),
     valorPadrao,
   );
   montar(
     "idadeProgressiva",
     "Idade mínima progressiva",
-    `${PREVIDENCIA.tempoTransicao[s]} anos de contribuição e ${anosMeses(idadeProgressivaNoAno(d.hoje.getUTCFullYear(), s))} de idade em ${d.hoje.getUTCFullYear()} (sobe 6 meses por ano até ${PREVIDENCIA.idadeProgressiva.teto[s]})`,
+    `${R.tempoTransicao[s]} anos de ${prof ? "magistério" : "contribuição"} e ${anosMeses(idadeProgressivaNoAno(d.hoje.getUTCFullYear(), s, cat))} de idade em ${d.hoje.getUTCFullYear()} (sobe 6 meses por ano até ${R.idadeProgressiva.teto[s]})`,
     transicao,
     motivoNovo,
-    (x) => x.tempo >= req && x.idade >= idadeProgressivaNoAno(x.ano, s),
+    (x) => x.tempo >= req && x.idade >= idadeProgressivaNoAno(x.ano, s, cat),
     valorPadrao,
   );
   const exig50 = req + Math.ceil(falta2019 * 0.5);
@@ -160,8 +165,10 @@ export function simularAposentadoria(d: DadosAposentadoria): ResultadoAposentado
     "pedagio50",
     "Pedágio de 50%",
     `Em 13/11/2019, faltar no máximo 2 anos para ${PREVIDENCIA.tempoTransicao[s]} anos de contribuição; cumprir o que faltava + 50% (no seu caso, ${anosMeses(exig50)}). Sem idade mínima`,
-    transicao && falta2019 <= 24,
-    novoSegurado ? motivoNovo : `Em 13/11/2019 faltavam ${anosMeses(falta2019)}; a regra exige que faltassem no máximo 2 anos.`,
+    transicao && falta2019 <= 24 && !prof,
+    prof
+      ? "Não tem versão para professor: só vale com 30 anos (mulher) ou 35 (homem) de contribuição comum."
+      : novoSegurado ? motivoNovo : `Em 13/11/2019 faltavam ${anosMeses(falta2019)}; a regra exige que faltassem no máximo 2 anos.`,
     (x) => x.tempo >= exig50,
     () => ({ calculo: "Média × fator previdenciário (depende da idade e da expectativa de vida; o INSS calcula na hora do pedido)" }),
   );
@@ -169,16 +176,28 @@ export function simularAposentadoria(d: DadosAposentadoria): ResultadoAposentado
   montar(
     "pedagio100",
     "Pedágio de 100%",
-    `${PREVIDENCIA.pedagio100Idade[s]} anos de idade e ${PREVIDENCIA.tempoTransicao[s]} anos de contribuição + o dobro do que faltava em 13/11/2019 (no seu caso, ${anosMeses(exig100)})`,
+    `${R.pedagio100Idade[s]} anos de idade e ${R.tempoTransicao[s]} anos de ${prof ? "magistério" : "contribuição"} + o dobro do que faltava em 13/11/2019 (no seu caso, ${anosMeses(exig100)})`,
     transicao,
     motivoNovo,
-    (x) => x.tempo >= exig100 && x.idade >= PREVIDENCIA.pedagio100Idade[s] * 12,
+    (x) => x.tempo >= exig100 && x.idade >= R.pedagio100Idade[s] * 12,
     () => ({ coef: 1, valor: valorBeneficio(media, 1), calculo: "100% da média" }),
   );
+  if (prof) {
+    const P = PROFESSOR.permanente;
+    montar(
+      "professorPermanente",
+      "Regra do professor (permanente)",
+      `${P.idade[s]} anos de idade e ${P.tempo} anos de magistério`,
+      !transicao,
+      "Vale para quem começou a contribuir depois de 13/11/2019; para você, valem as regras de transição acima.",
+      (x) => x.idade >= P.idade[s] * 12 && x.tempo >= P.tempo * 12,
+      valorPadrao,
+    );
+  }
   const minIdade = (transicao ? PREVIDENCIA.tempoMinimoIdade.transicao : PREVIDENCIA.tempoMinimoIdade.permanente)[s];
   montar(
     "idade",
-    transicao ? "Aposentadoria por idade" : "Aposentadoria por idade (regra geral)",
+    prof ? "Aposentadoria por idade (regra comum)" : transicao ? "Aposentadoria por idade" : "Aposentadoria por idade (regra geral)",
     `${PREVIDENCIA.idade[s]} anos de idade e ${minIdade} anos de contribuição`,
     true,
     "",
