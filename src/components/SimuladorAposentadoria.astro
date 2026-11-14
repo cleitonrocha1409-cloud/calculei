@@ -157,7 +157,7 @@ const { professor = false, ...resto } = Astro.props;
         : `Tempo até 13/11/2019 ${tempo2019 === undefined ? `estimado em ${anosMeses(r.tempo2019)}, supondo contribuição sem parar desde a reforma` : `informado: ${anosMeses(r.tempo2019)}`}.`,
       prof
         ? "Regras do professor do INSS (escolas particulares e quem não tem regime próprio). Professores de escolas públicas com regime próprio seguem as regras do seu estado ou município."
-        : "Não inclui atividade especial, trabalho rural nem pessoa com deficiência, que têm regras próprias. Professor? Marque a opção no formulário.",
+        : "Não inclui atividade especial. Pessoa com deficiência e trabalhador rural têm simuladores próprios no site. Professor? Marque a opção no formulário.",
     ];
     const alertas = r.direitoAdquirido
       ? [prof ? "Você já tinha o tempo de magistério antes da reforma: pode ter direito adquirido às regras antigas, sem idade mínima. Vale consultar o Meu INSS ou um especialista." : "Você já tinha o tempo mínimo antes da reforma: pode ter direito adquirido às regras antigas, que podem dar um valor maior. Vale consultar o Meu INSS ou um especialista."]

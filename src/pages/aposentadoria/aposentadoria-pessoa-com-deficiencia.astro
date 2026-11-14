@@ -1,0 +1,188 @@
+---
+import CalcPagina from "../../components/CalcPagina.astro";
+import { PCD } from "../../lib/previdencia/especiais";
+import { PREVIDENCIA } from "../../data/previdencia";
+import { formatarBRL } from "../../lib/dinheiro";
+
+const perguntas = [
+  {
+    p: "Quanto tempo a pessoa com deficiência precisa contribuir para se aposentar?",
+    r: "Na aposentadoria por tempo de contribuição, depende do grau da deficiência: grave, 20 anos (mulher) ou 25 (homem); moderada, 24 ou 29; leve, 28 ou 33. Não há idade mínima. Na aposentadoria por idade, bastam 55 anos (mulher) ou 60 (homem) e 15 anos de contribuição como pessoa com deficiência, em qualquer grau.",
+  },
+  {
+    p: "Qual o valor da aposentadoria da pessoa com deficiência?",
+    r: "Por tempo de contribuição, 100% da média dos salários, sem o redutor da reforma. Por idade, 70% da média mais 1% por ano de contribuição, até 100%. O valor fica entre o salário mínimo e o teto do INSS.",
+  },
+  {
+    p: "Quem define o grau da deficiência?",
+    r: "O INSS, por uma avaliação biopsicossocial (perícia médica e avaliação social), que classifica a deficiência como grave, moderada ou leve. O grau reconhecido define o tempo exigido.",
+  },
+  {
+    p: "A reforma da Previdência mudou essa aposentadoria?",
+    r: "Não. A Emenda Constitucional 103/2019 manteve as regras da Lei Complementar 142/2013 para a pessoa com deficiência, sem idade mínima na modalidade por tempo e sem o cálculo de 60% + 2%.",
+  },
+  {
+    p: "E se eu tiver tempo antes e depois da deficiência?",
+    r: "O tempo trabalhado sem deficiência também conta, mas é convertido com peso menor (art. 7º da LC 142/2013). Este simulador considera todo o tempo informado como tempo com deficiência; se o seu caso for misto, confira no Meu INSS ou com um especialista.",
+  },
+];
+---
+
+<CalcPagina
+  selo="Regras da Lei Complementar 142/2013, mantidas pela Reforma da Previdência, e teto do INSS de 2026"
+  titulo="Aposentadoria da pessoa com deficiência (PcD) 2026: simulador INSS"
+  descricao="Simule a aposentadoria da pessoa com deficiência pelo INSS: por tempo (20 a 33 anos, conforme o grau) ou por idade (55/60 anos). Veja quando e quanto você recebe."
+  h1="Aposentadoria da pessoa com deficiência"
+  apoio="A pessoa com deficiência se aposenta com 20 a 33 anos de contribuição, conforme o grau e o sexo, sem idade mínima e com 100% da média; ou com 55 anos (mulher) ou 60 (homem) e 15 anos de contribuição. Informe seus dados: comparamos as duas modalidades."
+  categoria="aposentadoria"
+  caminho="/aposentadoria/aposentadoria-pessoa-com-deficiencia/"
+  nomeApp="Simulador de aposentadoria da pessoa com deficiência"
+  perguntas={perguntas}
+>
+  <Fragment slot="form">
+    <fieldset class="campo">
+      <legend>Sexo</legend>
+      <div class="opcoes opcoes--linha">
+        <label><input type="radio" name="sexo" value="f" checked /> Mulher</label>
+        <label><input type="radio" name="sexo" value="m" /> Homem</label>
+      </div>
+    </fieldset>
+    <fieldset class="campo">
+      <legend>Grau da deficiência</legend>
+      <div class="opcoes">
+        <label><input type="radio" name="grau" value="grave" /> Grave</label>
+        <label><input type="radio" name="grau" value="moderada" checked /> Moderada</label>
+        <label><input type="radio" name="grau" value="leve" /> Leve</label>
+      </div>
+      <p class="ajuda">É o grau reconhecido pelo INSS na avaliação biopsicossocial. Não sabe? Compare os três.</p>
+    </fieldset>
+    <div class="campo">
+      <label for="nascimento">Data de nascimento</label>
+      <input id="nascimento" type="date" min="1940-01-01" max="2010-12-31" />
+    </div>
+    <fieldset class="campo">
+      <legend>Tempo de contribuição como pessoa com deficiência</legend>
+      <div class="duas">
+        <div><label for="anos" class="sub">Anos</label><input id="anos" type="number" min="0" max="60" inputmode="numeric" placeholder="0" /></div>
+        <div><label for="meses" class="sub">Meses</label><input id="meses" type="number" min="0" max="11" inputmode="numeric" placeholder="0" /></div>
+      </div>
+      <p class="ajuda">Conte só o tempo com a deficiência. O tempo antes dela vale com peso menor (veja as perguntas abaixo).</p>
+    </fieldset>
+    <div class="campo">
+      <label for="media">Média dos seus salários desde 1994</label>
+      <div class="moeda"><span aria-hidden="true">R$</span><input id="media" inputmode="decimal" autocomplete="off" placeholder="3.000,00" /></div>
+      <p class="ajuda">Não sabe? Use o seu salário atual para ter uma ideia.</p>
+    </div>
+    <fieldset class="campo">
+      <legend>Vai continuar contribuindo?</legend>
+      <div class="opcoes opcoes--linha">
+        <label><input type="radio" name="contribui" value="s" checked /> Sim</label>
+        <label><input type="radio" name="contribui" value="n" /> Não</label>
+      </div>
+    </fieldset>
+  </Fragment>
+
+  <Fragment slot="conteudo">
+    <h2>Tempo exigido por grau de deficiência</h2>
+    <div class="tabela-rolagem">
+      <table>
+        <thead><tr><th scope="col">Grau</th><th scope="col">Mulher</th><th scope="col">Homem</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Grave</th><td>{PCD.tempo.grave.f} anos</td><td>{PCD.tempo.grave.m} anos</td></tr>
+          <tr><th scope="row">Moderada</th><td>{PCD.tempo.moderada.f} anos</td><td>{PCD.tempo.moderada.m} anos</td></tr>
+          <tr><th scope="row">Leve</th><td>{PCD.tempo.leve.f} anos</td><td>{PCD.tempo.leve.m} anos</td></tr>
+          <tr><th scope="row">Por idade</th><td>{PCD.idade.f} anos de idade</td><td>{PCD.idade.m} anos de idade</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Nas três primeiras linhas, o tempo é de contribuição como pessoa com deficiência, sem idade mínima. Por idade, vale qualquer grau, com {PCD.tempoIdade} anos de contribuição.</p>
+    <p>
+      Por tempo, o valor é 100% da média dos salários. Por idade, 70% da média + 1% por ano de contribuição, até 100%. O benefício fica entre {formatarBRL(PREVIDENCIA.piso)} e {formatarBRL(PREVIDENCIA.teto)} em 2026. Fonte: {PCD.fonte}.
+    </p>
+    <p>Sem deficiência reconhecida? Use o <a href="/aposentadoria/simulador-de-aposentadoria/">simulador de aposentadoria</a> com as regras comuns.</p>
+  </Fragment>
+</CalcPagina>
+
+<script>
+  import { $, esc2 as esc, estadoURL, infoHTML, ligarAcoes, mostrar, rodapeHTML, tabelaHTML, topoHTML } from "../../lib/ui/calc-ui";
+  import { anosMeses, simularPcD, type GrauDeficiencia, type RegraEspecial } from "../../lib/previdencia/especiais";
+  import { formatarBRL, lerValor } from "../../lib/dinheiro";
+  import { lerData } from "../../lib/datas";
+  import type { Sexo } from "../../data/previdencia";
+
+  const form = $<HTMLFormElement>("form");
+  const estado = estadoURL(form, { sexo: "s", grau: "g", nascimento: "n", anos: "a", meses: "m", media: "v", contribui: "c" });
+  const marcado = (n: string) => form.querySelector<HTMLInputElement>(`input[name=${n}]:checked`)!.value;
+  const int = (id: string) => Math.max(0, Math.floor(Number($<HTMLInputElement>(id).value) || 0));
+  const mesAno = (d: Date) => d.toLocaleDateString("pt-BR", { month: "long", year: "numeric", timeZone: "UTC" });
+  const dataBR = (d: Date) => d.toLocaleDateString("pt-BR", { timeZone: "UTC" });
+  function hojeUTC() {
+    return lerData(new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date()));
+  }
+  const quando = (r: RegraEspecial) => (r.jaCumpre ? "Já pode" : r.data ? mesAno(r.data) : "—");
+  function resultado(titulo: string, sub: string, regras: RegraEspecial[], melhor: RegraEspecial | null, avisos: string[], alertas: string[], rodape: string) {
+    const destaque = !melhor
+      ? `<p class="proxima"><span>Com os dados informados</span><strong>Nenhuma regra alcançada</strong><small>Voltar a trabalhar muda o resultado.</small></p>`
+      : `<p class="proxima"><span>${melhor.jaCumpre ? "Você já pode se aposentar" : "Você pode se aposentar a partir de"}</span><strong>${melhor.jaCumpre ? "Hoje" : esc(mesAno(melhor.data!))}</strong><small>${esc(melhor.nome)}, cerca de ${formatarBRL(melhor.valor ?? 0)} por mês</small></p>`;
+    const linhas = regras.map((x) => [x.nome, quando(x), x.valor ? formatarBRL(x.valor) : "—"]);
+    const detalhes = regras
+      .map((x) => {
+        const sit = !x.data ? esc(x.motivo ?? "") : `${x.jaCumpre ? "Já cumpre hoje" : `Cumpre em ${dataBR(x.data)}`}, com ${anosMeses(x.idadeNaData!)} de idade e ${anosMeses(x.tempoNaData!)} de tempo. Valor: ${esc(x.calculo)}.`;
+        return `<li><strong>${esc(x.nome)}.</strong> ${sit}<br><span class="base">Exige: ${esc(x.requisitos)}.</span></li>`;
+      })
+      .join("");
+    const html =
+      topoHTML(titulo, sub) +
+      destaque +
+      tabelaHTML(["Regra", "Quando", "Valor estimado"], linhas, melhor ? regras.indexOf(melhor) : -1) +
+      `<details class="memoria"><summary>Ver os requisitos e a conta</summary><ul class="regras-detalhe">${detalhes}</ul></details>` +
+      infoHTML(avisos, alertas) +
+      rodapeHTML(rodape);
+    mostrar(html, {
+      barra: melhor ? { rotulo: melhor.jaCumpre ? "Já pode se aposentar" : "Aposenta em", valor: melhor.jaCumpre ? formatarBRL(melhor.valor ?? 0) : mesAno(melhor.data!) } : undefined,
+      compartilhar: {
+        titulo: `Simulação: ${titulo.toLowerCase()}`,
+        detalhe: sub,
+        itens: regras.filter((x) => x.data).map((x) => ({ rotulo: x.nome, valor: `${quando(x)}${x.valor ? `, ${formatarBRL(x.valor)}` : ""}` })),
+        chamada: "Veja a simulação completa:",
+      },
+    });
+  }
+
+  function atualizar() {
+    estado.salvar();
+    const nascTxt = $<HTMLInputElement>("nascimento").value;
+    const media = lerValor($<HTMLInputElement>("media").value);
+    const tempoHoje = int("anos") * 12 + int("meses");
+    if (!nascTxt) return mostrar(null, { vazio: "Informe sua data de nascimento." });
+    if (!(tempoHoje > 0)) return mostrar(null, { vazio: "Informe seu tempo de contribuição como pessoa com deficiência." });
+    if (!(media > 0)) return mostrar(null, { vazio: "Informe a média dos seus salários (ou o salário atual)." });
+    const hoje = hojeUTC();
+    const nascimento = lerData(nascTxt);
+    if (nascimento >= hoje) return mostrar(null, { erro: "A data de nascimento precisa ser anterior a hoje." });
+    const sexo = marcado("sexo") as Sexo;
+    const grau = marcado("grau") as GrauDeficiencia;
+    const r = simularPcD({ sexo, nascimento, hoje, tempoHoje, continua: marcado("contribui") === "s", grau, media });
+    const idade = Math.floor((hoje.getTime() - nascimento.getTime()) / (365.2425 * 86400000));
+    resultado(
+      "Aposentadoria PcD",
+      `${sexo === "f" ? "Mulher" : "Homem"}, ${idade} anos, deficiência ${grau}, ${anosMeses(tempoHoje)} de contribuição`,
+      r.regras,
+      r.melhor,
+      [
+        "É uma estimativa em valores de hoje. O INSS calcula com os salários do seu CNIS.",
+        "Considera todo o tempo informado como tempo com deficiência. Tempo sem deficiência entra convertido, com peso menor.",
+        "O grau vale como reconhecido pelo INSS na avaliação biopsicossocial.",
+      ],
+      [],
+      "Regras da LC 142/2013, com o salário mínimo e o teto de 2026.",
+    );
+  }
+
+  form.addEventListener("input", atualizar);
+  form.addEventListener("change", atualizar);
+  form.addEventListener("submit", (e) => e.preventDefault());
+  ligarAcoes();
+  estado.ler();
+  atualizar();
+</script>

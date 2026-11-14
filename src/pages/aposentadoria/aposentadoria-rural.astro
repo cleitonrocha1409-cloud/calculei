@@ -1,0 +1,179 @@
+---
+import CalcPagina from "../../components/CalcPagina.astro";
+import { RURAL } from "../../lib/previdencia/especiais";
+import { PREVIDENCIA } from "../../data/previdencia";
+import { formatarBRL } from "../../lib/dinheiro";
+
+const perguntas = [
+  {
+    p: "Com quantos anos o trabalhador rural se aposenta?",
+    r: "Com 55 anos (mulher) ou 60 anos (homem), comprovando 15 anos de atividade rural, mesmo que com intervalos. A reforma da Previdência não mudou essas idades.",
+  },
+  {
+    p: "Quem é segurado especial?",
+    r: "O pequeno produtor rural, o pescador artesanal e o extrativista que trabalham sozinhos ou em regime de economia familiar, além do cônjuge e dos filhos que trabalham junto. O segurado especial não precisa ter pago o INSS: basta comprovar a atividade rural.",
+  },
+  {
+    p: "Qual o valor da aposentadoria rural?",
+    r: "Para o segurado especial, um salário mínimo (R$ 1.621,00 em 2026). Para o empregado rural com carteira assinada, o valor segue a média dos salários: 60% mais 2% por ano acima de 15 anos (mulher) ou 20 anos (homem).",
+  },
+  {
+    p: "Como comprovar a atividade rural?",
+    r: "Com documentos como notas fiscais de produtor, contrato de arrendamento ou parceria, declaração do sindicato rural, cadastro no CAF (antigo DAP), certidões e a autodeclaração do segurado especial, complementados por testemunhas. O período precisa incluir o tempo logo antes do pedido ou de completar a idade.",
+  },
+  {
+    p: "Trabalhei na roça e na cidade. Qual regra vale?",
+    r: "A aposentadoria híbrida soma o tempo rural e o urbano, mas exige as idades da regra comum: 62 anos (mulher) e 65 (homem). Para esse caso, use o simulador de aposentadoria comum.",
+  },
+];
+---
+
+<CalcPagina
+  selo="Regras da aposentadoria rural (Lei 8.213/1991), mantidas pela Reforma da Previdência, e salário mínimo de 2026"
+  titulo="Aposentadoria rural 2026: idade, tempo e valor (simulador INSS)"
+  descricao="Simule a aposentadoria rural por idade: 55 anos (mulher) ou 60 (homem) com 15 anos de atividade rural. Veja quando você pode pedir e quanto recebe, segurado especial ou empregado rural."
+  h1="Aposentadoria rural"
+  apoio="O trabalhador rural se aposenta com 55 anos (mulher) ou 60 anos (homem) e 15 anos de atividade rural. O segurado especial, como o agricultor familiar e o pescador artesanal, recebe um salário mínimo, R$ 1.621,00 em 2026, mesmo sem ter pago o INSS."
+  categoria="aposentadoria"
+  caminho="/aposentadoria/aposentadoria-rural/"
+  nomeApp="Simulador de aposentadoria rural"
+  perguntas={perguntas}
+>
+  <Fragment slot="form">
+    <fieldset class="campo">
+      <legend>Sexo</legend>
+      <div class="opcoes opcoes--linha">
+        <label><input type="radio" name="sexo" value="f" checked /> Mulher</label>
+        <label><input type="radio" name="sexo" value="m" /> Homem</label>
+      </div>
+    </fieldset>
+    <fieldset class="campo">
+      <legend>Como você trabalha no campo?</legend>
+      <div class="opcoes">
+        <label><input type="radio" name="tipo" value="especial" checked /> Agricultor familiar, pescador artesanal ou extrativista (segurado especial)</label>
+        <label><input type="radio" name="tipo" value="empregado" /> Empregado rural com carteira assinada</label>
+      </div>
+    </fieldset>
+    <div class="campo">
+      <label for="nascimento">Data de nascimento</label>
+      <input id="nascimento" type="date" min="1940-01-01" max="2010-12-31" />
+    </div>
+    <fieldset class="campo">
+      <legend>Tempo de atividade rural até hoje</legend>
+      <div class="duas">
+        <div><label for="anos" class="sub">Anos</label><input id="anos" type="number" min="0" max="70" inputmode="numeric" placeholder="0" /></div>
+        <div><label for="meses" class="sub">Meses</label><input id="meses" type="number" min="0" max="11" inputmode="numeric" placeholder="0" /></div>
+      </div>
+      <p class="ajuda">Pode somar períodos com intervalos.</p>
+    </fieldset>
+    <div class="campo" id="campo-media" hidden>
+      <label for="media">Média dos seus salários desde 1994</label>
+      <div class="moeda"><span aria-hidden="true">R$</span><input id="media" inputmode="decimal" autocomplete="off" placeholder="2.000,00" /></div>
+      <p class="ajuda">Não sabe? Use o seu salário atual para ter uma ideia.</p>
+    </div>
+    <fieldset class="campo">
+      <legend>Vai continuar no trabalho rural?</legend>
+      <div class="opcoes opcoes--linha">
+        <label><input type="radio" name="continua" value="s" checked /> Sim</label>
+        <label><input type="radio" name="continua" value="n" /> Não</label>
+      </div>
+    </fieldset>
+  </Fragment>
+
+  <Fragment slot="conteudo">
+    <h2>Requisitos da aposentadoria rural</h2>
+    <ul>
+      <li><strong>Idade:</strong> {RURAL.idade.f} anos (mulher) ou {RURAL.idade.m} anos (homem).</li>
+      <li><strong>Tempo:</strong> {RURAL.tempo} anos de atividade rural, mesmo com intervalos, incluindo o período logo antes do pedido.</li>
+      <li><strong>Valor do segurado especial:</strong> {formatarBRL(PREVIDENCIA.piso)} (1 salário mínimo).</li>
+      <li><strong>Valor do empregado rural:</strong> 60% da média + 2% por ano acima de 15 (mulher) ou 20 (homem), até {formatarBRL(PREVIDENCIA.teto)}.</li>
+    </ul>
+    <p>Fonte: {RURAL.fonte}. Trabalhou também na cidade? Veja a regra híbrida nas perguntas e use o <a href="/aposentadoria/simulador-de-aposentadoria/">simulador de aposentadoria</a>.</p>
+  </Fragment>
+</CalcPagina>
+
+<script>
+  import { $, esc2 as esc, estadoURL, infoHTML, ligarAcoes, mostrar, rodapeHTML, tabelaHTML, topoHTML } from "../../lib/ui/calc-ui";
+  import { anosMeses, simularRural, type RegraEspecial, type TipoRural } from "../../lib/previdencia/especiais";
+  import { formatarBRL, lerValor } from "../../lib/dinheiro";
+  import { lerData } from "../../lib/datas";
+  import type { Sexo } from "../../data/previdencia";
+
+  const form = $<HTMLFormElement>("form");
+  const estado = estadoURL(form, { sexo: "s", tipo: "t", nascimento: "n", anos: "a", meses: "m", media: "v", continua: "c" });
+  const marcado = (n: string) => form.querySelector<HTMLInputElement>(`input[name=${n}]:checked`)!.value;
+  const int = (id: string) => Math.max(0, Math.floor(Number($<HTMLInputElement>(id).value) || 0));
+  const mesAno = (d: Date) => d.toLocaleDateString("pt-BR", { month: "long", year: "numeric", timeZone: "UTC" });
+  const dataBR = (d: Date) => d.toLocaleDateString("pt-BR", { timeZone: "UTC" });
+  function hojeUTC() {
+    return lerData(new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date()));
+  }
+  const quando = (r: RegraEspecial) => (r.jaCumpre ? "Já pode" : r.data ? mesAno(r.data) : "—");
+  function resultado(titulo: string, sub: string, regras: RegraEspecial[], melhor: RegraEspecial | null, avisos: string[], alertas: string[], rodape: string) {
+    const destaque = !melhor
+      ? `<p class="proxima"><span>Com os dados informados</span><strong>Nenhuma regra alcançada</strong><small>Voltar a trabalhar muda o resultado.</small></p>`
+      : `<p class="proxima"><span>${melhor.jaCumpre ? "Você já pode se aposentar" : "Você pode se aposentar a partir de"}</span><strong>${melhor.jaCumpre ? "Hoje" : esc(mesAno(melhor.data!))}</strong><small>${esc(melhor.nome)}, cerca de ${formatarBRL(melhor.valor ?? 0)} por mês</small></p>`;
+    const linhas = regras.map((x) => [x.nome, quando(x), x.valor ? formatarBRL(x.valor) : "—"]);
+    const detalhes = regras
+      .map((x) => {
+        const sit = !x.data ? esc(x.motivo ?? "") : `${x.jaCumpre ? "Já cumpre hoje" : `Cumpre em ${dataBR(x.data)}`}, com ${anosMeses(x.idadeNaData!)} de idade e ${anosMeses(x.tempoNaData!)} de tempo. Valor: ${esc(x.calculo)}.`;
+        return `<li><strong>${esc(x.nome)}.</strong> ${sit}<br><span class="base">Exige: ${esc(x.requisitos)}.</span></li>`;
+      })
+      .join("");
+    const html =
+      topoHTML(titulo, sub) +
+      destaque +
+      tabelaHTML(["Regra", "Quando", "Valor estimado"], linhas, melhor ? regras.indexOf(melhor) : -1) +
+      `<details class="memoria"><summary>Ver os requisitos e a conta</summary><ul class="regras-detalhe">${detalhes}</ul></details>` +
+      infoHTML(avisos, alertas) +
+      rodapeHTML(rodape);
+    mostrar(html, {
+      barra: melhor ? { rotulo: melhor.jaCumpre ? "Já pode se aposentar" : "Aposenta em", valor: melhor.jaCumpre ? formatarBRL(melhor.valor ?? 0) : mesAno(melhor.data!) } : undefined,
+      compartilhar: {
+        titulo: `Simulação: ${titulo.toLowerCase()}`,
+        detalhe: sub,
+        itens: regras.filter((x) => x.data).map((x) => ({ rotulo: x.nome, valor: `${quando(x)}${x.valor ? `, ${formatarBRL(x.valor)}` : ""}` })),
+        chamada: "Veja a simulação completa:",
+      },
+    });
+  }
+
+  function atualizar() {
+    estado.salvar();
+    const tipo = marcado("tipo") as TipoRural;
+    $("campo-media").hidden = tipo !== "empregado";
+    const nascTxt = $<HTMLInputElement>("nascimento").value;
+    const tempoHoje = int("anos") * 12 + int("meses");
+    const media = lerValor($<HTMLInputElement>("media").value);
+    if (!nascTxt) return mostrar(null, { vazio: "Informe sua data de nascimento." });
+    if (!(tempoHoje > 0)) return mostrar(null, { vazio: "Informe seu tempo de atividade rural." });
+    if (tipo === "empregado" && !(media > 0)) return mostrar(null, { vazio: "Informe a média dos seus salários (ou o salário atual)." });
+    const hoje = hojeUTC();
+    const nascimento = lerData(nascTxt);
+    if (nascimento >= hoje) return mostrar(null, { erro: "A data de nascimento precisa ser anterior a hoje." });
+    const sexo = marcado("sexo") as Sexo;
+    const r = simularRural({ sexo, nascimento, hoje, tempoHoje, continua: marcado("continua") === "s", tipo, media });
+    const idade = Math.floor((hoje.getTime() - nascimento.getTime()) / (365.2425 * 86400000));
+    resultado(
+      "Aposentadoria rural",
+      `${sexo === "f" ? "Mulher" : "Homem"}, ${idade} anos, ${anosMeses(tempoHoje)} de atividade rural`,
+      r.regras,
+      r.melhor,
+      [
+        tipo === "especial"
+          ? "O segurado especial recebe 1 salário mínimo. Quem contribuiu por conta própria além disso pode receber mais."
+          : "É uma estimativa em valores de hoje. O INSS calcula com os salários do seu CNIS.",
+        "A atividade rural precisa ser comprovada com documentos e incluir o período logo antes do pedido.",
+      ],
+      [],
+      "Regras da Lei 8.213/1991, com o salário mínimo e o teto de 2026.",
+    );
+  }
+
+  form.addEventListener("input", atualizar);
+  form.addEventListener("change", atualizar);
+  form.addEventListener("submit", (e) => e.preventDefault());
+  ligarAcoes();
+  estado.ler();
+  atualizar();
+</script>

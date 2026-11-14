@@ -60,6 +60,8 @@ export const CATEGORIAS: Categoria[] = [
     calculadoras: [
       { titulo: "Simulador de aposentadoria", resumo: "Compare pontos, idade progressiva, pedágios e idade", url: "/aposentadoria/simulador-de-aposentadoria/", busca: ["aposentadoria", "inss", "aposentar", "regra de transição", "pontos", "pedágio", "idade mínima", "tempo de contribuição", "simulador"] },
       { titulo: "Aposentadoria de professor", resumo: "Pontos e idade mínima do magistério em 2026", url: "/aposentadoria/aposentadoria-de-professor/", busca: ["professor", "professora", "magistério", "aposentadoria", "educação básica", "pontos", "idade mínima"] },
+      { titulo: "Aposentadoria da pessoa com deficiência", resumo: "Por tempo (conforme o grau) ou por idade", url: "/aposentadoria/aposentadoria-pessoa-com-deficiencia/", busca: ["deficiência", "pcd", "deficiente", "lc 142", "aposentadoria", "grau", "leve", "moderada", "grave"] },
+      { titulo: "Aposentadoria rural", resumo: "55/60 anos e 15 anos de atividade rural", url: "/aposentadoria/aposentadoria-rural/", busca: ["rural", "roça", "agricultor", "lavrador", "pescador", "segurado especial", "aposentadoria", "campo"] },
     ],
   },
   {
