@@ -7,8 +7,10 @@ interface Props {
   titulo: string;
   descricao?: string;
   jsonld?: object[];
+  /** Página fora dos buscadores (ferramentas ainda não lançadas). */
+  semIndice?: boolean;
 }
-const { titulo, descricao = SITE.descricao, jsonld = [] } = Astro.props;
+const { titulo, descricao = SITE.descricao, jsonld = [], semIndice = false } = Astro.props;
 const canonica = new URL(Astro.url.pathname, SITE.dominio).href;
 const tituloCompleto = Astro.url.pathname === "/" ? `${SITE.nome}: calculadoras trabalhistas, financeiras e do INSS` : `${titulo} | ${SITE.nome}`;
 ---
@@ -26,6 +28,7 @@ const tituloCompleto = Astro.url.pathname === "/" ? `${SITE.nome}: calculadoras 
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="pt_BR" />
     <meta name="theme-color" content="#1f3b7a" />
+    {semIndice && <meta name="robots" content="noindex, nofollow" />}
     <meta property="og:url" content={canonica} />
     <meta property="og:site_name" content={SITE.nome} />
     <meta property="og:image" content={`${SITE.dominio}/og.png`} />
