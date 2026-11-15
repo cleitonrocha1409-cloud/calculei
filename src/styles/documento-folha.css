@@ -362,7 +362,7 @@
       margin-top: 0 !important;
     }
     #documento .hol__corte {
-      margin: 6mm 0;
+      margin: 4mm 0;
     }
     #documento .hol {
       font-size: 10px;
@@ -372,7 +372,7 @@
       padding: 1.5px 5px;
     }
     #documento .hol__itens tbody tr.vazia td {
-      height: 13px;
+      height: 11px;
     }
     #documento .hol__topo {
       padding: 6px 8px 5px;
@@ -533,9 +533,11 @@
   .previa__vias {
     display: none !important;
   }
-  #documento.vias-separadas .hol__corte {
+  #documento.vias-separadas .hol__corte,
+  #documento.vias-longas .hol__corte {
     display: none !important;
   }
+  #documento.vias-longas .hol__corte + .hol,
   #documento.vias-separadas .hol__corte + .hol {
     break-before: page;
     page-break-before: always;

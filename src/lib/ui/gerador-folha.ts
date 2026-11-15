@@ -127,7 +127,7 @@ function desenhar(p: Partes, d: DocumentoFolha, o: OpcoesDesenho) {
         `<tr><td class="c">${l.codigo}</td><td>${esc(l.descricao)}</td><td class="c">${esc(l.referencia)}</td><td class="n">${l.vencimento ? brl(l.vencimento) : ""}</td><td class="n">${l.desconto ? brl(l.desconto) : ""}</td></tr>`,
     )
     .join("");
-  const vazias = Array.from({ length: Math.max(0, (o.linhasMinimas ?? 8) - d.linhas.length) }, () => `<tr class="vazia"><td></td><td></td><td></td><td></td><td></td></tr>`).join("");
+  const vazias = Array.from({ length: Math.max(0, (o.linhasMinimas ?? 7) - d.linhas.length) }, () => `<tr class="vazia"><td></td><td></td><td></td><td></td><td></td></tr>`).join("");
   const controle = numeroControle([d.titulo, d.referencia, p.documentoEmpresa, p.cpf, p.nome, d.liquido.toFixed(2), d.totalVencimentos.toFixed(2)].join("|"));
   const tipoDoc = p.documentoEmpresa.replace(/\D/g, "").length === 11 ? "CPF" : "CNPJ";
   const segunda = pessoa === "sócio"
@@ -183,6 +183,8 @@ export interface OpcoesConteudo {
   valor?: string;
   /** Largura natural do documento, em px, para reduzir no celular. */
   largura?: number;
+  /** Documento comprido: as vias saem em folhas separadas. */
+  longo?: boolean;
 }
 
 /** Mostra um documento já desenhado, ou a lista do que falta preencher. */
@@ -201,6 +203,7 @@ export function exibirConteudo(html: string | null, o: OpcoesConteudo = {}) {
   }
   larguraBase = o.largura ?? 640;
   $("documento").innerHTML = html;
+  $("documento").classList.toggle("vias-longas", !!o.longo);
   $("avisos").innerHTML = (o.avisos ?? []).map((a) => `<li>${esc(a)}</li>`).join("");
   $("barra-rotulo").textContent = o.rotulo ?? "";
   $("barra-valor").textContent = o.valor ?? "";
@@ -213,8 +216,11 @@ export function exibir(p: Partes | null, d: DocumentoFolha | null, o: OpcoesDese
   const corpo = desenhar(p, d, o);
   const via = (nome: string) => `<article class="hol"><div class="hol__via">${nome}</div>${corpo}</article>`;
   const quem = o.rotuloPessoa === "sócio" ? "Via do sócio" : "Via do funcionário";
+  // Com muitos lançamentos as duas vias não cabem numa folha: cada uma vai para a sua.
+  const longo = d.linhas.length > 11;
   exibirConteudo(via("Via da empresa") + `<div class="hol__corte" aria-hidden="true">corte aqui</div>` + via(quem), {
-    avisos: d.avisos,
+    avisos: longo ? [...d.avisos, "Com tantos lançamentos, cada via será impressa em uma folha."] : d.avisos,
+    longo,
     rotulo: "Valor líquido",
     valor: `R$ ${brl(d.liquido)}`,
   });
