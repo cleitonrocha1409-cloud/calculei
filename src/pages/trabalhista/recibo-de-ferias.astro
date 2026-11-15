@@ -77,7 +77,7 @@ import GeradorPagina from "../../components/folha/GeradorPagina.astro";
     $("vazio").textContent = vazio;
     const partes = lerPartes();
     const salario = val("salario");
-    if (!partes || !(salario > 0) || !$("inicio").value) return exibir(null, null);
+    if (!partes || !(salario > 0) || !$("inicio").value) return exibir(partes, null, { falta: salario > 0 ? [] : ["salário"] });
     try {
       const doc = reciboFerias({
         salario,

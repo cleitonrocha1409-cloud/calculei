@@ -49,6 +49,8 @@ export function iniciarPartes() {
   });
 }
 
+let pendencias: string[] = [];
+
 /** Lê as partes; devolve null se faltar algo obrigatório (o documento só sai com dados válidos). */
 export function lerPartes(): Partes | null {
   try {
@@ -70,6 +72,12 @@ export function lerPartes(): Partes | null {
   const cpfOk = !p.cpf || cpfValido(p.cpf);
   $("erro-cnpj").hidden = !p.documentoEmpresa || cnpjOk;
   $("erro-cpf").hidden = cpfOk;
+  pendencias = [
+    !p.empresa && "nome da empresa",
+    !cnpjOk && "CNPJ válido",
+    !p.nome && "nome",
+    !cpfOk && "CPF válido",
+  ].filter(Boolean) as string[];
   return p.empresa && cnpjOk && p.nome && cpfOk ? p : null;
 }
 
@@ -106,6 +114,8 @@ export interface OpcoesDesenho {
   dataPagamento?: string; // AAAA-MM-DD
   linhasMinimas?: number;
   rotuloPessoa?: string; // "funcionário" ou "sócio"
+  /** Campos da própria página que faltam (mostrados na barra do celular). */
+  falta?: string[];
 }
 
 function desenhar(p: Partes, d: DocumentoFolha, o: OpcoesDesenho) {
@@ -153,14 +163,29 @@ function desenhar(p: Partes, d: DocumentoFolha, o: OpcoesDesenho) {
     <footer class="hol__rodape">Documento ${controle} · emitido em ${new Date().toLocaleDateString("pt-BR")} · calculado com as tabelas de INSS, IRRF e FGTS de 2026 · calculoemdia.com.br</footer>`;
 }
 
+/** No celular o recibo é reduzido para caber na tela; um toque alterna para o tamanho real. */
+let ampliado = false;
+function encaixar() {
+  const doc = $("documento");
+  const largura = $("papel").clientWidth - 16;
+  const escala = !ampliado && largura < 640 ? largura / 640 : 1;
+  doc.style.setProperty("zoom", String(escala));
+  $("papel").classList.toggle("previa__papel--reduzido", escala < 1);
+}
+
 /** Mostra o documento (duas vias) ou o aviso de campos faltando. */
 export function exibir(p: Partes | null, d: DocumentoFolha | null, o: OpcoesDesenho = {}) {
   const pronto = !!(p && d);
   $("vazio").hidden = pronto;
   $("papel").hidden = !pronto;
   ($("imprimir") as HTMLButtonElement).disabled = !pronto;
+  const barra = $("barra-movel");
+  barra.classList.toggle("barra-movel--pronta", pronto);
   if (!p || !d) {
     $("avisos").innerHTML = "";
+    const falta = [...pendencias, ...(o.falta ?? [])];
+    $("barra-valor").textContent = falta.length ? `Falta: ${falta.join(", ")}` : "Preencha os campos";
+    $("barra-rotulo").textContent = "Para gerar o documento";
     return;
   }
   const corpo = desenhar(p, d, o);
@@ -168,6 +193,9 @@ export function exibir(p: Partes | null, d: DocumentoFolha | null, o: OpcoesDese
   const quem = o.rotuloPessoa === "sócio" ? "Via do sócio" : "Via do funcionário";
   $("documento").innerHTML = via("Via da empresa") + `<div class="hol__corte" aria-hidden="true">corte aqui</div>` + via(quem);
   $("avisos").innerHTML = d.avisos.map((a) => `<li>${esc(a)}</li>`).join("");
+  $("barra-rotulo").textContent = "Valor líquido";
+  $("barra-valor").textContent = `R$ ${brl(d.liquido)}`;
+  encaixar();
 }
 
 /** Liga formulário e botão de impressão. */
@@ -176,6 +204,25 @@ export function iniciarGerador(tipo: string, atualizar: () => void) {
   form.addEventListener("input", atualizar);
   form.addEventListener("change", atualizar);
   form.addEventListener("submit", (e) => e.preventDefault());
+  // Barra fixa do celular: mostra o líquido e leva ao documento; perto dele, vira o botão de PDF.
+  const previa = document.querySelector(".previa")!;
+  const acao = $<HTMLButtonElement>("barra-acao");
+  let naPrevia = false;
+  new IntersectionObserver(([e]) => {
+    naPrevia = e.isIntersecting;
+    acao.textContent = naPrevia ? "Baixar PDF" : "Ver documento";
+  }, { threshold: 0.15 }).observe(previa);
+  acao.addEventListener("click", () => {
+    if (!acao.closest(".barra-movel--pronta")) return form.querySelector<HTMLInputElement>("input:invalid, #empresa")?.focus();
+    if (naPrevia) $("imprimir").click();
+    else previa.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+  $("documento").addEventListener("click", () => {
+    if (!$("papel").classList.contains("previa__papel--reduzido") && !ampliado) return;
+    ampliado = !ampliado;
+    encaixar();
+  });
+  window.addEventListener("resize", encaixar);
   $("imprimir").addEventListener("click", () => {
     (window as unknown as { gtag?: (...a: unknown[]) => void }).gtag?.("event", "gerar_documento", { tipo });
     window.print();

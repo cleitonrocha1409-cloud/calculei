@@ -145,7 +145,7 @@ import { formatarBRL } from "../../lib/dinheiro";
     const partes = lerPartes();
     const salario = val("salario");
     const competencia = $("competencia").value;
-    if (!partes || !(salario > 0) || !competencia) return exibir(null, null);
+    if (!partes || !(salario > 0) || !competencia) return exibir(partes, null, { falta: salario > 0 ? [] : ["salário-base"] });
     const r = calcularHolerite({
       competencia,
       salarioBase: salario,

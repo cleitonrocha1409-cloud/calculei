@@ -56,7 +56,7 @@ import GeradorPagina from "../../components/folha/GeradorPagina.astro";
     const partes = lerPartes();
     const valor = val("valor");
     const competencia = $("competencia").value;
-    if (!partes || !(valor > 0) || !competencia) return exibir(null, null);
+    if (!partes || !(valor > 0) || !competencia) return exibir(partes, null, { falta: valor > 0 ? [] : ["valor do pró-labore"] });
     const doc = reciboProLabore(
       { competencia, valor, dependentesIR: num("dependentes"), pensao: val("pensao"), outrosDescontos: livres("descontos") },
       nomeCompetencia(competencia),

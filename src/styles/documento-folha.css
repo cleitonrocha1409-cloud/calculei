@@ -410,3 +410,95 @@
 .tres:has(input[type="date"]) {
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
 }
+
+/* Celular: barra fixa com o líquido, documento reduzido e uma via só na tela. */
+.barra-movel,
+.previa__dica {
+  display: none;
+}
+@media (max-width: 960px) {
+  .barra-movel {
+    display: flex;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 30;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.6rem 1rem calc(0.6rem + env(safe-area-inset-bottom));
+    background: #fff;
+    border-top: 1px solid var(--linha);
+    box-shadow: 0 -4px 14px rgba(22, 32, 42, 0.08);
+  }
+  .barra-movel div {
+    min-width: 0;
+  }
+  .barra-movel small {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--tinta-2);
+  }
+  .barra-movel strong {
+    display: block;
+    font: 700 1.05rem var(--titulo);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .barra-movel:not(.barra-movel--pronta) strong {
+    font: 600 0.92rem var(--texto);
+    color: var(--negativo);
+  }
+  .barra-movel button {
+    flex: none;
+    border: 0;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    background: var(--carteira);
+    color: #fff;
+    font: 600 0.95rem var(--texto);
+    cursor: pointer;
+  }
+  .barra-movel:not(.barra-movel--pronta) button {
+    background: var(--linha);
+    color: var(--tinta-2);
+  }
+  body:has(.barra-movel) {
+    padding-bottom: 76px;
+  }
+  .previa__papel {
+    padding: 8px;
+  }
+  .previa__papel--reduzido + .previa__avisos,
+  .previa__papel--reduzido {
+    cursor: zoom-in;
+  }
+  .previa__papel:not([hidden]) ~ .previa__dica,
+  .previa__dica:has(+ .previa__papel:not([hidden])) {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--tinta-2);
+    margin: 0 0 0.5rem;
+  }
+  #documento .hol__corte,
+  #documento .hol__corte + .hol {
+    display: none;
+  }
+}
+@media print {
+  .barra-movel,
+  .previa__dica {
+    display: none !important;
+  }
+  #documento {
+    zoom: 1 !important;
+  }
+  #documento .hol__corte {
+    display: block !important;
+  }
+  #documento .hol__corte + .hol {
+    display: block !important;
+  }
+}

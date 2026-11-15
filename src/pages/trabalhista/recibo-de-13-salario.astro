@@ -69,7 +69,7 @@ import GeradorPagina from "../../components/folha/GeradorPagina.astro";
     $("so-segunda").hidden = parcela.value !== "2";
     const partes = lerPartes();
     const salario = val("salario");
-    if (!partes || !(salario > 0)) return exibir(null, null);
+    if (!partes || !(salario > 0)) return exibir(partes, null, { falta: salario > 0 ? [] : ["salário"] });
     try {
       const doc = recibo13({
         parcela: parcela.value === "2" ? 2 : 1,

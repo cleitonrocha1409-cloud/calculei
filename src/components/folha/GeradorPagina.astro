@@ -97,6 +97,7 @@ const socio = pessoa === "socio";
         <button type="button" id="imprimir" class="botao-agenda" disabled>Baixar PDF / imprimir</button>
       </div>
       <div class="previa__vazio" id="vazio">Preencha a empresa, {socio ? "o sócio" : "o funcionário"} e os valores para ver o documento.</div>
+      <p class="previa__dica">Toque no documento para ver em tamanho real.</p>
       <div class="previa__papel" id="papel" hidden>
         <div id="documento"></div>
       </div>
@@ -110,5 +111,13 @@ const socio = pessoa === "socio";
         <a href="/trabalhista/recibo-de-pro-labore/">Recibo de pró-labore</a>
       </nav>
     </section>
+  </div>
+
+  <div class="barra-movel" id="barra-movel">
+    <div>
+      <small id="barra-rotulo">Para gerar o documento</small>
+      <strong id="barra-valor">Preencha os campos</strong>
+    </div>
+    <button type="button" id="barra-acao">Ver documento</button>
   </div>
 </Base>
