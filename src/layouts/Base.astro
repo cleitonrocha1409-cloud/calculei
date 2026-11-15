@@ -2,6 +2,7 @@
 import "../styles/global.css";
 import { SITE } from "../config";
 import { CATEGORIAS } from "../data/catalogo";
+import Logo from "../components/Logo.astro";
 
 interface Props {
   titulo: string;
@@ -37,6 +38,7 @@ const tituloCompleto = Astro.url.pathname === "/" ? `${SITE.nome}: calculadoras 
     <meta property="og:image:alt" content={`${SITE.nome}: calculadoras com as regras de 2026`} />
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="icon" href="/icon-192.png" type="image/png" sizes="192x192" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
@@ -63,7 +65,7 @@ const tituloCompleto = Astro.url.pathname === "/" ? `${SITE.nome}: calculadoras 
     <a class="pular" href="#conteudo">Pular para o conteúdo</a>
     <header class="topo">
       <div class="envelope topo__linha">
-        <a class="marca" href="/" aria-label={SITE.nome}>{SITE.marca[0]} <span>{SITE.marca[1]}</span></a>
+        <a class="marca" href="/" aria-label={`${SITE.nome}, página inicial`}><Logo variante="claro" /></a>
         <nav aria-label="Categorias">
           <ul>
             {CATEGORIAS.map((c) => <li><a href={`/${c.slug}/`}>{c.nome}</a></li>)}
@@ -77,7 +79,7 @@ const tituloCompleto = Astro.url.pathname === "/" ? `${SITE.nome}: calculadoras 
     <footer class="rodape">
       <div class="envelope rodape__grade">
         <div>
-          <p class="marca marca--rodape">{SITE.marca[0]} <span>{SITE.marca[1]}</span></p>
+          <p class="marca marca--rodape" aria-label={SITE.nome}><Logo variante="escuro" /></p>
           <p>Resultados são simulações e não substituem a orientação de um contador ou advogado.</p>
         </div>
         <ul>
@@ -149,13 +151,7 @@ const tituloCompleto = Astro.url.pathname === "/" ? `${SITE.nome}: calculadoras 
     letter-spacing: -0.02em;
     flex-shrink: 0;
   }
-  .marca span {
-    background: var(--marca-texto);
-    color: var(--carteira);
-    padding: 0.05em 0.28em 0.1em;
-    border-radius: 3px;
-    margin-left: 0.05em;
-  }
+
   .topo nav {
     overflow-x: auto;
     scrollbar-width: none;
@@ -212,9 +208,7 @@ const tituloCompleto = Astro.url.pathname === "/" ? `${SITE.nome}: calculadoras 
     color: var(--carteira);
     margin-bottom: 0.6rem;
   }
-  .marca--rodape span {
-    color: var(--carteira);
-  }
+
   @media (max-width: 720px) {
     .rodape__grade {
       grid-template-columns: 1fr;
