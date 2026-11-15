@@ -223,8 +223,25 @@ export function iniciarGerador(tipo: string, atualizar: () => void) {
     encaixar();
   });
   window.addEventListener("resize", encaixar);
+  // Vias juntas (com corte) ou uma por folha; a escolha fica guardada no aparelho.
+  const radios = document.querySelectorAll<HTMLInputElement>('input[name="vias"]');
+  const aplicarVias = (v: string) => $("documento").classList.toggle("vias-separadas", v === "separadas");
+  try {
+    const salvo = localStorage.getItem("documento-vias");
+    if (salvo) radios.forEach((r) => (r.checked = r.value === salvo));
+  } catch {}
+  aplicarVias([...radios].find((r) => r.checked)?.value ?? "juntas");
+  radios.forEach((r) =>
+    r.addEventListener("change", (e) => {
+      e.stopPropagation();
+      aplicarVias(r.value);
+      try {
+        localStorage.setItem("documento-vias", r.value);
+      } catch {}
+    }),
+  );
   $("imprimir").addEventListener("click", () => {
-    (window as unknown as { gtag?: (...a: unknown[]) => void }).gtag?.("event", "gerar_documento", { tipo });
+    (window as unknown as { gtag?: (...a: unknown[]) => void }).gtag?.("event", "gerar_documento", { tipo, vias: $("documento").classList.contains("vias-separadas") ? "separadas" : "juntas" });
     window.print();
   });
   atualizar();

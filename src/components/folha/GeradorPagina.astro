@@ -96,6 +96,11 @@ const socio = pessoa === "socio";
         <h2>Prévia</h2>
         <button type="button" id="imprimir" class="botao-agenda" disabled>Baixar PDF / imprimir</button>
       </div>
+      <fieldset class="previa__vias">
+        <legend>Impressão das duas vias</legend>
+        <label><input type="radio" name="vias" value="juntas" checked /> Na mesma folha, com linha de corte</label>
+        <label><input type="radio" name="vias" value="separadas" /> Uma via em cada folha</label>
+      </fieldset>
       <div class="previa__vazio" id="vazio">Preencha a empresa, {socio ? "o sócio" : "o funcionário"} e os valores para ver o documento.</div>
       <p class="previa__dica">Toque no documento para ver em tamanho real.</p>
       <div class="previa__papel" id="papel" hidden>
