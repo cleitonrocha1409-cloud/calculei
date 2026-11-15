@@ -11,10 +11,13 @@ interface Props {
   h1: string;
   apoio: string;
   /** "socio" troca os campos do funcionário pelos do sócio (pró-labore). */
-  pessoa?: "funcionario" | "socio";
+  pessoa?: "funcionario" | "socio" | "equipe";
+  /** Recibos em duas vias mostram a escolha de impressão. */
+  vias?: boolean;
 }
-const { titulo, descricao, h1, apoio, pessoa = "funcionario" } = Astro.props;
+const { titulo, descricao, h1, apoio, pessoa = "funcionario", vias = true } = Astro.props;
 const socio = pessoa === "socio";
+const equipe = pessoa === "equipe";
 ---
 
 <Base titulo={titulo} descricao={descricao} semIndice>
@@ -46,7 +49,7 @@ const socio = pessoa === "socio";
         <label class="marcar"><input type="checkbox" id="lembrar" /> Lembrar os dados da empresa neste aparelho</label>
       </section>
 
-      <section class="bloco">
+      {!equipe && (<section class="bloco">
         <h2><span>2</span> {socio ? "Sócio" : "Funcionário"}</h2>
         <div class="campo">
           <label for="nome">Nome completo</label>
@@ -86,7 +89,7 @@ const socio = pessoa === "socio";
             </div>
           )
         }
-      </section>
+      </section>)}
 
       <slot />
     </form>
@@ -96,12 +99,12 @@ const socio = pessoa === "socio";
         <h2>Prévia</h2>
         <button type="button" id="imprimir" class="botao-agenda" disabled>Baixar PDF / imprimir</button>
       </div>
-      <fieldset class="previa__vias">
+      {vias && (<fieldset class="previa__vias">
         <legend>Impressão das duas vias</legend>
         <label><input type="radio" name="vias" value="juntas" checked /> Na mesma folha, com linha de corte</label>
         <label><input type="radio" name="vias" value="separadas" /> Uma via em cada folha</label>
-      </fieldset>
-      <div class="previa__vazio" id="vazio">Preencha a empresa, {socio ? "o sócio" : "o funcionário"} e os valores para ver o documento.</div>
+      </fieldset>)}
+      <div class="previa__vazio" id="vazio">Preencha a empresa, {socio ? "o sócio" : equipe ? "a equipe" : "o funcionário"} e os dados para ver o documento.</div>
       <p class="previa__dica">Toque no documento para ver em tamanho real.</p>
       <div class="previa__papel" id="papel" hidden>
         <div id="documento"></div>
@@ -114,6 +117,8 @@ const socio = pessoa === "socio";
         <a href="/trabalhista/recibo-de-ferias/">Recibo de férias</a>
         <a href="/trabalhista/recibo-de-13-salario/">Recibo de 13º</a>
         <a href="/trabalhista/recibo-de-pro-labore/">Recibo de pró-labore</a>
+        <a href="/trabalhista/folha-de-ponto/">Folha de ponto</a>
+        <a href="/trabalhista/escala-de-trabalho/">Escala da equipe</a>
       </nav>
     </section>
   </div>

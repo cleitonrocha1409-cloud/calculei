@@ -1,0 +1,194 @@
+---
+// Escala de trabalho da equipe no mês (folgas, plantões e feriados), para imprimir e afixar. Ainda não publicada.
+import GeradorPagina from "../../components/folha/GeradorPagina.astro";
+---
+
+<GeradorPagina
+  titulo="Escala de trabalho da equipe: calendário de folgas do mês para imprimir"
+  descricao="Monte a escala mensal da equipe com folgas, plantões 12x36 e feriados nacionais, veja quantas pessoas trabalham por dia e confira as regras da CLT e do fim da 6x1. Pronta para imprimir."
+  h1="Escala de trabalho da equipe"
+  apoio="Cadastre a equipe com as folgas e o horário de cada pessoa. A escala do mês sai em uma folha deitada, com feriados marcados, quantas pessoas trabalham em cada dia e os alertas da CLT e do fim da 6x1."
+  pessoa="equipe"
+  vias={false}
+>
+  <section class="bloco">
+    <h2><span>2</span> Equipe</h2>
+    <div id="equipe"></div>
+    <button type="button" class="adicionar" id="adicionar-pessoa">+ Adicionar funcionário</button>
+    <p class="ajuda">Não sabe como distribuir as folgas? O <a href="/fim-da-escala-6x1/montador-de-escala/">montador de escala</a> calcula a equipe mínima e o rodízio.</p>
+  </section>
+
+  <section class="bloco">
+    <h2><span>3</span> Mês</h2>
+    <div class="duas">
+      <div class="campo">
+        <label for="competencia">Mês</label>
+        <input id="competencia" type="month" min="2026-01" max="2027-12" />
+      </div>
+      <div class="campo">
+        <label for="intervalo">Intervalo de todos (min)</label>
+        <input id="intervalo" type="number" min="0" max="180" step="5" value="60" inputmode="numeric" />
+      </div>
+    </div>
+    <label class="marcar"><input type="checkbox" id="feriados" /> A equipe trabalha nos feriados</label>
+    <label class="marcar"><input type="checkbox" id="acordo" /> Há acordo coletivo para 42 horas na transição do fim da 6x1</label>
+  </section>
+</GeradorPagina>
+
+<script>
+  import { formatarHoras, montarEscala, SEMANA_CURTA, SEMANA_LETRA, type ResultadoEscala } from "../../lib/trabalhista/escala";
+  import { nomeCompetencia } from "../../lib/ui/documentos";
+  import { $, cabecalhoEmpresa, esc, exibirConteudo, iniciarGerador, iniciarPartes, lerPartes, num, rodapeControle } from "../../lib/ui/gerador-folha";
+
+  interface Pessoa {
+    nome: string;
+    cargo: string;
+    modo: "semanal" | "12x36-1" | "12x36-2";
+    folgas: number[];
+    entrada: string;
+    saida: string;
+  }
+  const CHAVE = "escala-equipe";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const lista = $("equipe");
+  let seq = 0;
+
+  function linha(p: Partial<Pessoa> = {}) {
+    const id = `p${seq++}`;
+    const folgas = p.folgas ?? [0, 6];
+    const div = document.createElement("div");
+    div.className = "pessoa";
+    div.innerHTML = `
+      <div class="pessoa__topo">
+        <input class="pessoa__nome" maxlength="60" placeholder="Nome" aria-label="Nome" value="${esc(p.nome ?? "")}">
+        <button type="button" class="livre__remover" aria-label="Remover">×</button>
+      </div>
+      <div class="duas">
+        <input class="pessoa__cargo" maxlength="40" placeholder="Cargo (opcional)" aria-label="Cargo" value="${esc(p.cargo ?? "")}">
+        <select class="pessoa__modo" aria-label="Tipo de escala">
+          <option value="semanal">Folgas fixas</option>
+          <option value="12x36-1">12x36, plantão no dia 1</option>
+          <option value="12x36-2">12x36, plantão no dia 2</option>
+        </select>
+      </div>
+      <div class="chips pessoa__folgas" role="group" aria-label="Dias de folga">
+        ${SEMANA_CURTA.map((d, i) => `<label class="chip"><input type="checkbox" name="${id}" value="${i}" ${folgas.includes(i) ? "checked" : ""}><span>${d}</span></label>`).join("")}
+      </div>
+      <div class="duas pessoa__horas">
+        <label>Entrada <input type="time" class="pessoa__entrada" value="${p.entrada ?? "08:00"}"></label>
+        <label>Saída <input type="time" class="pessoa__saida" value="${p.saida ?? "17:00"}"></label>
+      </div>`;
+    (div.querySelector(".pessoa__modo") as HTMLSelectElement).value = p.modo ?? "semanal";
+    div.querySelector(".livre__remover")!.addEventListener("click", () => {
+      div.remove();
+      atualizar();
+    });
+    lista.appendChild(div);
+    return div;
+  }
+
+  const equipe = (): Pessoa[] =>
+    [...lista.querySelectorAll<HTMLElement>(".pessoa")].map((el) => ({
+      nome: (el.querySelector(".pessoa__nome") as HTMLInputElement).value.trim(),
+      cargo: (el.querySelector(".pessoa__cargo") as HTMLInputElement).value.trim(),
+      modo: (el.querySelector(".pessoa__modo") as HTMLSelectElement).value as Pessoa["modo"],
+      folgas: [...el.querySelectorAll<HTMLInputElement>(".pessoa__folgas input:checked")].map((c) => Number(c.value)),
+      entrada: (el.querySelector(".pessoa__entrada") as HTMLInputElement).value,
+      saida: (el.querySelector(".pessoa__saida") as HTMLInputElement).value,
+    }));
+
+  // Equipe guardada no aparelho junto com a empresa, se a pessoa pedir.
+  let salva: Pessoa[] = [];
+  try {
+    salva = JSON.parse(localStorage.getItem(CHAVE) || "[]");
+  } catch {}
+  (salva.length ? salva : [{}]).forEach((p) => linha(p));
+  $("adicionar-pessoa").addEventListener("click", () => {
+    (linha().querySelector(".pessoa__nome") as HTMLInputElement).focus();
+  });
+  $("competencia").value = (() => {
+    const h = new Date();
+    return `${h.getFullYear()}-${pad(h.getMonth() + 1)}`;
+  })();
+
+  function atualizar() {
+    lista.querySelectorAll<HTMLElement>(".pessoa").forEach((el) => {
+      (el.querySelector(".pessoa__folgas") as HTMLElement).hidden = (el.querySelector(".pessoa__modo") as HTMLSelectElement).value !== "semanal";
+    });
+    const pessoas = equipe().filter((p) => p.nome);
+    try {
+      if ($("lembrar").checked) localStorage.setItem(CHAVE, JSON.stringify(equipe()));
+      else localStorage.removeItem(CHAVE);
+    } catch {}
+
+    const partes = lerPartes(false);
+    const competencia = $("competencia").value;
+    if (!partes || !competencia || !pessoas.length) return exibirConteudo(null, { falta: pessoas.length ? [] : ["nome de pelo menos um funcionário"] });
+
+    const intervalo = num("intervalo");
+    const resultados: { p: Pessoa; r: ResultadoEscala }[] = pessoas.map((p) => ({
+      p,
+      r: montarEscala({
+        competencia,
+        modo: p.modo === "semanal" ? "semanal" : "12x36",
+        folgas: p.folgas,
+        inicio12x36: `${competencia}-${p.modo === "12x36-2" ? "02" : "01"}`,
+        horario: { entrada: p.entrada || "08:00", saida: p.saida || "17:00", intervalo },
+        trabalhaFeriados: $("feriados").checked,
+        acordo42h: $("acordo").checked,
+      }),
+    }));
+    const dias = resultados[0].r.dias;
+
+    // Alertas: iguais para várias pessoas viram um só, com os nomes.
+    const porAviso = new Map<string, string[]>();
+    for (const { p, r } of resultados) for (const a of r.avisos) porAviso.set(a, [...(porAviso.get(a) ?? []), p.nome]);
+    const avisos = [...porAviso].map(([a, nomes]) => (nomes.length === pessoas.length && pessoas.length > 1 ? a : `${nomes.join(", ")}: ${a}`));
+    const cobertura = dias.map((_, i) => resultados.filter(({ r }) => r.dias[i].tipo === "trabalho").length);
+    const vazios = dias.filter((d, i) => cobertura[i] === 0 && !d.feriado).map((d) => d.dia);
+    if (vazios.length) avisos.unshift(`Ninguém trabalha nos dias ${vazios.join(", ")}. Se o negócio abre nesses dias, ajuste as folgas.`);
+
+    const cab1 = dias.map((d) => `<th class="${d.feriado ? "esc__fer" : d.semana === 0 ? "esc__dom" : ""}">${d.dia}</th>`).join("");
+    const cab2 = dias.map((d) => `<th class="${d.feriado ? "esc__fer" : d.semana === 0 ? "esc__dom" : ""}">${SEMANA_LETRA[d.semana]}</th>`).join("");
+    const corpo = resultados
+      .map(({ p, r }) => {
+        const celulas = r.dias
+          .map((d) => (d.tipo === "trabalho" ? `<td class="esc__t${d.feriado ? " esc__fer" : ""}">T</td>` : d.tipo === "feriado" ? `<td class="esc__fe">FE</td>` : `<td class="esc__f">F</td>`))
+          .join("");
+        return `<tr><td class="esc__nome"><strong>${esc(p.nome)}</strong>${p.cargo ? `<small>${esc(p.cargo)}</small>` : ""}</td><td class="esc__hora">${p.entrada}–${p.saida}<small>${p.modo === "semanal" ? `${formatarHoras(r.minutosSemana)}/sem.` : "12x36"}</small></td>${celulas}<td class="esc__tot">${r.diasTrabalho}</td></tr>`;
+      })
+      .join("");
+    const rodape = `<tr class="esc__cob"><td colspan="2">Pessoas trabalhando</td>${cobertura.map((c) => `<td>${c}</td>`).join("")}<td></td></tr>`;
+    const feriadosMes = dias.filter((d) => d.feriado).map((d) => `${pad(d.dia)}: ${d.feriado}`);
+
+    const html = `<article class="hol esc">
+        ${cabecalhoEmpresa(partes, "Escala de trabalho", `Referência: ${nomeCompetencia(competencia)}`)}
+        <table class="esc__grade">
+          <thead><tr><th rowspan="2" class="esc__nome">Funcionário</th><th rowspan="2" class="esc__hora">Horário</th>${cab1}<th rowspan="2" class="esc__tot">Dias</th></tr><tr>${cab2}</tr></thead>
+          <tbody>${corpo}</tbody>
+          <tfoot>${rodape}</tfoot>
+        </table>
+        <div class="esc__legenda">
+          <span><b class="esc__t">T</b> trabalho</span><span><b class="esc__f">F</b> folga</span><span><b class="esc__fe">FE</b> feriado</span>
+          ${feriadosMes.length ? `<span>Feriados nacionais: ${esc(feriadosMes.join(" · "))}</span>` : ""}
+        </div>
+        <div class="hol__assinatura esc__assinatura">
+          <p>Escala sujeita a alteração com aviso prévio à equipe. Intervalo de ${formatarHoras(intervalo)} por dia.</p>
+          <div><span></span><small>Responsável</small></div>
+          <div><span></span><small>Data de afixação</small></div>
+        </div>
+        ${rodapeControle(partes, `escala|${competencia}|${pessoas.map((p) => p.nome).join(",")}`)}
+      </article>`;
+
+    const total = cobertura.reduce((a, b) => a + b, 0);
+    exibirConteudo(html, {
+      avisos,
+      largura: 1000,
+      rotulo: `${pessoas.length} ${pessoas.length === 1 ? "pessoa" : "pessoas"} na escala`,
+      valor: `média de ${(total / dias.length).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} por dia`,
+    });
+  }
+
+  iniciarPartes();
+  iniciarGerador("escala-equipe", atualizar);
+</script>

@@ -541,3 +541,248 @@
     page-break-before: always;
   }
 }
+
+/* Escalas: dias da semana em botões e atalhos. */
+.rotulo-grupo {
+  font-weight: 600;
+  margin: 0 0 0.4rem;
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.chip {
+  position: relative;
+  cursor: pointer;
+}
+.chip input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+.chip span {
+  display: inline-grid;
+  place-items: center;
+  min-width: 2.9rem;
+  height: 2.5rem;
+  border: 1.5px solid var(--linha);
+  border-radius: 8px;
+  background: #fff;
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+.chip input:checked + span {
+  background: var(--carteira);
+  border-color: var(--carteira);
+  color: #fff;
+}
+.chip input:focus-visible + span {
+  outline: 3px solid var(--carteira);
+  outline-offset: 2px;
+}
+.atalhos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.6rem 0 1rem;
+}
+.atalhos button {
+  background: none;
+  border: 0;
+  padding: 0.2rem 0;
+  color: var(--carteira);
+  font: 600 0.9rem var(--texto);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Folha de ponto */
+#documento .ponto__dias th {
+  font-size: 9.5px;
+  text-align: left;
+  border-bottom: 1px solid #222;
+  border-top: 1px solid #222;
+  background: #f1f1f1;
+}
+#documento .ponto__dias td {
+  border-bottom: 1px solid #ccc;
+  border-right: 1px solid #ccc;
+  height: 19px;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+#documento .ponto__dias td:last-child {
+  border-right: 0;
+  width: 30%;
+}
+#documento .ponto__dias th:nth-child(n + 3):nth-child(-n + 7) {
+  width: 58px;
+}
+#documento .ponto__dias th:first-child {
+  width: 52px;
+}
+#documento .ponto__off td {
+  background: #ececec;
+  color: #444;
+}
+#documento .ponto__dias em {
+  font-size: 9px;
+  color: #555;
+}
+#documento .ponto__obs {
+  width: 45%;
+}
+#documento .ponto__assinatura {
+  grid-template-columns: 1.2fr 1fr 1fr;
+  padding-top: 26px;
+}
+@media print {
+  #documento .ponto__dias td {
+    height: 20px;
+  }
+  #documento .ponto__assinatura {
+    padding-top: 22px;
+  }
+}
+
+/* Equipe no formulário da escala */
+.pessoa {
+  border: 1.5px solid var(--linha);
+  border-radius: 10px;
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+  background: #fff;
+  display: grid;
+  gap: 0.6rem;
+}
+.pessoa .duas {
+  gap: 0.5rem;
+}
+.pessoa__topo {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem;
+}
+.pessoa__topo .livre__remover {
+  width: 40px;
+  height: 40px;
+  border: 1.5px solid var(--linha);
+  border-radius: 8px;
+  background: #fff;
+  font-size: 1.3rem;
+  cursor: pointer;
+}
+.pessoa__horas label {
+  display: grid;
+  gap: 0.2rem;
+  font-size: 0.85rem;
+  color: var(--tinta-2);
+}
+.pessoa .chip span {
+  min-width: 2.6rem;
+  height: 2.2rem;
+  font-size: 0.85rem;
+}
+
+/* Escala da equipe: folha deitada */
+@page paisagem {
+  size: A4 landscape;
+  margin: 8mm;
+}
+#documento .esc {
+  min-width: 1000px;
+}
+#documento .esc__grade {
+  table-layout: fixed;
+}
+#documento .esc__grade th,
+#documento .esc__grade td {
+  border: 1px solid #bbb;
+  text-align: center;
+  padding: 2px 0;
+  font-size: 10px;
+  vertical-align: middle;
+}
+#documento .esc__grade thead th {
+  background: #f1f1f1;
+  font-weight: 700;
+}
+#documento .esc__grade .esc__nome {
+  width: 150px;
+  text-align: left;
+  padding-left: 6px;
+}
+#documento .esc__grade .esc__hora {
+  width: 76px;
+}
+#documento .esc__grade .esc__tot {
+  width: 34px;
+  font-weight: 700;
+}
+#documento .esc__nome strong {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#documento td.esc__hora {
+  white-space: nowrap;
+}
+#documento .esc__grade tbody td {
+  height: 34px;
+}
+#documento .esc__t {
+  color: #333;
+}
+#documento .esc__f {
+  background: #d9d9d9;
+  font-weight: 700;
+}
+#documento .esc__fe {
+  background: #f3dede;
+  font-weight: 700;
+}
+#documento th.esc__dom {
+  background: #e3e3e3;
+}
+#documento th.esc__fer,
+#documento td.esc__fer {
+  background: #f9eded;
+}
+#documento .esc__cob td {
+  background: #f1f1f1;
+  font-weight: 700;
+}
+#documento .esc__cob td:first-child {
+  text-align: right;
+  padding-right: 6px;
+}
+#documento .esc__legenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  padding: 6px 8px;
+  font-size: 10px;
+  border-top: 1px solid #222;
+}
+#documento .esc__legenda b {
+  display: inline-block;
+  min-width: 18px;
+  text-align: center;
+  border: 1px solid #bbb;
+  margin-right: 3px;
+}
+#documento .esc__assinatura {
+  grid-template-columns: 1.6fr 1fr 0.6fr;
+}
+@media print {
+  #documento .esc {
+    page: paisagem;
+    min-width: 0;
+  }
+}
+.chips[hidden] {
+  display: none;
+}

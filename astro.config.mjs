@@ -6,5 +6,5 @@ export default defineConfig({
   trailingSlash: "always",
   build: { format: "directory" },
   // Páginas ainda não lançadas ficam fora do sitemap.
-  integrations: [sitemap({ filter: (page) => !page.includes("/404") && !/\/(gerador-de-holerite|recibo-de-[a-z0-9-]+)\//.test(page) })],
+  integrations: [sitemap({ filter: (page) => !page.includes("/404") && !/\/(gerador-de-holerite|recibo-de-[a-z0-9-]+|folha-de-ponto|escala-de-trabalho)\//.test(page) })],
 });

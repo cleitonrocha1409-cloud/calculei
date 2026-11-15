@@ -42,7 +42,7 @@ export function iniciarPartes() {
       $("lembrar").checked = true;
     }
   } catch {}
-  $("cpf").addEventListener("input", () => ($("cpf").value = mascararCPF($("cpf").value)));
+  $("cpf")?.addEventListener("input", () => ($("cpf").value = mascararCPF($("cpf").value)));
   $("cnpj").addEventListener("input", () => {
     const d = $("cnpj").value.replace(/\D/g, "");
     $("cnpj").value = d.length <= 11 ? mascararCPF(d) : mascararCNPJ(d);
@@ -52,7 +52,7 @@ export function iniciarPartes() {
 let pendencias: string[] = [];
 
 /** Lê as partes; devolve null se faltar algo obrigatório (o documento só sai com dados válidos). */
-export function lerPartes(): Partes | null {
+export function lerPartes(exigirPessoa = true): Partes | null {
   try {
     if ($("lembrar").checked) localStorage.setItem(CHAVE, JSON.stringify({ empresa: $("empresa").value, cnpj: $("cnpj").value, endereco: $("endereco").value }));
     else localStorage.removeItem(CHAVE);
@@ -71,14 +71,15 @@ export function lerPartes(): Partes | null {
   const cnpjOk = docEmpregadorValido(p.documentoEmpresa);
   const cpfOk = !p.cpf || cpfValido(p.cpf);
   $("erro-cnpj").hidden = !p.documentoEmpresa || cnpjOk;
-  $("erro-cpf").hidden = cpfOk;
+  const erroCpf = document.getElementById("erro-cpf");
+  if (erroCpf) erroCpf.hidden = cpfOk;
   pendencias = [
     !p.empresa && "nome da empresa",
     !cnpjOk && "CNPJ válido",
-    !p.nome && "nome",
+    exigirPessoa && !p.nome && "nome",
     !cpfOk && "CPF válido",
   ].filter(Boolean) as string[];
-  return p.empresa && cnpjOk && p.nome && cpfOk ? p : null;
+  return p.empresa && cnpjOk && (p.nome || !exigirPessoa) && cpfOk ? p : null;
 }
 
 /** Botões "+ Outro vencimento / desconto". */
@@ -163,39 +164,74 @@ function desenhar(p: Partes, d: DocumentoFolha, o: OpcoesDesenho) {
     <footer class="hol__rodape">Documento ${controle} · emitido em ${new Date().toLocaleDateString("pt-BR")} · calculado com as tabelas de INSS, IRRF e FGTS de 2026 · calculoemdia.com.br</footer>`;
 }
 
-/** No celular o recibo é reduzido para caber na tela; um toque alterna para o tamanho real. */
+/** No celular o documento é reduzido para caber na tela; um toque alterna para o tamanho real. */
 let ampliado = false;
+let larguraBase = 640;
 function encaixar() {
   const doc = $("documento");
   const largura = $("papel").clientWidth - 16;
-  const escala = !ampliado && largura < 640 ? largura / 640 : 1;
+  const escala = !ampliado && largura < larguraBase ? largura / larguraBase : 1;
   doc.style.setProperty("zoom", String(escala));
   $("papel").classList.toggle("previa__papel--reduzido", escala < 1);
 }
 
-/** Mostra o documento (duas vias) ou o aviso de campos faltando. */
-export function exibir(p: Partes | null, d: DocumentoFolha | null, o: OpcoesDesenho = {}) {
-  const pronto = !!(p && d);
+export interface OpcoesConteudo {
+  avisos?: string[];
+  falta?: string[];
+  /** Barra do celular: rótulo e valor de destaque (ex.: "Valor líquido", "R$ 2.321,49"). */
+  rotulo?: string;
+  valor?: string;
+  /** Largura natural do documento, em px, para reduzir no celular. */
+  largura?: number;
+}
+
+/** Mostra um documento já desenhado, ou a lista do que falta preencher. */
+export function exibirConteudo(html: string | null, o: OpcoesConteudo = {}) {
+  const pronto = html !== null;
   $("vazio").hidden = pronto;
   $("papel").hidden = !pronto;
   ($("imprimir") as HTMLButtonElement).disabled = !pronto;
-  const barra = $("barra-movel");
-  barra.classList.toggle("barra-movel--pronta", pronto);
-  if (!p || !d) {
+  $("barra-movel").classList.toggle("barra-movel--pronta", pronto);
+  if (!pronto) {
     $("avisos").innerHTML = "";
     const falta = [...pendencias, ...(o.falta ?? [])];
     $("barra-valor").textContent = falta.length ? `Falta: ${falta.join(", ")}` : "Preencha os campos";
     $("barra-rotulo").textContent = "Para gerar o documento";
     return;
   }
+  larguraBase = o.largura ?? 640;
+  $("documento").innerHTML = html;
+  $("avisos").innerHTML = (o.avisos ?? []).map((a) => `<li>${esc(a)}</li>`).join("");
+  $("barra-rotulo").textContent = o.rotulo ?? "";
+  $("barra-valor").textContent = o.valor ?? "";
+  encaixar();
+}
+
+/** Recibos: duas vias do mesmo documento. */
+export function exibir(p: Partes | null, d: DocumentoFolha | null, o: OpcoesDesenho = {}) {
+  if (!p || !d) return exibirConteudo(null, { falta: o.falta });
   const corpo = desenhar(p, d, o);
   const via = (nome: string) => `<article class="hol"><div class="hol__via">${nome}</div>${corpo}</article>`;
   const quem = o.rotuloPessoa === "sócio" ? "Via do sócio" : "Via do funcionário";
-  $("documento").innerHTML = via("Via da empresa") + `<div class="hol__corte" aria-hidden="true">corte aqui</div>` + via(quem);
-  $("avisos").innerHTML = d.avisos.map((a) => `<li>${esc(a)}</li>`).join("");
-  $("barra-rotulo").textContent = "Valor líquido";
-  $("barra-valor").textContent = `R$ ${brl(d.liquido)}`;
-  encaixar();
+  exibirConteudo(via("Via da empresa") + `<div class="hol__corte" aria-hidden="true">corte aqui</div>` + via(quem), {
+    avisos: d.avisos,
+    rotulo: "Valor líquido",
+    valor: `R$ ${brl(d.liquido)}`,
+  });
+}
+
+/** Cabeçalho comum (empresa e título) para documentos de uma via só. */
+export function cabecalhoEmpresa(p: Partes, titulo: string, referencia: string) {
+  const tipoDoc = p.documentoEmpresa.replace(/\D/g, "").length === 11 ? "CPF" : "CNPJ";
+  return `<header class="hol__topo">
+      <div><strong class="hol__empresa">${esc(p.empresa)}</strong><span>${tipoDoc} ${esc(p.documentoEmpresa)}</span>${p.endereco ? `<span>${esc(p.endereco)}</span>` : ""}</div>
+      <div class="hol__titulo"><strong>${esc(titulo)}</strong>${referencia.split(" · ").map((r) => `<span>${esc(r)}</span>`).join("")}</div>
+    </header>`;
+}
+
+export function rodapeControle(p: Partes, conteudo: string) {
+  const controle = numeroControle([p.documentoEmpresa, p.nome, conteudo].join("|"));
+  return `<footer class="hol__rodape">Documento ${controle} · emitido em ${new Date().toLocaleDateString("pt-BR")} · calculoemdia.com.br</footer>`;
 }
 
 /** Liga formulário e botão de impressão. */
@@ -225,6 +261,7 @@ export function iniciarGerador(tipo: string, atualizar: () => void) {
   window.addEventListener("resize", encaixar);
   // Vias juntas (com corte) ou uma por folha; a escolha fica guardada no aparelho.
   const radios = document.querySelectorAll<HTMLInputElement>('input[name="vias"]');
+  if (radios.length) {
   const aplicarVias = (v: string) => $("documento").classList.toggle("vias-separadas", v === "separadas");
   try {
     const salvo = localStorage.getItem("documento-vias");
@@ -240,6 +277,7 @@ export function iniciarGerador(tipo: string, atualizar: () => void) {
       } catch {}
     }),
   );
+  }
   $("imprimir").addEventListener("click", () => {
     (window as unknown as { gtag?: (...a: unknown[]) => void }).gtag?.("event", "gerar_documento", { tipo, vias: $("documento").classList.contains("vias-separadas") ? "separadas" : "juntas" });
     window.print();
