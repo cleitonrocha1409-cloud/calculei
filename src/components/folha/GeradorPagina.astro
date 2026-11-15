@@ -3,6 +3,7 @@
 // Ainda não publicados: noindex e fora do sitemap.
 import Base from "../../layouts/Base.astro";
 import ListaEspera from "./ListaEspera.astro";
+import Icone, { type NomeIcone } from "../Icone.astro";
 import "../../styles/calculadora.css";
 import "../../styles/documento-folha.css";
 
@@ -15,8 +16,18 @@ interface Props {
   pessoa?: "funcionario" | "socio" | "equipe";
   /** Recibos em duas vias mostram a escolha de impressão. */
   vias?: boolean;
+  icone: NomeIcone;
 }
-const { titulo, descricao, h1, apoio, pessoa = "funcionario", vias = true } = Astro.props;
+const { titulo, descricao, h1, apoio, pessoa = "funcionario", vias = true, icone } = Astro.props;
+const documentos: { url: string; nome: string; icone: NomeIcone }[] = [
+  { url: "/trabalhista/gerador-de-holerite/", nome: "Holerite", icone: "holerite" },
+  { url: "/trabalhista/recibo-de-ferias/", nome: "Férias", icone: "ferias" },
+  { url: "/trabalhista/recibo-de-13-salario/", nome: "13º salário", icone: "decimo" },
+  { url: "/trabalhista/recibo-de-pro-labore/", nome: "Pró-labore", icone: "prolabore" },
+  { url: "/trabalhista/folha-de-ponto/", nome: "Folha de ponto", icone: "ponto" },
+  { url: "/trabalhista/escala-de-trabalho/", nome: "Escala da equipe", icone: "escala" },
+];
+const atual = Astro.url.pathname;
 const socio = pessoa === "socio";
 const equipe = pessoa === "equipe";
 ---
@@ -24,7 +35,7 @@ const equipe = pessoa === "equipe";
 <Base titulo={titulo} descricao={descricao} semIndice>
   <div class="envelope cabecalho">
     <p class="trilha"><a href="/">Início</a> / <a href="/trabalhista/">Trabalhista</a> / {h1}</p>
-    <h1>{h1}</h1>
+    <h1 class="gerador__titulo"><span class="gerador__icone"><Icone nome={icone} tamanho={30} /></span>{h1}</h1>
     <p class="cabecalho__apoio">{apoio}</p>
   </div>
 
@@ -112,15 +123,14 @@ const equipe = pessoa === "equipe";
       </div>
       <ul class="previa__avisos" id="avisos"></ul>
       <p class="previa__privacidade">Os dados do documento ficam só no seu aparelho: nada é enviado ou guardado pelo site.</p>
-      <ListaEspera chamada={equipe ? "Monte a escala uma vez e reaproveite todo mês." : undefined} />
-      <nav class="previa__outros" aria-label="Outros documentos">
+      <ListaEspera />
+      <nav class="outros" aria-label="Outros documentos">
         <strong>Outros documentos</strong>
-        <a href="/trabalhista/gerador-de-holerite/">Holerite</a>
-        <a href="/trabalhista/recibo-de-ferias/">Recibo de férias</a>
-        <a href="/trabalhista/recibo-de-13-salario/">Recibo de 13º</a>
-        <a href="/trabalhista/recibo-de-pro-labore/">Recibo de pró-labore</a>
-        <a href="/trabalhista/folha-de-ponto/">Folha de ponto</a>
-        <a href="/trabalhista/escala-de-trabalho/">Escala da equipe</a>
+        <ul>
+          {documentos.filter((d) => d.url !== atual).map((d) => (
+            <li><a href={d.url}><Icone nome={d.icone} tamanho={22} /><span>{d.nome}</span></a></li>
+          ))}
+        </ul>
       </nav>
     </section>
   </div>

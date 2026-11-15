@@ -81,7 +81,7 @@ async function listaEspera(request, env) {
     return json({ erro: "Dados inválidos." }, 400);
   }
   const v = validarInscricao(corpo);
-  if (v.robo) return json({ ok: true, posicao: 0 });
+  if (v.robo) return json({ ok: true });
   if (v.erro) return json({ erro: v.erro }, 400);
 
   // Limite de 5 inscrições por hora por endereço, sem guardar o IP (hash com o dia).
@@ -101,8 +101,26 @@ async function listaEspera(request, env) {
   )
     .bind(d.nome, d.email, d.whatsapp, d.perfil, d.funcionarios, d.interesses, d.origem, ipHash)
     .run();
-  const pos = await env.LISTA.prepare("SELECT (SELECT COUNT(*) FROM inscricoes WHERE id <= i.id) AS posicao FROM inscricoes i WHERE email = ?").bind(d.email).first();
-  return json({ ok: true, posicao: pos?.posicao ?? 0 });
+  return json({ ok: true });
+}
+
+/** Saída da lista: apaga a inscrição do e-mail informado. */
+async function sairDaLista(request, env) {
+  if (request.method !== "POST") return json({ erro: "Use POST." }, 405);
+  const origin = request.headers.get("origin");
+  if (origin && new URL(origin).hostname !== new URL(request.url).hostname) return json({ erro: "Origem não permitida." }, 403);
+  if (!env.LISTA) return json({ erro: "Lista indisponível no momento." }, 503);
+  let corpo;
+  try {
+    corpo = await request.json();
+  } catch {
+    return json({ erro: "Dados inválidos." }, 400);
+  }
+  const email = String(corpo?.email ?? "").trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return json({ erro: "Confira o e-mail." }, 400);
+  await env.LISTA.prepare("DELETE FROM inscricoes WHERE email = ?").bind(email).run();
+  // Mesma resposta exista ou não a inscrição, para não revelar quem está na lista.
+  return json({ ok: true });
 }
 
 export default {
@@ -115,6 +133,7 @@ export default {
     }
     if (url.pathname === "/api/indices" || url.pathname === "/api/indices/") return indices(request, ctx);
     if (url.pathname === "/api/lista-espera") return listaEspera(request, env);
+    if (url.pathname === "/api/lista-espera/sair") return sairDaLista(request, env);
     return env.ASSETS.fetch(request);
   },
 };

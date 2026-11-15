@@ -1,10 +1,6 @@
 ---
 // Convite para a lista de espera do Cálculo em Dia Empresas (grava em /api/lista-espera).
-interface Props {
-  /** Texto de abertura conforme a página. */
-  chamada?: string;
-}
-const { chamada = "Salve os funcionários e gere os documentos do mês seguinte em um clique." } = Astro.props;
+import Icone from "../Icone.astro";
 const interesses = [
   ["holerite", "Holerite todo mês"],
   ["ferias-13", "Férias e 13º"],
@@ -16,9 +12,14 @@ const interesses = [
 ---
 
 <aside class="lista" id="lista-espera" aria-labelledby="lista-titulo">
+  <p class="lista__selo"><Icone nome="aviso" tamanho={18} /> Em breve</p>
   <h2 id="lista-titulo">Cálculo em Dia Empresas</h2>
-  <p class="lista__chamada">{chamada} Estamos preparando a versão para empresas, com histórico, folha do mês inteira, férias, escalas e ponto.</p>
-  <p class="lista__oferta"><strong>Os 100 primeiros da lista pagam metade, para sempre</strong>, e podem testar antes de todo mundo.</p>
+  <ul class="lista__itens">
+    <li><Icone nome="pessoas" /> Funcionários salvos, com histórico</li>
+    <li><Icone nome="holerite" /> Holerites, férias e 13º do mês em um clique</li>
+    <li><Icone nome="escala" /> Escalas e ponto da equipe</li>
+  </ul>
+  <p class="lista__chamada">Entre na lista e seja avisado primeiro.</p>
   <button type="button" class="lista__abrir" id="lista-abrir" aria-expanded="false" aria-controls="lista-form">Quero entrar na lista</button>
 
   <form class="lista__form" id="lista-form" hidden novalidate>
@@ -53,7 +54,7 @@ const interesses = [
     <input class="lista__mel" name="site" id="le-site" tabindex="-1" autocomplete="off" aria-hidden="true" />
     <label class="marcar lista__consent">
       <input type="checkbox" id="le-consent" />
-      <span>Autorizo o Cálculo em Dia a me avisar do lançamento e do teste por e-mail ou WhatsApp. Posso sair da lista quando quiser. <a href="/privacidade/#lista-de-espera">Como usamos os dados</a>.</span>
+      <span>Autorizo o Cálculo em Dia a me avisar do lançamento por e-mail ou WhatsApp. Posso <a href="/lista-de-espera/sair/">sair da lista</a> quando quiser. <a href="/privacidade/#lista-de-espera">Como usamos os dados</a>.</span>
     </label>
     <p class="lista__erro" id="le-erro" role="alert" hidden></p>
     <button type="submit" class="lista__enviar" id="le-enviar">Entrar na lista</button>
@@ -69,19 +70,15 @@ const interesses = [
   const abrir = $<HTMLButtonElement>("lista-abrir");
   const CHAVE = "lista-espera-ok";
 
-  function sucesso(posicao: number) {
+  function sucesso() {
     form.hidden = true;
     abrir.hidden = true;
     const ok = $("lista-ok");
     ok.hidden = false;
-    ok.innerHTML =
-      posicao > 0
-        ? `<strong>Pronto, você está na lista${posicao <= 100 ? ` (nº ${posicao})` : ""}.</strong> ${posicao <= 100 ? "Está entre os 100 primeiros: vai pagar metade, para sempre." : "Vamos avisar assim que abrir o teste."}`
-        : "<strong>Pronto, você está na lista.</strong> Vamos avisar assim que abrir o teste.";
+    ok.innerHTML = "<strong>Pronto, você está na lista.</strong> Avisaremos quando a versão para empresas abrir.";
   }
   try {
-    const salvo = localStorage.getItem(CHAVE);
-    if (salvo) sucesso(Number(salvo));
+    if (localStorage.getItem(CHAVE)) sucesso();
   } catch {}
 
   abrir.addEventListener("click", () => {
@@ -121,10 +118,10 @@ const interesses = [
       const dados = await r.json().catch(() => ({}));
       if (!r.ok || !dados.ok) throw new Error(dados.erro || "Não foi possível enviar agora. Tente de novo em instantes.");
       try {
-        localStorage.setItem(CHAVE, String(dados.posicao ?? 0));
+        localStorage.setItem(CHAVE, "1");
       } catch {}
       (window as unknown as { gtag?: (...a: unknown[]) => void }).gtag?.("event", "lista_espera", { origem: location.pathname, perfil: corpo.perfil, funcionarios: corpo.funcionarios });
-      sucesso(dados.posicao ?? 0);
+      sucesso();
     } catch (err) {
       erro.textContent = (err as Error).message;
       erro.hidden = false;
@@ -152,14 +149,40 @@ const interesses = [
     margin: 0 0 0.5rem;
   }
   .lista__chamada {
-    margin: 0 0 0.6rem;
+    margin: 0 0 0.8rem;
+    font-weight: 600;
   }
-  .lista__oferta {
-    margin: 0 0 1rem;
-    padding: 0.6rem 0.8rem;
-    background: var(--papel);
+  .lista__selo {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin: 0 0 0.4rem;
+    padding: 0.15rem 0.6rem 0.15rem 0.45rem;
+    border-radius: 999px;
+    background: var(--marca-texto);
+    font-size: 0.82rem;
+    font-weight: 700;
+  }
+  .lista__itens {
+    list-style: none;
+    margin: 0 0 0.8rem;
+    padding: 0;
+    display: grid;
+    gap: 0.55rem;
+  }
+  .lista__itens li {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+  }
+  .lista__itens :global(svg) {
+    flex: none;
+    color: var(--carteira);
+    background: var(--carteira-claro);
     border-radius: 8px;
-    font-size: 0.95rem;
+    padding: 6px;
+    width: 36px;
+    height: 36px;
   }
   .lista__abrir,
   .lista__enviar {
