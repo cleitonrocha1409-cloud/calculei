@@ -1,5 +1,6 @@
-// Worker do Cálculo em Dia: serve o site estático e a rota /api/indices,
-// que busca os índices de preços no Banco Central e guarda em cache por 6 horas.
+// Worker do Cálculo em Dia: serve o site estático, a rota /api/indices
+// (índices de preços do Banco Central, com cache de 6 horas) e a rota /api/lista-espera
+// (inscrições na lista de espera do Cálculo em Dia Empresas, gravadas no banco D1 "LISTA").
 
 const SERIES = { igpm: 189, ipca: 433, inpc: 188, igpdi: 190 };
 const SEIS_HORAS = 6 * 3600;
@@ -39,6 +40,71 @@ async function indices(request, ctx) {
   return resposta;
 }
 
+const PERFIS = ["dono", "contador", "outro"];
+const FAIXAS = ["1-3", "4-10", "11-20", "21+"];
+const INTERESSES = ["holerite", "ferias-13", "ponto", "escalas", "contador", "rescisao"];
+const json = (dados, status = 200) =>
+  new Response(JSON.stringify(dados), { status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" } });
+
+async function hash(texto) {
+  const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(texto));
+  return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("").slice(0, 32);
+}
+
+/** Valida a inscrição; devolve os dados limpos ou uma mensagem de erro para mostrar à pessoa. */
+export function validarInscricao(d) {
+  if (!d || typeof d !== "object") return { erro: "Dados inválidos." };
+  if (d.site) return { robo: true }; // campo escondido: só robôs preenchem
+  const nome = String(d.nome ?? "").trim().replace(/\s+/g, " ");
+  const email = String(d.email ?? "").trim().toLowerCase();
+  const whatsapp = String(d.whatsapp ?? "").replace(/\D/g, "");
+  if (nome.length < 2 || nome.length > 90) return { erro: "Informe seu nome." };
+  if (email.length > 120 || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return { erro: "Confira o e-mail." };
+  if (whatsapp && (whatsapp.length < 10 || whatsapp.length > 13)) return { erro: "Confira o WhatsApp, com DDD." };
+  if (!PERFIS.includes(d.perfil)) return { erro: "Diga se você é dono do negócio ou contador." };
+  if (d.funcionarios && !FAIXAS.includes(d.funcionarios)) return { erro: "Escolha o número de funcionários." };
+  if (d.consentimento !== true) return { erro: "Marque a autorização para entrarmos em contato." };
+  const interesses = Array.isArray(d.interesses) ? d.interesses.filter((i) => INTERESSES.includes(i)) : [];
+  const origem = typeof d.origem === "string" && d.origem.startsWith("/") ? d.origem.slice(0, 120) : null;
+  return { dados: { nome, email, whatsapp: whatsapp || null, perfil: d.perfil, funcionarios: d.funcionarios || null, interesses: interesses.join(","), origem } };
+}
+
+async function listaEspera(request, env) {
+  if (request.method !== "POST") return json({ erro: "Use POST." }, 405);
+  const origin = request.headers.get("origin");
+  if (origin && new URL(origin).hostname !== new URL(request.url).hostname) return json({ erro: "Origem não permitida." }, 403);
+  if (!env.LISTA) return json({ erro: "Lista indisponível no momento." }, 503);
+  let corpo;
+  try {
+    corpo = await request.json();
+  } catch {
+    return json({ erro: "Dados inválidos." }, 400);
+  }
+  const v = validarInscricao(corpo);
+  if (v.robo) return json({ ok: true, posicao: 0 });
+  if (v.erro) return json({ erro: v.erro }, 400);
+
+  // Limite de 5 inscrições por hora por endereço, sem guardar o IP (hash com o dia).
+  const dia = new Date().toISOString().slice(0, 10);
+  const ipHash = await hash(`${request.headers.get("cf-connecting-ip") ?? ""}|${dia}|calculoemdia`);
+  const recentes = await env.LISTA.prepare("SELECT COUNT(*) AS n FROM inscricoes WHERE ip_hash = ? AND criado_em > strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-1 hour')")
+    .bind(ipHash)
+    .first();
+  if ((recentes?.n ?? 0) >= 5) return json({ erro: "Muitas inscrições seguidas. Tente de novo mais tarde." }, 429);
+
+  const d = v.dados;
+  await env.LISTA.prepare(
+    `INSERT INTO inscricoes (nome, email, whatsapp, perfil, funcionarios, interesses, origem, consentimento_em, ip_hash)
+     VALUES (?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), ?)
+     ON CONFLICT(email) DO UPDATE SET nome = excluded.nome, whatsapp = COALESCE(excluded.whatsapp, whatsapp), perfil = excluded.perfil,
+       funcionarios = COALESCE(excluded.funcionarios, funcionarios), interesses = excluded.interesses, consentimento_em = excluded.consentimento_em`,
+  )
+    .bind(d.nome, d.email, d.whatsapp, d.perfil, d.funcionarios, d.interesses, d.origem, ipHash)
+    .run();
+  const pos = await env.LISTA.prepare("SELECT (SELECT COUNT(*) FROM inscricoes WHERE id <= i.id) AS posicao FROM inscricoes i WHERE email = ?").bind(d.email).first();
+  return json({ ok: true, posicao: pos?.posicao ?? 0 });
+}
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -48,6 +114,7 @@ export default {
       return Response.redirect(url.toString(), 301);
     }
     if (url.pathname === "/api/indices" || url.pathname === "/api/indices/") return indices(request, ctx);
+    if (url.pathname === "/api/lista-espera") return listaEspera(request, env);
     return env.ASSETS.fetch(request);
   },
 };

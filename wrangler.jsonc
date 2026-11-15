@@ -8,6 +8,8 @@
     { "pattern": "calculoemdia.com.br", "custom_domain": true },
     { "pattern": "www.calculoemdia.com.br", "custom_domain": true }
   ],
+  // Lista de espera do Cálculo em Dia Empresas (esquema em worker/lista-espera.sql).
+  "d1_databases": [{ "binding": "LISTA", "database_name": "calculoemdia-lista", "database_id": "9d7f2b6c-a142-46fe-ab9f-b535ac4ed382" }],
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",

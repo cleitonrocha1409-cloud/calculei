@@ -2,6 +2,7 @@
 // Moldura dos geradores de documentos da folha: cabeçalho, formulário (empresa, pessoa e o slot) e prévia.
 // Ainda não publicados: noindex e fora do sitemap.
 import Base from "../../layouts/Base.astro";
+import ListaEspera from "./ListaEspera.astro";
 import "../../styles/calculadora.css";
 import "../../styles/documento-folha.css";
 
@@ -110,7 +111,8 @@ const equipe = pessoa === "equipe";
         <div id="documento"></div>
       </div>
       <ul class="previa__avisos" id="avisos"></ul>
-      <p class="previa__privacidade">Os dados ficam só no seu aparelho: nada é enviado ou guardado pelo site.</p>
+      <p class="previa__privacidade">Os dados do documento ficam só no seu aparelho: nada é enviado ou guardado pelo site.</p>
+      <ListaEspera chamada={equipe ? "Monte a escala uma vez e reaproveite todo mês." : undefined} />
       <nav class="previa__outros" aria-label="Outros documentos">
         <strong>Outros documentos</strong>
         <a href="/trabalhista/gerador-de-holerite/">Holerite</a>
