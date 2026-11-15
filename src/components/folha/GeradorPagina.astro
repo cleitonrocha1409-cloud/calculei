@@ -1,0 +1,114 @@
+---
+// Moldura dos geradores de documentos da folha: cabeçalho, formulário (empresa, pessoa e o slot) e prévia.
+// Ainda não publicados: noindex e fora do sitemap.
+import Base from "../../layouts/Base.astro";
+import "../../styles/calculadora.css";
+import "../../styles/documento-folha.css";
+
+interface Props {
+  titulo: string;
+  descricao: string;
+  h1: string;
+  apoio: string;
+  /** "socio" troca os campos do funcionário pelos do sócio (pró-labore). */
+  pessoa?: "funcionario" | "socio";
+}
+const { titulo, descricao, h1, apoio, pessoa = "funcionario" } = Astro.props;
+const socio = pessoa === "socio";
+---
+
+<Base titulo={titulo} descricao={descricao} semIndice>
+  <div class="envelope cabecalho">
+    <p class="trilha"><a href="/">Início</a> / <a href="/trabalhista/">Trabalhista</a> / {h1}</p>
+    <h1>{h1}</h1>
+    <p class="cabecalho__apoio">{apoio}</p>
+  </div>
+
+  <div class="envelope gerador">
+    <form id="form" class="form" novalidate autocomplete="off">
+      <section class="bloco">
+        <h2><span>1</span> Empresa</h2>
+        <div class="campo">
+          <label for="empresa">Razão social ou nome do empregador</label>
+          <input id="empresa" maxlength="90" />
+        </div>
+        <div class="duas">
+          <div class="campo">
+            <label for="cnpj">CNPJ ou CPF do empregador</label>
+            <input id="cnpj" inputmode="numeric" maxlength="18" placeholder="00.000.000/0000-00" />
+            <p class="erro-campo" id="erro-cnpj" hidden>Número inválido. Confira os dígitos.</p>
+          </div>
+          <div class="campo">
+            <label for="endereco">Endereço <span class="opcional">(opcional)</span></label>
+            <input id="endereco" maxlength="120" />
+          </div>
+        </div>
+        <label class="marcar"><input type="checkbox" id="lembrar" /> Lembrar os dados da empresa neste aparelho</label>
+      </section>
+
+      <section class="bloco">
+        <h2><span>2</span> {socio ? "Sócio" : "Funcionário"}</h2>
+        <div class="campo">
+          <label for="nome">Nome completo</label>
+          <input id="nome" maxlength="90" />
+        </div>
+        <div class="duas">
+          <div class="campo">
+            <label for="cpf">CPF</label>
+            <input id="cpf" inputmode="numeric" maxlength="14" placeholder="000.000.000-00" />
+            <p class="erro-campo" id="erro-cpf" hidden>CPF inválido. Confira os dígitos.</p>
+          </div>
+          <div class="campo">
+            <label for="cargo">{socio ? "Função" : "Cargo"} <span class="opcional">(opcional)</span></label>
+            <input id="cargo" maxlength="60" placeholder={socio ? "Ex.: Sócio-administrador" : ""} />
+          </div>
+        </div>
+        {
+          socio ? (
+            <div class="campo campo--curto">
+              <label for="matricula">Matrícula <span class="opcional">(opcional)</span></label>
+              <input id="matricula" maxlength="12" />
+            </div>
+          ) : (
+            <div class="tres">
+              <div class="campo">
+                <label for="matricula">Matrícula <span class="opcional">(opcional)</span></label>
+                <input id="matricula" maxlength="12" />
+              </div>
+              <div class="campo">
+                <label for="cbo">CBO <span class="opcional">(opcional)</span></label>
+                <input id="cbo" inputmode="numeric" maxlength="7" placeholder="0000-00" />
+              </div>
+              <div class="campo">
+                <label for="admissao">Admissão</label>
+                <input id="admissao" type="date" />
+              </div>
+            </div>
+          )
+        }
+      </section>
+
+      <slot />
+    </form>
+
+    <section class="previa" aria-live="polite">
+      <div class="previa__barra">
+        <h2>Prévia</h2>
+        <button type="button" id="imprimir" class="botao-agenda" disabled>Baixar PDF / imprimir</button>
+      </div>
+      <div class="previa__vazio" id="vazio">Preencha a empresa, {socio ? "o sócio" : "o funcionário"} e os valores para ver o documento.</div>
+      <div class="previa__papel" id="papel" hidden>
+        <div id="documento"></div>
+      </div>
+      <ul class="previa__avisos" id="avisos"></ul>
+      <p class="previa__privacidade">Os dados ficam só no seu aparelho: nada é enviado ou guardado pelo site.</p>
+      <nav class="previa__outros" aria-label="Outros documentos">
+        <strong>Outros documentos</strong>
+        <a href="/trabalhista/gerador-de-holerite/">Holerite</a>
+        <a href="/trabalhista/recibo-de-ferias/">Recibo de férias</a>
+        <a href="/trabalhista/recibo-de-13-salario/">Recibo de 13º</a>
+        <a href="/trabalhista/recibo-de-pro-labore/">Recibo de pró-labore</a>
+      </nav>
+    </section>
+  </div>
+</Base>

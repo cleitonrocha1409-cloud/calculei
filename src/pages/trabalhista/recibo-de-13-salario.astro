@@ -1,0 +1,92 @@
+---
+// Gerador de recibo de 13º salário (1ª e 2ª parcela). Ainda não publicado.
+import GeradorPagina from "../../components/folha/GeradorPagina.astro";
+---
+
+<GeradorPagina
+  titulo="Recibo de 13º salário: 1ª e 2ª parcela com INSS e IRRF"
+  descricao="Gere o recibo da 1ª ou da 2ª parcela do 13º salário com os cálculos de 2026: avos, médias, INSS, imposto de renda e desconto do adiantamento. Pronto para imprimir e assinar."
+  h1="Recibo de 13º salário"
+  apoio="Escolha a parcela, informe o salário e o recibo sai com os avos, o INSS e o imposto de renda do 13º pelas regras de 2026, em duas vias. A data de admissão do funcionário define os meses do ano."
+>
+  <section class="bloco">
+    <h2><span>3</span> 13º salário</h2>
+    <div class="duas">
+      <div class="campo">
+        <label for="parcela">Parcela</label>
+        <select id="parcela">
+          <option value="1">1ª parcela (até 30/11)</option>
+          <option value="2">2ª parcela (até 20/12)</option>
+        </select>
+      </div>
+      <div class="campo">
+        <label for="ano">Ano</label>
+        <input id="ano" type="number" min="2026" max="2027" value="2026" inputmode="numeric" />
+      </div>
+    </div>
+    <div class="duas">
+      <div class="campo">
+        <label for="salario">Salário mensal</label>
+        <div class="moeda"><span aria-hidden="true">R$</span><input id="salario" inputmode="decimal" placeholder="0,00" /></div>
+      </div>
+      <div class="campo">
+        <label for="medias">Média de variáveis <span class="opcional">(opcional)</span></label>
+        <div class="moeda"><span aria-hidden="true">R$</span><input id="medias" inputmode="decimal" placeholder="0,00" /></div>
+      </div>
+    </div>
+    <div class="duas" id="so-segunda" hidden>
+      <div class="campo">
+        <label for="dependentes">Dependentes no IR</label>
+        <input id="dependentes" type="number" min="0" max="15" inputmode="numeric" placeholder="0" />
+      </div>
+      <div class="campo">
+        <label for="primeira">1ª parcela paga</label>
+        <div class="moeda"><span aria-hidden="true">R$</span><input id="primeira" inputmode="decimal" placeholder="metade do 13º" /></div>
+        <p class="ajuda">Deixe em branco se foi a metade do 13º.</p>
+      </div>
+    </div>
+    <div class="campo campo--curto">
+      <label for="pagamento">Data do pagamento</label>
+      <input id="pagamento" type="date" />
+    </div>
+  </section>
+</GeradorPagina>
+
+<script>
+  import { recibo13 } from "../../lib/trabalhista/recibos";
+  import { $, exibir, iniciarGerador, iniciarPartes, lerPartes, num, val } from "../../lib/ui/gerador-folha";
+
+  const vazio = $("vazio").textContent;
+  const parcela = document.getElementById("parcela") as HTMLSelectElement;
+  const hoje = new Date();
+  if (hoje.getMonth() === 11) parcela.value = "2";
+  const prazo = () => `${num("ano") || 2026}-${parcela.value === "1" ? "11-30" : "12-20"}`;
+  $("pagamento").value = prazo();
+  parcela.addEventListener("change", () => ($("pagamento").value = prazo()));
+
+  function atualizar() {
+    $("vazio").textContent = vazio;
+    $("so-segunda").hidden = parcela.value !== "2";
+    const partes = lerPartes();
+    const salario = val("salario");
+    if (!partes || !(salario > 0)) return exibir(null, null);
+    try {
+      const doc = recibo13({
+        parcela: parcela.value === "2" ? 2 : 1,
+        ano: Math.min(2027, Math.max(2026, num("ano") || 2026)),
+        salario,
+        mediaVariaveis: val("medias"),
+        admissao: partes.admissao || undefined,
+        dependentesIR: num("dependentes"),
+        primeiraPaga: val("primeira") || undefined,
+      });
+      exibir(partes, doc, { dataPagamento: $("pagamento").value });
+    } catch (e) {
+      exibir(null, null);
+      $("vazio").textContent = (e as Error).message;
+    }
+  }
+
+  iniciarPartes();
+  iniciarGerador("recibo-13", atualizar);
+</script>

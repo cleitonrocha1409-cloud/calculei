@@ -1,0 +1,412 @@
+/* Geradores de documentos da folha (holerite, recibos): formulário, prévia e o recibo impresso. */
+
+  .gerador {
+    display: grid;
+    grid-template-columns: minmax(0, 400px) minmax(0, 1fr);
+    gap: 2rem;
+    align-items: start;
+    margin-top: 1.5rem;
+  }
+  @media (max-width: 960px) {
+    .gerador {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+  .bloco + .bloco {
+    border-top: 1px solid var(--linha);
+    padding-top: 1.25rem;
+    margin-top: 0.5rem;
+  }
+  .bloco h2 {
+    font: 700 1.1rem var(--titulo);
+    margin: 0 0 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .bloco h2 > span:first-child {
+    display: inline-grid;
+    place-items: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 50%;
+    background: var(--carteira);
+    color: #fff;
+    font-size: 0.85rem;
+  }
+  .tres {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+  @media (max-width: 420px) {
+    .tres {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  .tres .campo > label {
+    font-size: 0.9rem;
+  }
+  .campo--curto {
+    max-width: 220px;
+  }
+  .espaco {
+    margin-top: 1rem;
+  }
+  .erro-campo {
+    color: var(--negativo);
+    font-size: 0.85rem;
+    margin: 0.3rem 0 0;
+  }
+  .visualmente-oculto {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+  .adicionar {
+    background: none;
+    border: 1.5px dashed var(--linha);
+    border-radius: 8px;
+    padding: 0.6rem 0.9rem;
+    font: 600 0.95rem var(--texto);
+    color: var(--carteira);
+    cursor: pointer;
+    width: 100%;
+  }
+  .livres .livre {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) auto;
+    gap: 0.5rem;
+    align-items: center;
+    margin-bottom: 0.6rem;
+  }
+  .livres .livre__incide {
+    grid-column: 1 / -1;
+    font-size: 0.85rem;
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+    color: var(--tinta-2);
+  }
+  .livres .livre__incide input {
+    width: 1rem;
+    height: 1rem;
+    min-height: 0;
+  }
+  .livres .livre__remover {
+    width: 40px;
+    height: 40px;
+    border: 1.5px solid var(--linha);
+    border-radius: 8px;
+    background: #fff;
+    font-size: 1.3rem;
+    cursor: pointer;
+    grid-row: 1;
+    grid-column: 3;
+  }
+
+  /* Prévia */
+  .previa {
+    position: sticky;
+    top: 1rem;
+    min-width: 0;
+  }
+  .previa__barra {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+  }
+  .previa__barra h2 {
+    font: 700 1.2rem var(--titulo);
+    margin: 0;
+  }
+  .previa__barra button[disabled] {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+  .previa__vazio {
+    border: 1.5px dashed var(--linha);
+    border-radius: var(--raio);
+    padding: 3rem 1.5rem;
+    text-align: center;
+    color: var(--tinta-2);
+    background: var(--papel);
+  }
+  .previa__papel {
+    background: #fff;
+    border: 1px solid var(--linha);
+    border-radius: var(--raio);
+    padding: 1.25rem;
+    overflow-x: auto;
+    box-shadow: 0 2px 10px rgba(22, 32, 42, 0.06);
+  }
+  .previa__avisos {
+    margin: 0.8rem 0 0;
+    padding-left: 1.2rem;
+    color: var(--tinta-2);
+    font-size: 0.9rem;
+  }
+  .previa__privacidade {
+    font-size: 0.85rem;
+    color: var(--tinta-2);
+  }
+
+  /* O holerite */
+  #documento .hol {
+    min-width: 640px;
+    font: 400 11.5px/1.35 var(--texto);
+    color: #111;
+    border: 1px solid #222;
+    position: relative;
+  }
+  #documento .hol__via {
+    position: absolute;
+    top: -1px;
+    right: -1px;
+    background: #222;
+    color: #fff;
+    font-size: 9.5px;
+    padding: 1px 6px;
+    letter-spacing: 0.02em;
+  }
+  #documento .hol__topo {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 10px 10px 8px;
+    border-bottom: 1px solid #222;
+  }
+  #documento .hol__topo span {
+    display: block;
+  }
+  #documento .hol__empresa {
+    display: block;
+    font-size: 13px;
+    text-transform: uppercase;
+  }
+  #documento .hol__titulo {
+    text-align: right;
+    padding-top: 10px;
+  }
+  #documento .hol__titulo strong {
+    display: block;
+    font-size: 13px;
+  }
+  #documento table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  #documento td,
+  #documento th {
+    padding: 3px 6px;
+    vertical-align: top;
+  }
+  #documento small {
+    display: block;
+    font-size: 9px;
+    color: #555;
+  }
+  #documento .hol__func td {
+    border-bottom: 1px solid #222;
+    border-right: 1px solid #222;
+  }
+  #documento .hol__func td:last-child {
+    border-right: 0;
+  }
+  #documento .hol__func .largo {
+    width: 55%;
+  }
+  #documento .hol__itens th {
+    font-size: 10px;
+    text-align: left;
+    border-bottom: 1px solid #222;
+    background: #f1f1f1;
+  }
+  #documento .hol__itens td {
+    border-right: 1px solid #bbb;
+  }
+  #documento .hol__itens td:last-child {
+    border-right: 0;
+  }
+  #documento .hol__itens tbody tr.vazia td {
+    height: 17px;
+  }
+  #documento .c {
+    text-align: center;
+  }
+  #documento th.c {
+    text-align: center;
+  }
+  #documento .n {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  #documento th.n {
+    text-align: right;
+  }
+  #documento .hol__itens th:nth-child(1) {
+    width: 42px;
+  }
+  #documento .hol__itens th:nth-child(3) {
+    width: 120px;
+  }
+  #documento .hol__itens th:nth-child(4),
+  #documento .hol__itens th:nth-child(5) {
+    width: 96px;
+  }
+  #documento .hol__itens tfoot td {
+    border-top: 1px solid #222;
+    border-right: 1px solid #222;
+  }
+  #documento .hol__itens tfoot td:last-child {
+    border-right: 0;
+  }
+  #documento .hol__msg {
+    font-style: italic;
+    color: #333;
+  }
+  #documento .hol__liquido td {
+    font-size: 13px;
+    font-weight: 700;
+    background: #f1f1f1;
+  }
+  #documento .hol__bases td {
+    border-top: 1px solid #222;
+    border-right: 1px solid #222;
+    font-variant-numeric: tabular-nums;
+  }
+  #documento .hol__bases td:last-child {
+    border-right: 0;
+  }
+  #documento .hol__assinatura {
+    display: grid;
+    grid-template-columns: 1fr 120px 1.4fr;
+    gap: 14px;
+    align-items: end;
+    padding: 10px 10px 6px;
+    border-top: 1px solid #222;
+  }
+  #documento .hol__assinatura p {
+    margin: 0;
+    font-size: 10.5px;
+  }
+  #documento .hol__assinatura div {
+    border-top: 1px solid #222;
+    padding-top: 2px;
+    text-align: center;
+  }
+  #documento .hol__assinatura div span {
+    display: block;
+    margin-top: -18px;
+    min-height: 16px;
+  }
+  #documento .hol__rodape {
+    font-size: 8.5px;
+    color: #555;
+    text-align: center;
+    padding: 3px 6px 4px;
+    border-top: 1px dotted #999;
+  }
+  #documento .hol__corte {
+    text-align: center;
+    font-size: 9px;
+    color: #888;
+    border-top: 1px dashed #999;
+    margin: 14px 0;
+    line-height: 0;
+  }
+
+  @media print {
+    @page {
+      size: A4 portrait;
+      margin: 10mm;
+    }
+    body > header,
+    body > footer,
+    .cookies,
+    .cabecalho,
+    .form,
+    .previa__barra,
+    .previa__avisos,
+    .previa__privacidade,
+    .previa__vazio {
+      display: none !important;
+    }
+    body {
+      background: #fff !important;
+    }
+    .gerador {
+      display: block;
+      margin: 0;
+      max-width: none;
+      padding: 0;
+    }
+    .previa {
+      position: static;
+    }
+    .previa__papel {
+      border: 0;
+      box-shadow: none;
+      padding: 0;
+      overflow: visible;
+    }
+    main,
+    .envelope {
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+      margin-top: 0 !important;
+    }
+    #documento .hol__corte {
+      margin: 6mm 0;
+    }
+    #documento .hol {
+      font-size: 10px;
+    }
+    #documento td,
+    #documento th {
+      padding: 1.5px 5px;
+    }
+    #documento .hol__itens tbody tr.vazia td {
+      height: 13px;
+    }
+    #documento .hol__topo {
+      padding: 6px 8px 5px;
+    }
+    #documento .hol__assinatura {
+      padding: 14px 8px 4px;
+    }
+    #documento .hol {
+      min-width: 0;
+      break-inside: avoid;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+  }
+
+.previa__outros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+  margin-top: 1rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--linha);
+  font-size: 0.92rem;
+}
+.previa__outros strong {
+  width: 100%;
+}
+@media print {
+  .previa__outros {
+    display: none !important;
+  }
+}
+
+/* Datas precisam de mais largura que os campos numéricos. */
+.tres:has(input[type="date"]) {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}

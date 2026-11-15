@@ -1,75 +1,16 @@
 ---
-// Gerador de holerite (recibo de pagamento de salário). Ainda não publicado: fora do menu, do sitemap e dos buscadores.
-import Base from "../../layouts/Base.astro";
-import "../../styles/calculadora.css";
+// Gerador de holerite (recibo de pagamento de salário). Ainda não publicado.
+import GeradorPagina from "../../components/folha/GeradorPagina.astro";
 import { SALARIO_FAMILIA_2026 } from "../../lib/trabalhista/holerite";
 import { formatarBRL } from "../../lib/dinheiro";
 ---
 
-<Base titulo="Gerador de holerite: recibo de pagamento de salário com INSS, IRRF e FGTS" descricao="Gere o holerite do seu funcionário com os cálculos de 2026: horas extras, DSR, adicionais, faltas, INSS, IRRF, FGTS e vale-transporte. Pronto para imprimir e assinar." semIndice>
-  <div class="envelope cabecalho">
-    <p class="trilha"><a href="/">Início</a> / <a href="/trabalhista/">Trabalhista</a> / Gerador de holerite</p>
-    <h1>Gerador de holerite</h1>
-    <p class="cabecalho__apoio">
-      Preencha os dados da empresa, do funcionário e do mês. O holerite sai pronto, com horas extras, descanso remunerado, adicionais, INSS, IRRF e FGTS calculados pelas regras de 2026, em duas vias para imprimir e assinar.
-    </p>
-  </div>
-
-  <div class="envelope gerador">
-    <form id="form" class="form" novalidate autocomplete="off">
-      <section class="bloco">
-        <h2><span>1</span> Empresa</h2>
-        <div class="campo">
-          <label for="empresa">Razão social ou nome do empregador</label>
-          <input id="empresa" maxlength="90" />
-        </div>
-        <div class="duas">
-          <div class="campo">
-            <label for="cnpj">CNPJ ou CPF do empregador</label>
-            <input id="cnpj" inputmode="numeric" maxlength="18" placeholder="00.000.000/0000-00" />
-            <p class="erro-campo" id="erro-cnpj" hidden>Número inválido. Confira os dígitos.</p>
-          </div>
-          <div class="campo">
-            <label for="endereco">Endereço <span class="opcional">(opcional)</span></label>
-            <input id="endereco" maxlength="120" />
-          </div>
-        </div>
-        <label class="marcar"><input type="checkbox" id="lembrar" /> Lembrar os dados da empresa neste aparelho</label>
-      </section>
-
-      <section class="bloco">
-        <h2><span>2</span> Funcionário</h2>
-        <div class="campo">
-          <label for="nome">Nome completo</label>
-          <input id="nome" maxlength="90" />
-        </div>
-        <div class="duas">
-          <div class="campo">
-            <label for="cpf">CPF</label>
-            <input id="cpf" inputmode="numeric" maxlength="14" placeholder="000.000.000-00" />
-            <p class="erro-campo" id="erro-cpf" hidden>CPF inválido. Confira os dígitos.</p>
-          </div>
-          <div class="campo">
-            <label for="cargo">Cargo</label>
-            <input id="cargo" maxlength="60" />
-          </div>
-        </div>
-        <div class="tres">
-          <div class="campo">
-            <label for="matricula">Matrícula <span class="opcional">(opcional)</span></label>
-            <input id="matricula" maxlength="12" />
-          </div>
-          <div class="campo">
-            <label for="cbo">CBO <span class="opcional">(opcional)</span></label>
-            <input id="cbo" inputmode="numeric" maxlength="7" placeholder="0000-00" />
-          </div>
-          <div class="campo">
-            <label for="admissao">Admissão</label>
-            <input id="admissao" type="date" />
-          </div>
-        </div>
-      </section>
-
+<GeradorPagina
+  titulo="Gerador de holerite: recibo de pagamento de salário com INSS, IRRF e FGTS"
+  descricao="Gere o holerite do seu funcionário com os cálculos de 2026: horas extras, DSR, adicionais, faltas, INSS, IRRF, FGTS e vale-transporte. Pronto para imprimir e assinar."
+  h1="Gerador de holerite"
+  apoio="Preencha os dados da empresa, do funcionário e do mês. O holerite sai pronto, com horas extras, descanso remunerado, adicionais, INSS, IRRF e FGTS calculados pelas regras de 2026, em duas vias para imprimir e assinar."
+>
       <section class="bloco">
         <h2><span>3</span> Mês e jornada</h2>
         <div class="duas">
@@ -181,38 +122,18 @@ import { formatarBRL } from "../../lib/dinheiro";
           <input id="mensagem" maxlength="120" placeholder="Ex.: Feliz aniversário!" />
         </div>
       </section>
-    </form>
-
-    <section class="previa" aria-live="polite">
-      <div class="previa__barra">
-        <h2>Prévia</h2>
-        <button type="button" id="imprimir" class="botao-agenda" disabled>Baixar PDF / imprimir</button>
-      </div>
-      <div class="previa__vazio" id="vazio">Preencha a empresa, o funcionário e o salário-base para ver o holerite.</div>
-      <div class="previa__papel" id="papel" hidden>
-        <div id="documento"></div>
-      </div>
-      <ul class="previa__avisos" id="avisos"></ul>
-      <p class="previa__privacidade">Os dados ficam só no seu aparelho: nada é enviado ou guardado pelo site.</p>
-    </section>
-  </div>
-</Base>
+</GeradorPagina>
 
 <script>
-  import { calcularHolerite, type LancamentoLivre } from "../../lib/trabalhista/holerite";
-  import { formatarBRL, lerValor } from "../../lib/dinheiro";
-  import { cnpjValido, cpfValido, mascararCNPJ, mascararCPF, nomeCompetencia, numeroControle } from "../../lib/ui/documentos";
+  import { calcularHolerite } from "../../lib/trabalhista/holerite";
+  import type { DocumentoFolha } from "../../lib/trabalhista/recibos";
+  import { nomeCompetencia } from "../../lib/ui/documentos";
+  import { $, exibir, iniciarGerador, iniciarLivres, iniciarPartes, lerPartes, livres, num, val } from "../../lib/ui/gerador-folha";
 
-  const $ = <T extends HTMLElement = HTMLInputElement>(id: string) => document.getElementById(id) as T;
-  const form = $<HTMLFormElement>("form");
-  const esc = (t: string) => t.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
-  const num = (id: string) => Math.max(0, Number($(id).value.replace(",", ".")) || 0);
-  const positivo = (n: number) => (Number.isFinite(n) && n > 0 ? n : 0);
-  const val = (id: string) => positivo(lerValor($(id).value));
-  const brl = (n: number) => formatarBRL(n).replace("R$", "").trim();
-  const dataBR = (iso: string) => (iso ? iso.split("-").reverse().join("/") : "");
+  const brl = (n: number) => n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const sel = (id: string) => (document.getElementById(id) as HTMLSelectElement).value;
 
-  // Valores iniciais: mês anterior e 5º dia útil aproximado.
+  // Valores iniciais: mês anterior e pagamento no início deste mês.
   (() => {
     const hoje = new Date();
     const comp = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1);
@@ -220,90 +141,16 @@ import { formatarBRL } from "../../lib/dinheiro";
     $("pagamento").value = new Date(hoje.getFullYear(), hoje.getMonth(), Math.min(hoje.getDate(), 7)).toISOString().slice(0, 10);
   })();
 
-  // Dados da empresa guardados no aparelho, se a pessoa pedir.
-  const CHAVE = "holerite-empresa";
-  try {
-    const salvo = JSON.parse(localStorage.getItem(CHAVE) || "null");
-    if (salvo) {
-      $("empresa").value = salvo.empresa ?? "";
-      $("cnpj").value = salvo.cnpj ?? "";
-      $("endereco").value = salvo.endereco ?? "";
-      $("lembrar").checked = true;
-    }
-  } catch {}
-  function guardarEmpresa() {
-    try {
-      if ($("lembrar").checked) localStorage.setItem(CHAVE, JSON.stringify({ empresa: $("empresa").value, cnpj: $("cnpj").value, endereco: $("endereco").value }));
-      else localStorage.removeItem(CHAVE);
-    } catch {}
-  }
-
-  // Lançamentos livres.
-  function novaLinha(tipo: "proventos" | "descontos") {
-    const lista = $(`lista-${tipo}`);
-    const div = document.createElement("div");
-    div.className = "livre";
-    div.innerHTML = `
-      <input class="livre__desc" maxlength="40" placeholder="${tipo === "proventos" ? "Ex.: Gratificação" : "Ex.: Convênio farmácia"}" aria-label="Descrição">
-      <div class="moeda"><span aria-hidden="true">R$</span><input class="livre__valor" inputmode="decimal" placeholder="0,00" aria-label="Valor"></div>
-      ${tipo === "proventos" ? '<label class="livre__incide" title="Entra na base de INSS, IRRF e FGTS"><input type="checkbox" checked> Incide INSS/IR/FGTS</label>' : ""}
-      <button type="button" class="livre__remover" aria-label="Remover">×</button>`;
-    div.querySelector(".livre__remover")!.addEventListener("click", () => {
-      div.remove();
-      atualizar();
-    });
-    lista.appendChild(div);
-    (div.querySelector(".livre__desc") as HTMLInputElement).focus();
-  }
-  document.querySelectorAll<HTMLButtonElement>("[data-adicionar]").forEach((b) => b.addEventListener("click", () => novaLinha(b.dataset.adicionar as "proventos" | "descontos")));
-  const livres = (tipo: string): LancamentoLivre[] =>
-    [...$(`lista-${tipo}`).querySelectorAll(".livre")].map((el) => ({
-      descricao: (el.querySelector(".livre__desc") as HTMLInputElement).value.trim(),
-      valor: positivo(lerValor((el.querySelector(".livre__valor") as HTMLInputElement).value)),
-      incide: (el.querySelector(".livre__incide input") as HTMLInputElement | null)?.checked ?? true,
-    }));
-
-  // Máscaras e validação.
-  $("cpf").addEventListener("input", () => ($("cpf").value = mascararCPF($("cpf").value)));
-  $("cnpj").addEventListener("input", () => {
-    const d = $("cnpj").value.replace(/\D/g, "");
-    $("cnpj").value = d.length <= 11 ? mascararCPF(d) : mascararCNPJ(d);
-  });
-  const docEmpregadorValido = (t: string) => {
-    const d = t.replace(/\D/g, "");
-    return d.length === 11 ? cpfValido(d) : cnpjValido(d);
-  };
-
-  function via(nomeVia: string, corpo: string) {
-    return `<article class="hol"><div class="hol__via">${nomeVia}</div>${corpo}</article>`;
-  }
-
   function atualizar() {
-    guardarEmpresa();
-    const empresa = $("empresa").value.trim();
-    const cnpj = $("cnpj").value.trim();
-    const nome = $("nome").value.trim();
-    const cpf = $("cpf").value.trim();
+    const partes = lerPartes();
     const salario = val("salario");
-    const cnpjOk = docEmpregadorValido(cnpj);
-    const cpfOk = !cpf || cpfValido(cpf);
-    $("erro-cnpj").hidden = !cnpj || cnpjOk;
-    $("erro-cpf").hidden = cpfOk;
-    const pronto = empresa && cnpjOk && nome && cpfOk && salario > 0 && $("competencia").value;
-    $("vazio").hidden = !!pronto;
-    $("papel").hidden = !pronto;
-    ($("imprimir") as HTMLButtonElement).disabled = !pronto;
-    if (!pronto) {
-      $("avisos").innerHTML = "";
-      return;
-    }
-
     const competencia = $("competencia").value;
+    if (!partes || !(salario > 0) || !competencia) return exibir(null, null);
     const r = calcularHolerite({
       competencia,
       salarioBase: salario,
-      jornadaSemanal: Number(($("jornada") as unknown as HTMLSelectElement).value),
-      escala: ($("escala") as unknown as HTMLSelectElement).value as "6x1" | "5x2",
+      jornadaSemanal: Number(sel("jornada")),
+      escala: sel("escala") as "6x1" | "5x2",
       diasTrabalhados: Math.min(30, Math.max(1, num("dias") || 30)),
       faltas: num("faltas"),
       dsrDescontados: num("dsrperdidos"),
@@ -311,7 +158,7 @@ import { formatarBRL } from "../../lib/dinheiro";
       horasExtras100: num("he100"),
       horasNoturnas: num("noturnas"),
       comissoes: val("comissoes"),
-      insalubridade: Number(($("insalubridade") as unknown as HTMLSelectElement).value) as 0 | 10 | 20 | 40,
+      insalubridade: Number(sel("insalubridade")) as 0 | 10 | 20 | 40,
       periculosidade: $("periculosidade").checked,
       dependentesIR: num("dependentes"),
       filhosSalarioFamilia: num("filhos"),
@@ -322,471 +169,28 @@ import { formatarBRL } from "../../lib/dinheiro";
       outrosProventos: livres("proventos"),
       outrosDescontos: livres("descontos"),
     });
-
-    const linhasMin = 8;
-    const linhas = r.linhas
-      .map(
-        (l) =>
-          `<tr><td class="c">${l.codigo}</td><td>${esc(l.descricao)}</td><td class="c">${esc(l.referencia)}</td><td class="n">${l.vencimento ? brl(l.vencimento) : ""}</td><td class="n">${l.desconto ? brl(l.desconto) : ""}</td></tr>`,
-      )
-      .join("");
-    const vazias = Array.from({ length: Math.max(0, linhasMin - r.linhas.length) }, () => `<tr class="vazia"><td></td><td></td><td></td><td></td><td></td></tr>`).join("");
-    const emissao = new Date().toLocaleDateString("pt-BR");
-    const controle = numeroControle([competencia, cnpj, cpf, nome, r.liquido.toFixed(2), r.totalVencimentos.toFixed(2)].join("|"));
-    const mensagem = $("mensagem").value.trim();
-    const endereco = $("endereco").value.trim();
-    const cargo = $("cargo").value.trim();
-
-    const corpo = `
-      <header class="hol__topo">
-        <div>
-          <strong class="hol__empresa">${esc(empresa)}</strong>
-          <span>${cnpj.replace(/\D/g, "").length === 11 ? "CPF" : "CNPJ"} ${esc(cnpj)}</span>
-          ${endereco ? `<span>${esc(endereco)}</span>` : ""}
-        </div>
-        <div class="hol__titulo">
-          <strong>Recibo de pagamento de salário</strong>
-          <span>Referência: ${nomeCompetencia(competencia)}</span>
-        </div>
-      </header>
-      <table class="hol__func">
-        <tr>
-          <td><small>Matrícula</small>${esc($("matricula").value.trim()) || "—"}</td>
-          <td class="largo"><small>Nome do funcionário</small>${esc(nome)}</td>
-          <td><small>CPF</small>${esc(cpf) || "—"}</td>
-        </tr>
-        <tr>
-          <td><small>CBO</small>${esc($("cbo").value.trim()) || "—"}</td>
-          <td class="largo"><small>Cargo</small>${esc(cargo) || "—"}</td>
-          <td><small>Admissão</small>${dataBR($("admissao").value) || "—"}</td>
-        </tr>
-      </table>
-      <table class="hol__itens">
-        <thead><tr><th class="c">Cód.</th><th>Descrição</th><th class="c">Referência</th><th class="n">Vencimentos</th><th class="n">Descontos</th></tr></thead>
-        <tbody>${linhas}${vazias}</tbody>
-        <tfoot>
-          <tr><td colspan="3" class="hol__msg">${esc(mensagem)}</td><td class="n"><small>Total de vencimentos</small>${brl(r.totalVencimentos)}</td><td class="n"><small>Total de descontos</small>${brl(r.totalDescontos)}</td></tr>
-          <tr class="hol__liquido"><td colspan="3"></td><td colspan="2" class="n"><small>Valor líquido</small>R$ ${brl(r.liquido)}</td></tr>
-        </tfoot>
-      </table>
-      <table class="hol__bases">
-        <tr>
-          <td><small>Salário-base</small>${brl(salario)}</td>
-          <td><small>Sal. contr. INSS</small>${brl(r.baseINSS)}</td>
-          <td><small>Base cálc. FGTS</small>${brl(r.baseFGTS)}</td>
-          <td><small>FGTS do mês</small>${brl(r.fgts)}</td>
-          <td><small>Base cálc. IRRF</small>${brl(r.baseIRRF)}</td>
-          <td><small>Faixa IRRF</small>${r.faixaIRRF}</td>
-        </tr>
-      </table>
-      <div class="hol__assinatura">
-        <p>Declaro ter recebido a importância líquida discriminada neste recibo.</p>
-        <div><span>${dataBR($("pagamento").value) || "____/____/______"}</span><small>Data</small></div>
-        <div><span></span><small>Assinatura do funcionário</small></div>
-      </div>
-      <footer class="hol__rodape">Documento ${controle} · emitido em ${emissao} · calculado com as tabelas de INSS, IRRF e FGTS de 2026 · calculoemdia.com.br</footer>`;
-
-    $("documento").innerHTML = via("Via do empregador", corpo) + `<div class="hol__corte" aria-hidden="true">corte aqui</div>` + via("Via do funcionário", corpo);
-    $("avisos").innerHTML = r.avisos.map((a) => `<li>${esc(a)}</li>`).join("");
+    const doc: DocumentoFolha = {
+      titulo: "Recibo de pagamento de salário",
+      referencia: `Referência: ${nomeCompetencia(competencia)}`,
+      linhas: r.linhas,
+      totalVencimentos: r.totalVencimentos,
+      totalDescontos: r.totalDescontos,
+      liquido: r.liquido,
+      bases: [
+        { rotulo: "Salário-base", valor: brl(salario) },
+        { rotulo: "Sal. contr. INSS", valor: brl(r.baseINSS) },
+        { rotulo: "Base cálc. FGTS", valor: brl(r.baseFGTS) },
+        { rotulo: "FGTS do mês", valor: brl(r.fgts) },
+        { rotulo: "Base cálc. IRRF", valor: brl(r.baseIRRF) },
+        { rotulo: "Faixa IRRF", valor: r.faixaIRRF },
+      ],
+      declaracao: "Declaro ter recebido a importância líquida discriminada neste recibo.",
+      avisos: r.avisos,
+    };
+    exibir(partes, doc, { mensagem: $("mensagem").value.trim(), dataPagamento: $("pagamento").value });
   }
 
-  form.addEventListener("input", atualizar);
-  form.addEventListener("change", atualizar);
-  form.addEventListener("submit", (e) => e.preventDefault());
-  $("imprimir").addEventListener("click", () => {
-    const g = (window as unknown as { gtag?: (...a: unknown[]) => void }).gtag;
-    g?.("event", "gerar_documento", { tipo: "holerite" });
-    window.print();
-  });
-  atualizar();
+  iniciarPartes();
+  iniciarLivres(atualizar);
+  iniciarGerador("holerite", atualizar);
 </script>
-
-<style>
-  .gerador {
-    display: grid;
-    grid-template-columns: minmax(0, 400px) minmax(0, 1fr);
-    gap: 2rem;
-    align-items: start;
-    margin-top: 1.5rem;
-  }
-  @media (max-width: 960px) {
-    .gerador {
-      grid-template-columns: minmax(0, 1fr);
-    }
-  }
-  .bloco + .bloco {
-    border-top: 1px solid var(--linha);
-    padding-top: 1.25rem;
-    margin-top: 0.5rem;
-  }
-  .bloco h2 {
-    font: 700 1.1rem var(--titulo);
-    margin: 0 0 1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-  .bloco h2 > span:first-child {
-    display: inline-grid;
-    place-items: center;
-    width: 1.6rem;
-    height: 1.6rem;
-    border-radius: 50%;
-    background: var(--carteira);
-    color: #fff;
-    font-size: 0.85rem;
-  }
-  .tres {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.75rem;
-  }
-  @media (max-width: 420px) {
-    .tres {
-      grid-template-columns: 1fr 1fr;
-    }
-  }
-  .tres .campo > label {
-    font-size: 0.9rem;
-  }
-  .campo--curto {
-    max-width: 220px;
-  }
-  .espaco {
-    margin-top: 1rem;
-  }
-  .erro-campo {
-    color: var(--negativo);
-    font-size: 0.85rem;
-    margin: 0.3rem 0 0;
-  }
-  .visualmente-oculto {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-  }
-  .adicionar {
-    background: none;
-    border: 1.5px dashed var(--linha);
-    border-radius: 8px;
-    padding: 0.6rem 0.9rem;
-    font: 600 0.95rem var(--texto);
-    color: var(--carteira);
-    cursor: pointer;
-    width: 100%;
-  }
-  .livres :global(.livre) {
-    display: grid;
-    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) auto;
-    gap: 0.5rem;
-    align-items: center;
-    margin-bottom: 0.6rem;
-  }
-  .livres :global(.livre__incide) {
-    grid-column: 1 / -1;
-    font-size: 0.85rem;
-    display: flex;
-    gap: 0.4rem;
-    align-items: center;
-    color: var(--tinta-2);
-  }
-  .livres :global(.livre__incide input) {
-    width: 1rem;
-    height: 1rem;
-    min-height: 0;
-  }
-  .livres :global(.livre__remover) {
-    width: 40px;
-    height: 40px;
-    border: 1.5px solid var(--linha);
-    border-radius: 8px;
-    background: #fff;
-    font-size: 1.3rem;
-    cursor: pointer;
-    grid-row: 1;
-    grid-column: 3;
-  }
-
-  /* Prévia */
-  .previa {
-    position: sticky;
-    top: 1rem;
-    min-width: 0;
-  }
-  .previa__barra {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 0.75rem;
-  }
-  .previa__barra h2 {
-    font: 700 1.2rem var(--titulo);
-    margin: 0;
-  }
-  .previa__barra button[disabled] {
-    opacity: 0.45;
-    cursor: not-allowed;
-  }
-  .previa__vazio {
-    border: 1.5px dashed var(--linha);
-    border-radius: var(--raio);
-    padding: 3rem 1.5rem;
-    text-align: center;
-    color: var(--tinta-2);
-    background: var(--papel);
-  }
-  .previa__papel {
-    background: #fff;
-    border: 1px solid var(--linha);
-    border-radius: var(--raio);
-    padding: 1.25rem;
-    overflow-x: auto;
-    box-shadow: 0 2px 10px rgba(22, 32, 42, 0.06);
-  }
-  .previa__avisos {
-    margin: 0.8rem 0 0;
-    padding-left: 1.2rem;
-    color: var(--tinta-2);
-    font-size: 0.9rem;
-  }
-  .previa__privacidade {
-    font-size: 0.85rem;
-    color: var(--tinta-2);
-  }
-
-  /* O holerite */
-  #documento :global(.hol) {
-    min-width: 640px;
-    font: 400 11.5px/1.35 var(--texto);
-    color: #111;
-    border: 1px solid #222;
-    position: relative;
-  }
-  #documento :global(.hol__via) {
-    position: absolute;
-    top: -1px;
-    right: -1px;
-    background: #222;
-    color: #fff;
-    font-size: 9.5px;
-    padding: 1px 6px;
-    letter-spacing: 0.02em;
-  }
-  #documento :global(.hol__topo) {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: 10px 10px 8px;
-    border-bottom: 1px solid #222;
-  }
-  #documento :global(.hol__topo span) {
-    display: block;
-  }
-  #documento :global(.hol__empresa) {
-    display: block;
-    font-size: 13px;
-    text-transform: uppercase;
-  }
-  #documento :global(.hol__titulo) {
-    text-align: right;
-    padding-top: 10px;
-  }
-  #documento :global(.hol__titulo strong) {
-    display: block;
-    font-size: 13px;
-  }
-  #documento :global(table) {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  #documento :global(td),
-  #documento :global(th) {
-    padding: 3px 6px;
-    vertical-align: top;
-  }
-  #documento :global(small) {
-    display: block;
-    font-size: 9px;
-    color: #555;
-  }
-  #documento :global(.hol__func td) {
-    border-bottom: 1px solid #222;
-    border-right: 1px solid #222;
-  }
-  #documento :global(.hol__func td:last-child) {
-    border-right: 0;
-  }
-  #documento :global(.hol__func .largo) {
-    width: 55%;
-  }
-  #documento :global(.hol__itens th) {
-    font-size: 10px;
-    text-align: left;
-    border-bottom: 1px solid #222;
-    background: #f1f1f1;
-  }
-  #documento :global(.hol__itens td) {
-    border-right: 1px solid #bbb;
-  }
-  #documento :global(.hol__itens td:last-child) {
-    border-right: 0;
-  }
-  #documento :global(.hol__itens tbody tr.vazia td) {
-    height: 17px;
-  }
-  #documento :global(.c) {
-    text-align: center;
-  }
-  #documento :global(th.c) {
-    text-align: center;
-  }
-  #documento :global(.n) {
-    text-align: right;
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-  }
-  #documento :global(th.n) {
-    text-align: right;
-  }
-  #documento :global(.hol__itens th:nth-child(1)) {
-    width: 42px;
-  }
-  #documento :global(.hol__itens th:nth-child(3)) {
-    width: 120px;
-  }
-  #documento :global(.hol__itens th:nth-child(4)),
-  #documento :global(.hol__itens th:nth-child(5)) {
-    width: 96px;
-  }
-  #documento :global(.hol__itens tfoot td) {
-    border-top: 1px solid #222;
-    border-right: 1px solid #222;
-  }
-  #documento :global(.hol__itens tfoot td:last-child) {
-    border-right: 0;
-  }
-  #documento :global(.hol__msg) {
-    font-style: italic;
-    color: #333;
-  }
-  #documento :global(.hol__liquido td) {
-    font-size: 13px;
-    font-weight: 700;
-    background: #f1f1f1;
-  }
-  #documento :global(.hol__bases td) {
-    border-top: 1px solid #222;
-    border-right: 1px solid #222;
-    font-variant-numeric: tabular-nums;
-  }
-  #documento :global(.hol__bases td:last-child) {
-    border-right: 0;
-  }
-  #documento :global(.hol__assinatura) {
-    display: grid;
-    grid-template-columns: 1fr 120px 1.4fr;
-    gap: 14px;
-    align-items: end;
-    padding: 10px 10px 6px;
-    border-top: 1px solid #222;
-  }
-  #documento :global(.hol__assinatura p) {
-    margin: 0;
-    font-size: 10.5px;
-  }
-  #documento :global(.hol__assinatura div) {
-    border-top: 1px solid #222;
-    padding-top: 2px;
-    text-align: center;
-  }
-  #documento :global(.hol__assinatura div span) {
-    display: block;
-    margin-top: -18px;
-    min-height: 16px;
-  }
-  #documento :global(.hol__rodape) {
-    font-size: 8.5px;
-    color: #555;
-    text-align: center;
-    padding: 3px 6px 4px;
-    border-top: 1px dotted #999;
-  }
-  #documento :global(.hol__corte) {
-    text-align: center;
-    font-size: 9px;
-    color: #888;
-    border-top: 1px dashed #999;
-    margin: 14px 0;
-    line-height: 0;
-  }
-
-  @media print {
-    @page {
-      size: A4 portrait;
-      margin: 10mm;
-    }
-    :global(body > header),
-    :global(body > footer),
-    :global(.cookies),
-    :global(.cabecalho),
-    .form,
-    .previa__barra,
-    .previa__avisos,
-    .previa__privacidade,
-    .previa__vazio {
-      display: none !important;
-    }
-    :global(body) {
-      background: #fff !important;
-    }
-    .gerador {
-      display: block;
-      margin: 0;
-      max-width: none;
-      padding: 0;
-    }
-    .previa {
-      position: static;
-    }
-    .previa__papel {
-      border: 0;
-      box-shadow: none;
-      padding: 0;
-      overflow: visible;
-    }
-    :global(main),
-    :global(.envelope) {
-      padding-top: 0 !important;
-      padding-bottom: 0 !important;
-      margin-top: 0 !important;
-    }
-    #documento :global(.hol__corte) {
-      margin: 6mm 0;
-    }
-    #documento :global(.hol) {
-      font-size: 10px;
-    }
-    #documento :global(td),
-    #documento :global(th) {
-      padding: 1.5px 5px;
-    }
-    #documento :global(.hol__itens tbody tr.vazia td) {
-      height: 13px;
-    }
-    #documento :global(.hol__topo) {
-      padding: 6px 8px 5px;
-    }
-    #documento :global(.hol__assinatura) {
-      padding: 14px 8px 4px;
-    }
-    #documento :global(.hol) {
-      min-width: 0;
-      break-inside: avoid;
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
-    }
-  }
-</style>

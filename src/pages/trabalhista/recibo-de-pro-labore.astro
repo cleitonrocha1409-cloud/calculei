@@ -1,0 +1,70 @@
+---
+// Gerador de recibo de pró-labore. Ainda não publicado.
+import GeradorPagina from "../../components/folha/GeradorPagina.astro";
+---
+
+<GeradorPagina
+  titulo="Recibo de pró-labore: gere com INSS de 11% e IRRF de 2026"
+  descricao="Gere o recibo de pró-labore do sócio com INSS de 11%, imposto de renda com a isenção até R$ 5 mil e o INSS patronal. Pronto para imprimir e assinar."
+  h1="Recibo de pró-labore"
+  apoio="Informe a empresa, o sócio e o valor. O recibo sai com o INSS de 11%, o imposto de renda com a redução de 2026 e o INSS patronal para conferência, em duas vias."
+  pessoa="socio"
+>
+  <section class="bloco">
+    <h2><span>3</span> Pró-labore</h2>
+    <div class="duas">
+      <div class="campo">
+        <label for="competencia">Mês de referência</label>
+        <input id="competencia" type="month" min="2026-01" max="2027-12" />
+      </div>
+      <div class="campo">
+        <label for="pagamento">Data do pagamento</label>
+        <input id="pagamento" type="date" />
+      </div>
+    </div>
+    <div class="duas">
+      <div class="campo">
+        <label for="valor">Valor do pró-labore</label>
+        <div class="moeda"><span aria-hidden="true">R$</span><input id="valor" inputmode="decimal" placeholder="0,00" /></div>
+      </div>
+      <div class="campo">
+        <label for="dependentes">Dependentes no IR</label>
+        <input id="dependentes" type="number" min="0" max="15" inputmode="numeric" placeholder="0" />
+      </div>
+    </div>
+    <div class="campo">
+      <label for="pensao">Pensão alimentícia <span class="opcional">(opcional)</span></label>
+      <div class="moeda"><span aria-hidden="true">R$</span><input id="pensao" inputmode="decimal" placeholder="0,00" /></div>
+    </div>
+    <div class="livres" id="lista-descontos"></div>
+    <button type="button" class="adicionar" data-adicionar="descontos">+ Outro desconto</button>
+  </section>
+</GeradorPagina>
+
+<script>
+  import { reciboProLabore } from "../../lib/trabalhista/recibos";
+  import { nomeCompetencia } from "../../lib/ui/documentos";
+  import { $, exibir, iniciarGerador, iniciarLivres, iniciarPartes, lerPartes, livres, num, val } from "../../lib/ui/gerador-folha";
+
+  (() => {
+    const h = new Date();
+    $("competencia").value = `${h.getFullYear()}-${String(h.getMonth() + 1).padStart(2, "0")}`;
+    $("pagamento").value = new Date(h.getFullYear(), h.getMonth() + 1, 0).toISOString().slice(0, 10);
+  })();
+
+  function atualizar() {
+    const partes = lerPartes();
+    const valor = val("valor");
+    const competencia = $("competencia").value;
+    if (!partes || !(valor > 0) || !competencia) return exibir(null, null);
+    const doc = reciboProLabore(
+      { competencia, valor, dependentesIR: num("dependentes"), pensao: val("pensao"), outrosDescontos: livres("descontos") },
+      nomeCompetencia(competencia),
+    );
+    exibir(partes, doc, { dataPagamento: $("pagamento").value, rotuloPessoa: "sócio" });
+  }
+
+  iniciarPartes();
+  iniciarLivres(atualizar);
+  iniciarGerador("recibo-pro-labore", atualizar);
+</script>
