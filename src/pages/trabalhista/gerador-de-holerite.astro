@@ -1,0 +1,197 @@
+---
+// Gerador de holerite (recibo de pagamento de salário).
+import GeradorPagina from "../../components/folha/GeradorPagina.astro";
+import { SALARIO_FAMILIA_2026 } from "../../lib/trabalhista/holerite";
+import { formatarBRL } from "../../lib/dinheiro";
+---
+
+<GeradorPagina
+  titulo="Gerador de holerite: recibo de pagamento de salário com INSS, IRRF e FGTS"
+  descricao="Gere o holerite do seu funcionário com os cálculos de 2026: horas extras, DSR, adicionais, faltas, INSS, IRRF, FGTS e vale-transporte. Pronto para imprimir e assinar."
+  h1="Gerador de holerite"
+  apoio="Preencha empresa, funcionário e mês. O holerite sai com horas extras, adicionais, INSS, IRRF e FGTS de 2026, em duas vias."
+  icone="holerite"
+>
+      <section class="bloco">
+        <h2><span>3</span> Mês e jornada</h2>
+        <div class="duas">
+          <div class="campo">
+            <label for="competencia">Mês de referência</label>
+            <input id="competencia" type="month" min="2026-01" max="2027-12" />
+          </div>
+          <div class="campo">
+            <label for="pagamento">Data do pagamento</label>
+            <input id="pagamento" type="date" />
+          </div>
+        </div>
+        <div class="duas">
+          <div class="campo">
+            <label for="jornada">Jornada semanal</label>
+            <select id="jornada">
+              <option value="44">44 horas (divisor 220)</option>
+              <option value="42">42 horas (divisor 210)</option>
+              <option value="40">40 horas (divisor 200)</option>
+            </select>
+          </div>
+          <div class="campo">
+            <label for="escala">Escala</label>
+            <select id="escala">
+              <option value="6x1">6x1 (descanso no domingo)</option>
+              <option value="5x2">5x2 (sábado e domingo)</option>
+            </select>
+          </div>
+        </div>
+        <div class="campo campo--curto">
+          <label for="dias">Dias trabalhados no mês</label>
+          <input id="dias" type="number" min="1" max="30" value="30" inputmode="numeric" />
+          <p class="ajuda">Menos de 30 só no mês de admissão ou de saída.</p>
+        </div>
+      </section>
+
+      <section class="bloco">
+        <h2><span>4</span> Vencimentos</h2>
+        <div class="campo">
+          <label for="salario">Salário-base mensal</label>
+          <div class="moeda"><span aria-hidden="true">R$</span><input id="salario" inputmode="decimal" placeholder="0,00" /></div>
+        </div>
+        <div class="tres">
+          <div class="campo"><label for="he50">Horas extras 50%</label><input id="he50" type="number" min="0" step="0.5" inputmode="decimal" placeholder="0" /></div>
+          <div class="campo"><label for="he100">Horas extras 100%</label><input id="he100" type="number" min="0" step="0.5" inputmode="decimal" placeholder="0" /></div>
+          <div class="campo"><label for="noturnas">Horas noturnas</label><input id="noturnas" type="number" min="0" step="0.5" inputmode="decimal" placeholder="0" /></div>
+        </div>
+        <div class="duas">
+          <div class="campo">
+            <label for="comissoes">Comissões</label>
+            <div class="moeda"><span aria-hidden="true">R$</span><input id="comissoes" inputmode="decimal" placeholder="0,00" /></div>
+          </div>
+          <div class="campo">
+            <label for="insalubridade">Insalubridade</label>
+            <select id="insalubridade">
+              <option value="0">Não tem</option>
+              <option value="10">Grau mínimo (10%)</option>
+              <option value="20">Grau médio (20%)</option>
+              <option value="40">Grau máximo (40%)</option>
+            </select>
+          </div>
+        </div>
+        <label class="marcar"><input type="checkbox" id="periculosidade" /> Recebe periculosidade (30% do salário-base)</label>
+        <div class="campo campo--curto espaco">
+          <label for="filhos">Filhos para salário-família</label>
+          <input id="filhos" type="number" min="0" max="15" inputmode="numeric" placeholder="0" />
+          <p class="ajuda">Até 14 anos ou inválidos. Só vale para quem ganha até {formatarBRL(SALARIO_FAMILIA_2026.limite)}.</p>
+        </div>
+        <div class="livres" id="lista-proventos"></div>
+        <button type="button" class="adicionar" data-adicionar="proventos">+ Outro vencimento</button>
+      </section>
+
+      <section class="bloco">
+        <h2><span>5</span> Descontos</h2>
+        <div class="tres">
+          <div class="campo"><label for="faltas">Faltas (dias)</label><input id="faltas" type="number" min="0" max="30" inputmode="numeric" placeholder="0" /></div>
+          <div class="campo"><label for="dsrperdidos">DSR perdidos</label><input id="dsrperdidos" type="number" min="0" max="6" inputmode="numeric" placeholder="0" /></div>
+          <div class="campo"><label for="dependentes">Dependentes no IR</label><input id="dependentes" type="number" min="0" max="15" inputmode="numeric" placeholder="0" /></div>
+        </div>
+        <div class="duas">
+          <div class="campo">
+            <label for="vt">Vale-transporte do mês</label>
+            <div class="moeda"><span aria-hidden="true">R$</span><input id="vt" inputmode="decimal" placeholder="0,00" /></div>
+            <p class="ajuda">Valor das passagens que a empresa fornece. O desconto é de até 6% do salário.</p>
+          </div>
+          <div class="campo">
+            <label for="adiantamento">Adiantamento (vale)</label>
+            <div class="moeda"><span aria-hidden="true">R$</span><input id="adiantamento" inputmode="decimal" placeholder="0,00" /></div>
+          </div>
+        </div>
+        <div class="duas">
+          <div class="campo">
+            <label for="pensao">Pensão alimentícia</label>
+            <div class="moeda"><span aria-hidden="true">R$</span><input id="pensao" inputmode="decimal" placeholder="0,00" /></div>
+          </div>
+          <div class="campo">
+            <label for="saude">Plano de saúde</label>
+            <div class="moeda"><span aria-hidden="true">R$</span><input id="saude" inputmode="decimal" placeholder="0,00" /></div>
+          </div>
+        </div>
+        <div class="livres" id="lista-descontos"></div>
+        <button type="button" class="adicionar" data-adicionar="descontos">+ Outro desconto</button>
+      </section>
+
+      <section class="bloco">
+        <h2><span>6</span> Mensagem <span class="opcional">(opcional)</span></h2>
+        <div class="campo">
+          <label for="mensagem" class="visualmente-oculto">Mensagem ao funcionário</label>
+          <input id="mensagem" maxlength="120" placeholder="Ex.: Feliz aniversário!" />
+        </div>
+      </section>
+</GeradorPagina>
+
+<script>
+  import { calcularHolerite } from "../../lib/trabalhista/holerite";
+  import type { DocumentoFolha } from "../../lib/trabalhista/recibos";
+  import { nomeCompetencia } from "../../lib/ui/documentos";
+  import { $, exibir, iniciarGerador, iniciarLivres, iniciarPartes, lerPartes, livres, num, val } from "../../lib/ui/gerador-folha";
+
+  const brl = (n: number) => n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const sel = (id: string) => (document.getElementById(id) as HTMLSelectElement).value;
+
+  // Valores iniciais: mês anterior e pagamento no início deste mês.
+  (() => {
+    const hoje = new Date();
+    const comp = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1);
+    $("competencia").value = `${comp.getFullYear()}-${String(comp.getMonth() + 1).padStart(2, "0")}`;
+    $("pagamento").value = new Date(hoje.getFullYear(), hoje.getMonth(), Math.min(hoje.getDate(), 7)).toISOString().slice(0, 10);
+  })();
+
+  function atualizar() {
+    const partes = lerPartes();
+    const salario = val("salario");
+    const competencia = $("competencia").value;
+    if (!partes || !(salario > 0) || !competencia) return exibir(partes, null, { falta: salario > 0 ? [] : ["salário-base"] });
+    const r = calcularHolerite({
+      competencia,
+      salarioBase: salario,
+      jornadaSemanal: Number(sel("jornada")),
+      escala: sel("escala") as "6x1" | "5x2",
+      diasTrabalhados: Math.min(30, Math.max(1, num("dias") || 30)),
+      faltas: num("faltas"),
+      dsrDescontados: num("dsrperdidos"),
+      horasExtras50: num("he50"),
+      horasExtras100: num("he100"),
+      horasNoturnas: num("noturnas"),
+      comissoes: val("comissoes"),
+      insalubridade: Number(sel("insalubridade")) as 0 | 10 | 20 | 40,
+      periculosidade: $("periculosidade").checked,
+      dependentesIR: num("dependentes"),
+      filhosSalarioFamilia: num("filhos"),
+      valeTransporte: val("vt"),
+      adiantamento: val("adiantamento"),
+      pensao: val("pensao"),
+      planoSaude: val("saude"),
+      outrosProventos: livres("proventos"),
+      outrosDescontos: livres("descontos"),
+    });
+    const doc: DocumentoFolha = {
+      titulo: "Recibo de pagamento de salário",
+      referencia: `Referência: ${nomeCompetencia(competencia)}`,
+      linhas: r.linhas,
+      totalVencimentos: r.totalVencimentos,
+      totalDescontos: r.totalDescontos,
+      liquido: r.liquido,
+      bases: [
+        { rotulo: "Salário-base", valor: brl(salario) },
+        { rotulo: "Sal. contr. INSS", valor: brl(r.baseINSS) },
+        { rotulo: "Base cálc. FGTS", valor: brl(r.baseFGTS) },
+        { rotulo: "FGTS do mês", valor: brl(r.fgts) },
+        { rotulo: "Base cálc. IRRF", valor: brl(r.baseIRRF) },
+        { rotulo: "Faixa IRRF", valor: r.faixaIRRF },
+      ],
+      declaracao: "Declaro ter recebido a importância líquida discriminada neste recibo.",
+      avisos: r.avisos,
+    };
+    exibir(partes, doc, { mensagem: $("mensagem").value.trim(), dataPagamento: $("pagamento").value });
+  }
+
+  iniciarPartes();
+  iniciarLivres(atualizar);
+  iniciarGerador("holerite", atualizar);
+</script>

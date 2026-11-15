@@ -1,0 +1,828 @@
+/* Geradores de documentos da folha (holerite, recibos): formulário, prévia e o recibo impresso. */
+
+  .gerador {
+    display: grid;
+    grid-template-columns: minmax(0, 400px) minmax(0, 1fr);
+    gap: 2rem;
+    align-items: start;
+    margin-top: 1.5rem;
+  }
+  @media (max-width: 960px) {
+    .gerador {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+  .bloco + .bloco {
+    border-top: 1px solid var(--linha);
+    padding-top: 1.25rem;
+    margin-top: 0.5rem;
+  }
+  .bloco h2 {
+    font: 700 1.1rem var(--titulo);
+    margin: 0 0 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .bloco h2 > span:first-child {
+    display: inline-grid;
+    place-items: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 50%;
+    background: var(--carteira);
+    color: #fff;
+    font-size: 0.85rem;
+  }
+  .tres {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+  @media (max-width: 420px) {
+    .tres {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  .tres .campo > label {
+    font-size: 0.9rem;
+  }
+  .campo--curto {
+    max-width: 220px;
+  }
+  .espaco {
+    margin-top: 1rem;
+  }
+  .erro-campo {
+    color: var(--negativo);
+    font-size: 0.85rem;
+    margin: 0.3rem 0 0;
+  }
+  .visualmente-oculto {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+  .adicionar {
+    background: none;
+    border: 1.5px dashed var(--linha);
+    border-radius: 8px;
+    padding: 0.6rem 0.9rem;
+    font: 600 0.95rem var(--texto);
+    color: var(--carteira);
+    cursor: pointer;
+    width: 100%;
+  }
+  .livres .livre {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) auto;
+    gap: 0.5rem;
+    align-items: center;
+    margin-bottom: 0.6rem;
+  }
+  .livres .livre__incide {
+    grid-column: 1 / -1;
+    font-size: 0.85rem;
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+    color: var(--tinta-2);
+  }
+  .livres .livre__incide input {
+    width: 1rem;
+    height: 1rem;
+    min-height: 0;
+  }
+  .livres .livre__remover {
+    width: 40px;
+    height: 40px;
+    border: 1.5px solid var(--linha);
+    border-radius: 8px;
+    background: #fff;
+    font-size: 1.3rem;
+    cursor: pointer;
+    grid-row: 1;
+    grid-column: 3;
+  }
+
+  /* Prévia */
+  .previa {
+    position: sticky;
+    top: 1rem;
+    min-width: 0;
+  }
+  .previa__barra {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+  }
+  .previa__barra h2 {
+    font: 700 1.2rem var(--titulo);
+    margin: 0;
+  }
+  .previa__barra button[disabled] {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+  .previa__vazio {
+    border: 1.5px dashed var(--linha);
+    border-radius: var(--raio);
+    padding: 3rem 1.5rem;
+    text-align: center;
+    color: var(--tinta-2);
+    background: var(--papel);
+  }
+  .previa__papel {
+    background: #fff;
+    border: 1px solid var(--linha);
+    border-radius: var(--raio);
+    padding: 1.25rem;
+    overflow-x: auto;
+    box-shadow: 0 2px 10px rgba(22, 32, 42, 0.06);
+  }
+  .previa__avisos {
+    margin: 0.8rem 0 0;
+    padding-left: 1.2rem;
+    color: var(--tinta-2);
+    font-size: 0.9rem;
+  }
+  .previa__privacidade {
+    font-size: 0.85rem;
+    color: var(--tinta-2);
+  }
+
+  /* O holerite */
+  #documento .hol {
+    min-width: 640px;
+    font: 400 11.5px/1.35 var(--texto);
+    color: #111;
+    border: 1px solid #222;
+    position: relative;
+  }
+  #documento .hol__via {
+    position: absolute;
+    top: -1px;
+    right: -1px;
+    background: #222;
+    color: #fff;
+    font-size: 9.5px;
+    padding: 1px 6px;
+    letter-spacing: 0.02em;
+  }
+  #documento .hol__topo {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 10px 10px 8px;
+    border-bottom: 1px solid #222;
+  }
+  #documento .hol__topo span {
+    display: block;
+  }
+  #documento .hol__empresa {
+    display: block;
+    font-size: 13px;
+    text-transform: uppercase;
+  }
+  #documento .hol__titulo {
+    text-align: right;
+    padding-top: 10px;
+  }
+  #documento .hol__titulo strong {
+    display: block;
+    font-size: 13px;
+  }
+  #documento table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  #documento td,
+  #documento th {
+    padding: 3px 6px;
+    vertical-align: top;
+  }
+  #documento small {
+    display: block;
+    font-size: 9px;
+    color: #555;
+  }
+  #documento .hol__func td {
+    border-bottom: 1px solid #222;
+    border-right: 1px solid #222;
+  }
+  #documento .hol__func td:last-child {
+    border-right: 0;
+  }
+  #documento .hol__func .largo {
+    width: 55%;
+  }
+  #documento .hol__itens th {
+    font-size: 10px;
+    text-align: left;
+    border-bottom: 1px solid #222;
+    background: #f1f1f1;
+  }
+  #documento .hol__itens td {
+    border-right: 1px solid #bbb;
+  }
+  #documento .hol__itens td:last-child {
+    border-right: 0;
+  }
+  #documento .hol__itens tbody tr.vazia td {
+    height: 17px;
+  }
+  #documento .c {
+    text-align: center;
+  }
+  #documento th.c {
+    text-align: center;
+  }
+  #documento .n {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  #documento th.n {
+    text-align: right;
+  }
+  #documento .hol__itens th:nth-child(1) {
+    width: 42px;
+  }
+  #documento .hol__itens th:nth-child(3) {
+    width: 120px;
+  }
+  #documento .hol__itens th:nth-child(4),
+  #documento .hol__itens th:nth-child(5) {
+    width: 96px;
+  }
+  #documento .hol__itens tfoot td {
+    border-top: 1px solid #222;
+    border-right: 1px solid #222;
+  }
+  #documento .hol__itens tfoot td:last-child {
+    border-right: 0;
+  }
+  #documento .hol__msg {
+    font-style: italic;
+    color: #333;
+  }
+  #documento .hol__liquido td {
+    font-size: 13px;
+    font-weight: 700;
+    background: #f1f1f1;
+  }
+  #documento .hol__bases td {
+    border-top: 1px solid #222;
+    border-right: 1px solid #222;
+    font-variant-numeric: tabular-nums;
+  }
+  #documento .hol__bases td:last-child {
+    border-right: 0;
+  }
+  #documento .hol__assinatura {
+    display: grid;
+    grid-template-columns: 1fr 120px 1.4fr;
+    gap: 14px;
+    align-items: end;
+    padding: 10px 10px 6px;
+    border-top: 1px solid #222;
+  }
+  #documento .hol__assinatura p {
+    margin: 0;
+    font-size: 10.5px;
+  }
+  #documento .hol__assinatura div {
+    border-top: 1px solid #222;
+    padding-top: 2px;
+    text-align: center;
+  }
+  #documento .hol__assinatura div span {
+    display: block;
+    margin-top: -18px;
+    min-height: 16px;
+  }
+  #documento .hol__rodape {
+    font-size: 8.5px;
+    color: #555;
+    text-align: center;
+    padding: 3px 6px 4px;
+    border-top: 1px dotted #999;
+  }
+  #documento .hol__corte {
+    text-align: center;
+    font-size: 9px;
+    color: #888;
+    border-top: 1px dashed #999;
+    margin: 14px 0;
+    line-height: 0;
+  }
+
+  @media print {
+    @page {
+      size: A4 portrait;
+      margin: 10mm;
+    }
+    body > header,
+    body > footer,
+    .cookies,
+    .cabecalho,
+    .form,
+    .previa__barra,
+    .previa__avisos,
+    .previa__privacidade,
+    .previa__vazio {
+      display: none !important;
+    }
+    body {
+      background: #fff !important;
+    }
+    .gerador {
+      display: block;
+      margin: 0;
+      max-width: none;
+      padding: 0;
+    }
+    .previa {
+      position: static;
+    }
+    .previa__papel {
+      border: 0;
+      box-shadow: none;
+      padding: 0;
+      overflow: visible;
+    }
+    main,
+    .envelope {
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+      margin-top: 0 !important;
+    }
+    #documento .hol__corte {
+      margin: 4mm 0;
+    }
+    #documento .hol {
+      font-size: 10px;
+    }
+    #documento td,
+    #documento th {
+      padding: 1.5px 5px;
+    }
+    #documento .hol__itens tbody tr.vazia td {
+      height: 11px;
+    }
+    #documento .hol__topo {
+      padding: 6px 8px 5px;
+    }
+    #documento .hol__assinatura {
+      padding: 14px 8px 4px;
+    }
+    #documento .hol {
+      min-width: 0;
+      break-inside: avoid;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+  }
+
+.gerador__titulo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.gerador__icone {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: var(--carteira);
+  color: #fff;
+}
+.outros {
+  margin-top: 1.25rem;
+}
+.outros strong {
+  display: block;
+  margin-bottom: 0.6rem;
+}
+.outros ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.5rem;
+}
+.outros a {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.65rem 0.75rem;
+  border: 1.5px solid var(--linha);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--tinta);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+.outros a svg {
+  color: var(--carteira);
+  flex: none;
+}
+.outros a:hover {
+  border-color: var(--carteira);
+}
+@media print {
+  .outros {
+    display: none !important;
+  }
+}
+
+/* Datas precisam de mais largura que os campos numéricos. */
+.tres:has(input[type="date"]) {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+/* Celular: barra fixa com o líquido, documento reduzido e uma via só na tela. */
+.barra-movel,
+.previa__dica {
+  display: none;
+}
+@media (max-width: 960px) {
+  .barra-movel {
+    display: flex;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 30;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.6rem 1rem calc(0.6rem + env(safe-area-inset-bottom));
+    background: #fff;
+    border-top: 1px solid var(--linha);
+    box-shadow: 0 -4px 14px rgba(22, 32, 42, 0.08);
+  }
+  .barra-movel div {
+    min-width: 0;
+  }
+  .barra-movel small {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--tinta-2);
+  }
+  .barra-movel strong {
+    display: block;
+    font: 700 1.05rem var(--titulo);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .barra-movel:not(.barra-movel--pronta) strong {
+    font: 600 0.92rem var(--texto);
+    color: var(--negativo);
+  }
+  .barra-movel button {
+    flex: none;
+    border: 0;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    background: var(--carteira);
+    color: #fff;
+    font: 600 0.95rem var(--texto);
+    cursor: pointer;
+  }
+  .barra-movel:not(.barra-movel--pronta) button {
+    background: var(--linha);
+    color: var(--tinta-2);
+  }
+  body:has(.barra-movel) {
+    padding-bottom: 76px;
+  }
+  .previa__papel {
+    padding: 8px;
+  }
+  .previa__papel--reduzido + .previa__avisos,
+  .previa__papel--reduzido {
+    cursor: zoom-in;
+  }
+  .previa__papel:not([hidden]) ~ .previa__dica,
+  .previa__dica:has(+ .previa__papel:not([hidden])) {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--tinta-2);
+    margin: 0 0 0.5rem;
+  }
+  #documento .hol__corte,
+  #documento .hol__corte + .hol {
+    display: none;
+  }
+}
+@media print {
+  .barra-movel,
+  .previa__dica {
+    display: none !important;
+  }
+  #documento {
+    zoom: 1 !important;
+  }
+  #documento .hol__corte {
+    display: block !important;
+  }
+  #documento .hol__corte + .hol {
+    display: block !important;
+  }
+}
+
+.previa__vias {
+  border: 0;
+  padding: 0;
+  margin: 0 0 0.9rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 1.2rem;
+  font-size: 0.92rem;
+}
+.previa__vias legend {
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+  padding: 0;
+}
+.previa__vias label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+}
+.previa__vias input {
+  width: 1.05rem;
+  height: 1.05rem;
+  min-height: 0;
+  accent-color: var(--carteira);
+}
+@media print {
+  .previa__vias {
+    display: none !important;
+  }
+  #documento.vias-separadas .hol__corte,
+  #documento.vias-longas .hol__corte {
+    display: none !important;
+  }
+  #documento.vias-longas .hol__corte + .hol,
+  #documento.vias-separadas .hol__corte + .hol {
+    break-before: page;
+    page-break-before: always;
+  }
+}
+
+/* Escalas: dias da semana em botões e atalhos. */
+.rotulo-grupo {
+  font-weight: 600;
+  margin: 0 0 0.4rem;
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.chip {
+  position: relative;
+  cursor: pointer;
+}
+.chip input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+.chip span {
+  display: inline-grid;
+  place-items: center;
+  min-width: 2.9rem;
+  height: 2.5rem;
+  border: 1.5px solid var(--linha);
+  border-radius: 8px;
+  background: #fff;
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+.chip input:checked + span {
+  background: var(--carteira);
+  border-color: var(--carteira);
+  color: #fff;
+}
+.chip input:focus-visible + span {
+  outline: 3px solid var(--carteira);
+  outline-offset: 2px;
+}
+.atalhos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.6rem 0 1rem;
+}
+.atalhos button {
+  background: none;
+  border: 0;
+  padding: 0.2rem 0;
+  color: var(--carteira);
+  font: 600 0.9rem var(--texto);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Folha de ponto */
+#documento .ponto__dias th {
+  font-size: 9.5px;
+  text-align: left;
+  border-bottom: 1px solid #222;
+  border-top: 1px solid #222;
+  background: #f1f1f1;
+}
+#documento .ponto__dias td {
+  border-bottom: 1px solid #ccc;
+  border-right: 1px solid #ccc;
+  height: 19px;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+#documento .ponto__dias td:last-child {
+  border-right: 0;
+  width: 30%;
+}
+#documento .ponto__dias th:nth-child(n + 3):nth-child(-n + 7) {
+  width: 58px;
+}
+#documento .ponto__dias th:first-child {
+  width: 52px;
+}
+#documento .ponto__off td {
+  background: #ececec;
+  color: #444;
+}
+#documento .ponto__dias em {
+  font-size: 9px;
+  color: #555;
+}
+#documento .ponto__obs {
+  width: 45%;
+}
+#documento .ponto__assinatura {
+  grid-template-columns: 1.2fr 1fr 1fr;
+  padding-top: 26px;
+}
+@media print {
+  #documento .ponto__dias td {
+    height: 20px;
+  }
+  #documento .ponto__assinatura {
+    padding-top: 22px;
+  }
+}
+
+/* Equipe no formulário da escala */
+.pessoa {
+  border: 1.5px solid var(--linha);
+  border-radius: 10px;
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+  background: #fff;
+  display: grid;
+  gap: 0.6rem;
+}
+.pessoa .duas {
+  gap: 0.5rem;
+}
+.pessoa__topo {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem;
+}
+.pessoa__topo .livre__remover {
+  width: 40px;
+  height: 40px;
+  border: 1.5px solid var(--linha);
+  border-radius: 8px;
+  background: #fff;
+  font-size: 1.3rem;
+  cursor: pointer;
+}
+.pessoa__horas label {
+  display: grid;
+  gap: 0.2rem;
+  font-size: 0.85rem;
+  color: var(--tinta-2);
+}
+.pessoa .chip span {
+  min-width: 2.6rem;
+  height: 2.2rem;
+  font-size: 0.85rem;
+}
+
+/* Escala da equipe: folha deitada */
+@page paisagem {
+  size: A4 landscape;
+  margin: 8mm;
+}
+#documento .esc {
+  min-width: 1000px;
+}
+#documento .esc__grade {
+  table-layout: fixed;
+}
+#documento .esc__grade th,
+#documento .esc__grade td {
+  border: 1px solid #bbb;
+  text-align: center;
+  padding: 2px 0;
+  font-size: 10px;
+  vertical-align: middle;
+}
+#documento .esc__grade thead th {
+  background: #f1f1f1;
+  font-weight: 700;
+}
+#documento .esc__grade .esc__nome {
+  width: 150px;
+  text-align: left;
+  padding-left: 6px;
+}
+#documento .esc__grade .esc__hora {
+  width: 76px;
+}
+#documento .esc__grade .esc__tot {
+  width: 34px;
+  font-weight: 700;
+}
+#documento .esc__nome strong {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#documento td.esc__hora {
+  white-space: nowrap;
+}
+#documento .esc__grade tbody td {
+  height: 34px;
+}
+#documento .esc__t {
+  color: #333;
+}
+#documento .esc__f {
+  background: #d9d9d9;
+  font-weight: 700;
+}
+#documento .esc__fe {
+  background: #f3dede;
+  font-weight: 700;
+}
+#documento th.esc__dom {
+  background: #e3e3e3;
+}
+#documento th.esc__fer,
+#documento td.esc__fer {
+  background: #f9eded;
+}
+#documento .esc__cob td {
+  background: #f1f1f1;
+  font-weight: 700;
+}
+#documento .esc__cob td:first-child {
+  text-align: right;
+  padding-right: 6px;
+}
+#documento .esc__legenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  padding: 6px 8px;
+  font-size: 10px;
+  border-top: 1px solid #222;
+}
+#documento .esc__legenda b {
+  display: inline-block;
+  min-width: 18px;
+  text-align: center;
+  border: 1px solid #bbb;
+  margin-right: 3px;
+}
+#documento .esc__assinatura {
+  grid-template-columns: 1.6fr 1fr 0.6fr;
+}
+@media print {
+  #documento .esc {
+    page: paisagem;
+    min-width: 0;
+  }
+}
+.chips[hidden] {
+  display: none;
+}

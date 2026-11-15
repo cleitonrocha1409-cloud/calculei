@@ -1,0 +1,77 @@
+---
+// Saída da lista de espera do Cálculo em Dia Empresas.
+import Texto from "../../layouts/Texto.astro";
+---
+
+<Texto titulo="Sair da lista de espera" descricao="Remova seu e-mail da lista de espera do Cálculo em Dia Empresas." semIndice>
+  <p>Informe o e-mail que você usou na inscrição. Os seus dados serão apagados da lista na hora.</p>
+  <form id="sair" class="sair" novalidate>
+    <label for="sair-email">E-mail</label>
+    <input id="sair-email" type="email" autocomplete="email" maxlength="120" />
+    <button type="submit">Sair da lista</button>
+    <p id="sair-msg" role="status" hidden></p>
+  </form>
+</Texto>
+
+<script>
+  const form = document.getElementById("sair") as HTMLFormElement;
+  const msg = document.getElementById("sair-msg")!;
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = (document.getElementById("sair-email") as HTMLInputElement).value;
+    msg.hidden = false;
+    msg.className = "";
+    try {
+      const r = await fetch("/api/lista-espera/sair", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email }) });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !d.ok) throw new Error(d.erro || "Não foi possível agora. Tente de novo em instantes.");
+      msg.textContent = "Pronto. Se este e-mail estava na lista, ele foi apagado.";
+      msg.className = "ok";
+      try {
+        localStorage.removeItem("lista-espera-ok");
+      } catch {}
+      form.querySelector("button")!.disabled = true;
+    } catch (err) {
+      msg.textContent = (err as Error).message;
+      msg.className = "erro";
+    }
+  });
+</script>
+
+<style>
+  .sair {
+    display: grid;
+    gap: 0.5rem;
+    max-width: 420px;
+    margin-top: 1rem;
+  }
+  .sair label {
+    font-weight: 600;
+  }
+  .sair input {
+    font: inherit;
+    padding: 0.7rem 0.8rem;
+    border: 1.5px solid var(--linha);
+    border-radius: 8px;
+  }
+  .sair button {
+    border: 0;
+    border-radius: 8px;
+    padding: 0.8rem 1rem;
+    background: var(--carteira);
+    color: #fff;
+    font: 600 1rem var(--texto);
+    cursor: pointer;
+  }
+  .sair button[disabled] {
+    opacity: 0.6;
+  }
+  .ok {
+    color: var(--positivo);
+    font-weight: 600;
+  }
+  .erro {
+    color: var(--negativo);
+    font-weight: 600;
+  }
+</style>

@@ -3,11 +3,12 @@ import Base from "./Base.astro";
 interface Props {
   titulo: string;
   descricao?: string;
+  semIndice?: boolean;
 }
-const { titulo, descricao } = Astro.props;
+const { titulo, descricao, semIndice } = Astro.props;
 ---
 
-<Base titulo={titulo} descricao={descricao}>
+<Base titulo={titulo} descricao={descricao} semIndice={semIndice}>
   <article class="envelope texto-longo artigo">
     <h1>{titulo}</h1>
     <slot />

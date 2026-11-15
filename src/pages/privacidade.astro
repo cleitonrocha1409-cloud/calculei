@@ -5,7 +5,7 @@ const email = `contato@${SITE.dominio.replace("https://", "")}`;
 ---
 
 <Texto titulo="Política de privacidade" descricao={`Como o ${SITE.nome} trata dados pessoais: cálculos feitos no seu aparelho, cookies só com consentimento e seus direitos pela LGPD.`}>
-  <p>Atualizada em 13/11/2026.</p>
+  <p>Atualizada em 15/11/2026.</p>
   <p>
     Esta política explica como o {SITE.nome} ({SITE.dominio.replace("https://", "")}) trata dados pessoais, conforme a Lei Geral de Proteção de Dados (Lei 13.709/2018, LGPD). Em resumo: os valores
     que você digita nas calculadoras não saem do seu aparelho, e cookies de medição e publicidade só são usados se você aceitar.
@@ -23,6 +23,17 @@ const email = `contato@${SITE.dominio.replace("https://", "")}`;
     páginas e proteger o site contra ataques. Essas informações não são usadas para identificar você.
   </p>
 
+  <h2 id="lista-de-espera">Lista de espera do Cálculo em Dia Empresas</h2>
+  <p>
+    Se você entrar na lista de espera, guardamos o nome, o e-mail, o WhatsApp (se informado), o perfil, o número de funcionários, os interesses marcados, a página de onde veio e a data da
+    autorização. Usamos esses dados só para avisar sobre o lançamento da versão para empresas e para entender o que mais interessa ao público. Eles ficam num banco de dados da Cloudflare e
+    não são vendidos nem cedidos a terceiros. Para evitar abuso, guardamos apenas um código gerado a partir do endereço IP, que muda todo dia e não permite identificar você.
+  </p>
+  <p>
+    Os dados ficam guardados até o lançamento e por no máximo 2 anos, ou até você sair da lista, o que pode ser feito a qualquer momento na página <a href="/lista-de-espera/sair/">Sair da lista de espera</a>,
+    que apaga os seus dados na hora.
+  </p>
+
   <h2>Cookies, medição de audiência e publicidade</h2>
   <p>
     Se você aceitar no aviso de cookies, usamos o Google Analytics para saber quantas pessoas visitam o site, quais calculadoras são mais usadas e de que tipo de aparelho. No futuro, o site poderá
@@ -37,6 +48,7 @@ const email = `contato@${SITE.dominio.replace("https://", "")}`;
   <ul>
     <li>Entregar o site e mantê-lo seguro: legítimo interesse (art. 7º, IX, da LGPD).</li>
     <li>Medir a audiência e exibir anúncios: consentimento, dado no aviso de cookies (art. 7º, I).</li>
+    <li>Avisar sobre o lançamento da versão para empresas: consentimento, dado ao entrar na lista de espera (art. 7º, I).</li>
     <li>Responder mensagens que você nos enviar: execução do seu pedido e legítimo interesse.</li>
   </ul>
 

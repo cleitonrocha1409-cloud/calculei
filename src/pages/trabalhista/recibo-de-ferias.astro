@@ -1,0 +1,103 @@
+---
+// Gerador de recibo de férias.
+import GeradorPagina from "../../components/folha/GeradorPagina.astro";
+---
+
+<GeradorPagina
+  titulo="Recibo de férias: gere o aviso e o recibo com 1/3, abono, INSS e IRRF"
+  descricao="Gere o recibo de férias do funcionário com os cálculos de 2026: 1/3 constitucional, venda de 10 dias, adiantamento do 13º, INSS e imposto de renda. Pronto para imprimir e assinar."
+  h1="Recibo de férias"
+  apoio="Informe o funcionário e o período de descanso. O recibo sai com 1/3, abono, INSS e IRRF de 2026, em duas vias."
+  icone="ferias"
+>
+  <section class="bloco">
+    <h2><span>3</span> Férias</h2>
+    <div class="duas">
+      <div class="campo">
+        <label for="salario">Salário mensal</label>
+        <div class="moeda"><span aria-hidden="true">R$</span><input id="salario" inputmode="decimal" placeholder="0,00" /></div>
+      </div>
+      <div class="campo">
+        <label for="medias">Média de variáveis <span class="opcional">(opcional)</span></label>
+        <div class="moeda"><span aria-hidden="true">R$</span><input id="medias" inputmode="decimal" placeholder="0,00" /></div>
+        <p class="ajuda">Média de horas extras, comissões e adicionais do período aquisitivo.</p>
+      </div>
+    </div>
+    <div class="tres">
+      <div class="campo">
+        <label for="inicio">Início do descanso</label>
+        <input id="inicio" type="date" />
+      </div>
+      <div class="campo">
+        <label for="dias">Dias de descanso</label>
+        <input id="dias" type="number" min="5" max="30" value="30" inputmode="numeric" />
+      </div>
+      <div class="campo">
+        <label for="dependentes">Dependentes no IR</label>
+        <input id="dependentes" type="number" min="0" max="15" inputmode="numeric" placeholder="0" />
+      </div>
+    </div>
+    <label class="marcar"><input type="checkbox" id="vender" /> Vender 10 dias (abono pecuniário)</label>
+    <label class="marcar"><input type="checkbox" id="adiantar" /> Adiantar a 1ª parcela do 13º</label>
+    <div class="duas espaco">
+      <div class="campo">
+        <label for="aquisitivo">Início do período aquisitivo <span class="opcional">(opcional)</span></label>
+        <input id="aquisitivo" type="date" />
+      </div>
+      <div class="campo">
+        <label for="pagamento">Data do pagamento</label>
+        <input id="pagamento" type="date" />
+        <p class="ajuda">Até 2 dias antes do início do descanso.</p>
+      </div>
+    </div>
+  </section>
+</GeradorPagina>
+
+<script>
+  import { reciboFerias } from "../../lib/trabalhista/recibos";
+  import { $, exibir, iniciarGerador, iniciarPartes, lerPartes, num, val } from "../../lib/ui/gerador-folha";
+
+  const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const vazio = $("vazio").textContent;
+  // Sugestão: férias começando no próximo dia 1º e pagas 2 dias antes.
+  (() => {
+    const h = new Date();
+    const inicio = new Date(h.getFullYear(), h.getMonth() + 1, 1);
+    $("inicio").value = iso(inicio);
+    $("pagamento").value = iso(new Date(inicio.getFullYear(), inicio.getMonth(), inicio.getDate() - 2));
+  })();
+  $("inicio").addEventListener("change", () => {
+    const [a, m, d] = $("inicio").value.split("-").map(Number);
+    if (a) $("pagamento").value = iso(new Date(a, m - 1, d - 2));
+  });
+  $("vender").addEventListener("change", () => {
+    if ($("vender").checked && num("dias") > 20) $("dias").value = "20";
+  });
+
+  function atualizar() {
+    $("vazio").textContent = vazio;
+    const partes = lerPartes();
+    const salario = val("salario");
+    if (!partes || !(salario > 0) || !$("inicio").value) return exibir(partes, null, { falta: salario > 0 ? [] : ["salário"] });
+    try {
+      const doc = reciboFerias({
+        salario,
+        mediaVariaveis: val("medias"),
+        inicioGozo: $("inicio").value,
+        dias: num("dias") || 30,
+        venderDias: $("vender").checked,
+        adiantar13: $("adiantar").checked,
+        dependentesIR: num("dependentes"),
+        inicioAquisitivo: $("aquisitivo").value || undefined,
+        pagamento: $("pagamento").value || undefined,
+      });
+      exibir(partes, doc, { dataPagamento: $("pagamento").value });
+    } catch (e) {
+      exibir(null, null);
+      $("vazio").textContent = (e as Error).message;
+    }
+  }
+
+  iniciarPartes();
+  iniciarGerador("recibo-ferias", atualizar);
+</script>

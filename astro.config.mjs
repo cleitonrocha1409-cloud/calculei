@@ -5,5 +5,6 @@ export default defineConfig({
   site: "https://calculoemdia.com.br",
   trailingSlash: "always",
   build: { format: "directory" },
-  integrations: [sitemap({ filter: (page) => !page.includes("/404") })],
+  // A página de saída da lista de espera fica fora do sitemap.
+  integrations: [sitemap({ filter: (page) => !page.includes("/404") && !page.includes("/lista-de-espera/") })],
 });

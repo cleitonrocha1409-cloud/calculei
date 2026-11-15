@@ -1,0 +1,162 @@
+---
+// Folha de ponto mensal do funcionário, com a escala já preenchida.
+import GeradorPagina from "../../components/folha/GeradorPagina.astro";
+const dias = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+---
+
+<GeradorPagina
+  titulo="Folha de ponto mensal: modelo pronto com a escala e os feriados do mês"
+  descricao="Gere a folha de ponto do funcionário com a escala do mês, folgas, feriados nacionais e horas previstas, conferida com a CLT e com o fim da escala 6x1. Pronta para imprimir."
+  h1="Folha de ponto"
+  apoio="Informe a escala e o horário. A folha do mês sai com folgas, feriados e horas previstas, pronta para anotar."
+  icone="ponto"
+  vias={false}
+>
+  <section class="bloco">
+    <h2><span>3</span> Escala</h2>
+    <div class="duas">
+      <div class="campo">
+        <label for="competencia">Mês</label>
+        <input id="competencia" type="month" min="2026-01" max="2027-12" />
+      </div>
+      <div class="campo">
+        <label for="modo">Tipo de escala</label>
+        <select id="modo">
+          <option value="semanal">Folgas fixas na semana</option>
+          <option value="12x36">12x36 (plantões)</option>
+        </select>
+      </div>
+    </div>
+    <div id="bloco-semanal">
+      <p class="rotulo-grupo">Dias de folga</p>
+      <div class="chips" role="group" aria-label="Dias de folga">
+        {dias.map((d, i) => <label class="chip"><input type="checkbox" name="folga" value={i} checked={i === 0 || i === 6} /><span>{d}</span></label>)}
+      </div>
+      <div class="atalhos">
+        <button type="button" data-folgas="0">6x1 (folga no domingo)</button>
+        <button type="button" data-folgas="0,6">5x2 (sábado e domingo)</button>
+      </div>
+    </div>
+    <div class="campo" id="bloco-12x36" hidden>
+      <label for="plantao">Primeiro plantão do mês</label>
+      <select id="plantao">
+        <option value="1">Dia 1 (plantões nos dias ímpares do início)</option>
+        <option value="2">Dia 2</option>
+      </select>
+    </div>
+    <div class="tres">
+      <div class="campo"><label for="entrada">Entrada</label><input id="entrada" type="time" value="08:00" /></div>
+      <div class="campo"><label for="saida">Saída</label><input id="saida" type="time" value="17:00" /></div>
+      <div class="campo"><label for="intervalo">Intervalo (min)</label><input id="intervalo" type="number" min="0" max="180" step="5" value="60" inputmode="numeric" /></div>
+    </div>
+    <label class="marcar" id="marcar-sabado"><input type="checkbox" id="sabado-diferente" /> Horário diferente aos sábados</label>
+    <div class="tres" id="bloco-sabado" hidden>
+      <div class="campo"><label for="entrada-sab">Entrada sáb.</label><input id="entrada-sab" type="time" value="08:00" /></div>
+      <div class="campo"><label for="saida-sab">Saída sáb.</label><input id="saida-sab" type="time" value="12:00" /></div>
+      <div class="campo"><label for="intervalo-sab">Intervalo sáb.</label><input id="intervalo-sab" type="number" min="0" max="180" step="5" value="0" inputmode="numeric" /></div>
+    </div>
+    <label class="marcar" id="marcar-feriados"><input type="checkbox" id="feriados" /> Trabalha nos feriados</label>
+    <label class="marcar"><input type="checkbox" id="acordo" /> Há acordo coletivo para 42 horas na transição do fim da 6x1</label>
+  </section>
+</GeradorPagina>
+
+<script>
+  import { formatarHoras, montarEscala, SEMANA_CURTA, type DadosEscala } from "../../lib/trabalhista/escala";
+  import { nomeCompetencia } from "../../lib/ui/documentos";
+  import { $, cabecalhoEmpresa, dataBR, esc, exibirConteudo, iniciarGerador, iniciarPartes, lerPartes, num, rodapeControle } from "../../lib/ui/gerador-folha";
+
+  const sel = (id: string) => (document.getElementById(id) as HTMLSelectElement).value;
+  const folgasMarcadas = () => [...document.querySelectorAll<HTMLInputElement>('input[name="folga"]:checked')].map((c) => Number(c.value));
+  const pad = (n: number) => String(n).padStart(2, "0");
+
+  (() => {
+    const h = new Date();
+    $("competencia").value = `${h.getFullYear()}-${pad(h.getMonth() + 1)}`;
+  })();
+  document.querySelectorAll<HTMLButtonElement>("[data-folgas]").forEach((b) =>
+    b.addEventListener("click", () => {
+      const lista = b.dataset.folgas!.split(",");
+      document.querySelectorAll<HTMLInputElement>('input[name="folga"]').forEach((c) => (c.checked = lista.includes(c.value)));
+      $("form").dispatchEvent(new Event("change"));
+    }),
+  );
+
+  function atualizar() {
+    const modo = sel("modo") as "semanal" | "12x36";
+    $("bloco-semanal").hidden = modo !== "semanal";
+    $("bloco-12x36").hidden = modo !== "12x36";
+    $("marcar-sabado").hidden = modo !== "semanal";
+    $("marcar-feriados").hidden = modo !== "semanal";
+    $("bloco-sabado").hidden = modo !== "semanal" || !$("sabado-diferente").checked;
+
+    const partes = lerPartes();
+    const competencia = $("competencia").value;
+    if (!partes || !competencia || !$("entrada").value || !$("saida").value) return exibirConteudo(null, { falta: competencia ? [] : ["mês"] });
+
+    const horario = { entrada: $("entrada").value, saida: $("saida").value, intervalo: num("intervalo") };
+    const dados: DadosEscala = {
+      competencia,
+      modo,
+      folgas: folgasMarcadas(),
+      inicio12x36: `${competencia}-${pad(Number(sel("plantao")))}`,
+      horario,
+      horarioSabado: modo === "semanal" && $("sabado-diferente").checked ? { entrada: $("entrada-sab").value, saida: $("saida-sab").value, intervalo: num("intervalo-sab") } : null,
+      trabalhaFeriados: $("feriados").checked,
+      acordo42h: $("acordo").checked,
+    };
+    const r = montarEscala(dados);
+
+    const nomeEscala =
+      modo === "12x36"
+        ? "12x36"
+        : dados.folgas.length === 1 && dados.folgas[0] === 0
+          ? "6x1"
+          : dados.folgas.length === 2 && dados.folgas.includes(0) && dados.folgas.includes(6)
+            ? "5x2"
+            : `folgas: ${dados.folgas.map((f) => SEMANA_CURTA[f]).join(", ") || "nenhuma"}`;
+    const faixa = (h: typeof horario) => `${h.entrada} às ${h.saida}${h.intervalo ? `, intervalo ${formatarHoras(h.intervalo)}` : ""}`;
+
+    const linhas = r.dias
+      .map((d) => {
+        const dia = `<td class="c"><strong>${pad(d.dia)}</strong> ${SEMANA_CURTA[d.semana]}</td>`;
+        if (d.tipo === "folga")
+          return `<tr class="ponto__off">${dia}<td>Folga${d.feriado ? ` · ${esc(d.feriado)}` : ""}</td><td colspan="6"></td></tr>`;
+        if (d.tipo === "feriado") return `<tr class="ponto__off">${dia}<td>Feriado · ${esc(d.feriado!)}</td><td colspan="6"></td></tr>`;
+        const h = d.horario!;
+        return `<tr>${dia}<td>${h.entrada}–${h.saida}${d.feriado ? ` <em>(${esc(d.feriado)})</em>` : ""}</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`;
+      })
+      .join("");
+
+    const pessoa = `<table class="hol__func">
+        <tr><td><small>Matrícula</small>${esc(partes.matricula) || "—"}</td><td class="largo"><small>Nome do funcionário</small>${esc(partes.nome)}</td><td><small>CPF</small>${esc(partes.cpf) || "—"}</td></tr>
+        <tr><td><small>CBO</small>${esc(partes.cbo) || "—"}</td><td class="largo"><small>Cargo</small>${esc(partes.cargo) || "—"}</td><td><small>Admissão</small>${dataBR(partes.admissao) || "—"}</td></tr>
+        <tr><td><small>Escala</small>${esc(nomeEscala)}</td><td class="largo"><small>Horário</small>${faixa(horario)}${dados.horarioSabado ? ` · sábado ${faixa(dados.horarioSabado)}` : ""}</td><td><small>Jornada semanal</small>${formatarHoras(r.minutosSemana)}${modo === "12x36" ? " (média)" : ""}</td></tr>
+      </table>`;
+
+    const html = `<article class="hol ponto">
+        ${cabecalhoEmpresa(partes, "Folha de ponto", `Referência: ${nomeCompetencia(competencia)}`)}
+        ${pessoa}
+        <table class="ponto__dias">
+          <thead><tr><th class="c">Dia</th><th>Previsto</th><th class="c">Entrada</th><th class="c">Saída intervalo</th><th class="c">Retorno</th><th class="c">Saída</th><th class="c">Horas extras</th><th>Assinatura</th></tr></thead>
+          <tbody>${linhas}</tbody>
+        </table>
+        <table class="hol__bases"><tr>
+          <td><small>Dias de trabalho</small>${r.diasTrabalho}</td>
+          <td><small>Horas previstas no mês</small>${formatarHoras(r.minutosMes)}</td>
+          <td><small>Folgas e feriados</small>${r.dias.length - r.diasTrabalho}</td>
+          <td class="ponto__obs"><small>Observações</small></td>
+        </tr></table>
+        <div class="hol__assinatura ponto__assinatura">
+          <p>Declaro que as marcações acima correspondem à minha jornada no mês.</p>
+          <div><span></span><small>Assinatura do funcionário</small></div>
+          <div><span></span><small>Assinatura do responsável</small></div>
+        </div>
+        ${rodapeControle(partes, `ponto|${competencia}|${r.minutosMes}`)}
+      </article>`;
+
+    exibirConteudo(html, { avisos: r.avisos, rotulo: "Horas previstas no mês", valor: `${formatarHoras(r.minutosMes)} em ${r.diasTrabalho} dias` });
+  }
+
+  iniciarPartes();
+  iniciarGerador("folha-ponto", atualizar);
+</script>

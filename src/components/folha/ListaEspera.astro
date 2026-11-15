@@ -1,0 +1,264 @@
+---
+// Convite para a lista de espera do Cálculo em Dia Empresas (grava em /api/lista-espera).
+import Icone from "../Icone.astro";
+const interesses = [
+  ["holerite", "Holerite todo mês"],
+  ["ferias-13", "Férias e 13º"],
+  ["escalas", "Escalas"],
+  ["ponto", "Ponto pelo celular"],
+  ["rescisao", "Rescisão"],
+  ["contador", "Envio ao contador"],
+];
+---
+
+<aside class="lista" id="lista-espera" aria-labelledby="lista-titulo">
+  <p class="lista__selo"><Icone nome="aviso" tamanho={18} /> Em breve</p>
+  <h2 id="lista-titulo">Cálculo em Dia Empresas</h2>
+  <ul class="lista__itens">
+    <li><Icone nome="pessoas" /> Funcionários salvos, com histórico</li>
+    <li><Icone nome="holerite" /> Holerites, férias e 13º do mês em um clique</li>
+    <li><Icone nome="escala" /> Escalas e ponto da equipe</li>
+  </ul>
+  <p class="lista__chamada">Entre na lista e seja avisado primeiro.</p>
+  <button type="button" class="lista__abrir" id="lista-abrir" aria-expanded="false" aria-controls="lista-form">Quero entrar na lista</button>
+
+  <form class="lista__form" id="lista-form" hidden novalidate>
+    <div class="campo"><label for="le-nome">Nome</label><input id="le-nome" autocomplete="name" maxlength="90" /></div>
+    <div class="campo"><label for="le-email">E-mail</label><input id="le-email" type="email" autocomplete="email" maxlength="120" /></div>
+    <div class="campo">
+      <label for="le-whats">WhatsApp <span class="opcional">(opcional)</span></label>
+      <input id="le-whats" type="tel" inputmode="tel" autocomplete="tel" maxlength="16" placeholder="(11) 90000-0000" />
+    </div>
+    <fieldset class="lista__grupo">
+      <legend>Você é</legend>
+      <label><input type="radio" name="le-perfil" value="dono" /> Dono ou gestor do negócio</label>
+      <label><input type="radio" name="le-perfil" value="contador" /> Contador</label>
+      <label><input type="radio" name="le-perfil" value="outro" /> Outro</label>
+    </fieldset>
+    <div class="campo">
+      <label for="le-func">Quantos funcionários <span class="opcional">(na sua empresa ou na maior cliente)</span></label>
+      <select id="le-func">
+        <option value="">Escolha</option>
+        <option value="1-3">1 a 3</option>
+        <option value="4-10">4 a 10</option>
+        <option value="11-20">11 a 20</option>
+        <option value="21+">Mais de 20</option>
+      </select>
+    </div>
+    <fieldset class="lista__grupo">
+      <legend>O que mais faria diferença</legend>
+      <div class="chips">
+        {interesses.map(([v, t]) => <label class="chip"><input type="checkbox" name="le-int" value={v} /><span>{t}</span></label>)}
+      </div>
+    </fieldset>
+    <input class="lista__mel" name="site" id="le-site" tabindex="-1" autocomplete="off" aria-hidden="true" />
+    <label class="marcar lista__consent">
+      <input type="checkbox" id="le-consent" />
+      <span>Autorizo o Cálculo em Dia a me avisar do lançamento por e-mail ou WhatsApp. Posso <a href="/lista-de-espera/sair/">sair da lista</a> quando quiser. <a href="/privacidade/#lista-de-espera">Como usamos os dados</a>.</span>
+    </label>
+    <p class="lista__erro" id="le-erro" role="alert" hidden></p>
+    <button type="submit" class="lista__enviar" id="le-enviar">Entrar na lista</button>
+  </form>
+
+  <div class="lista__ok" id="lista-ok" hidden role="status"></div>
+</aside>
+
+<script>
+  const $ = <T extends HTMLElement = HTMLInputElement>(id: string) => document.getElementById(id) as T;
+  const caixa = $("lista-espera");
+  const form = $<HTMLFormElement>("lista-form");
+  const abrir = $<HTMLButtonElement>("lista-abrir");
+  const CHAVE = "lista-espera-ok";
+
+  function sucesso() {
+    form.hidden = true;
+    abrir.hidden = true;
+    const ok = $("lista-ok");
+    ok.hidden = false;
+    ok.innerHTML = "<strong>Pronto, você está na lista.</strong> Avisaremos quando a versão para empresas abrir.";
+  }
+  try {
+    if (localStorage.getItem(CHAVE)) sucesso();
+  } catch {}
+
+  abrir.addEventListener("click", () => {
+    form.hidden = false;
+    abrir.setAttribute("aria-expanded", "true");
+    abrir.hidden = true;
+    $("le-nome").focus();
+  });
+
+  // Depois de imprimir, o convite aparece em destaque.
+  window.addEventListener("afterprint", () => {
+    if (!$("lista-ok").hidden) return;
+    caixa.classList.add("lista--destaque");
+    caixa.scrollIntoView({ behavior: "smooth", block: "center" });
+  });
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const erro = $("le-erro");
+    const botao = $<HTMLButtonElement>("le-enviar");
+    erro.hidden = true;
+    const corpo = {
+      nome: $("le-nome").value,
+      email: $("le-email").value,
+      whatsapp: $("le-whats").value,
+      perfil: (document.querySelector('input[name="le-perfil"]:checked') as HTMLInputElement | null)?.value,
+      funcionarios: ($("le-func") as unknown as HTMLSelectElement).value,
+      interesses: [...document.querySelectorAll<HTMLInputElement>('input[name="le-int"]:checked')].map((c) => c.value),
+      consentimento: $("le-consent").checked,
+      site: $("le-site").value,
+      origem: location.pathname,
+    };
+    botao.disabled = true;
+    botao.textContent = "Enviando…";
+    try {
+      const r = await fetch("/api/lista-espera", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(corpo) });
+      const dados = await r.json().catch(() => ({}));
+      if (!r.ok || !dados.ok) throw new Error(dados.erro || "Não foi possível enviar agora. Tente de novo em instantes.");
+      try {
+        localStorage.setItem(CHAVE, "1");
+      } catch {}
+      (window as unknown as { gtag?: (...a: unknown[]) => void }).gtag?.("event", "lista_espera", { origem: location.pathname, perfil: corpo.perfil, funcionarios: corpo.funcionarios });
+      sucesso();
+    } catch (err) {
+      erro.textContent = (err as Error).message;
+      erro.hidden = false;
+    } finally {
+      botao.disabled = false;
+      botao.textContent = "Entrar na lista";
+    }
+  });
+</script>
+
+<style>
+  .lista {
+    margin-top: 1.5rem;
+    padding: 1.25rem;
+    border-radius: var(--raio);
+    background: #fff;
+    border: 1.5px solid var(--carteira);
+    transition: box-shadow 0.3s;
+  }
+  .lista--destaque {
+    box-shadow: 0 0 0 4px rgba(31, 61, 122, 0.18);
+  }
+  .lista h2 {
+    font: 700 1.2rem var(--titulo);
+    margin: 0 0 0.5rem;
+  }
+  .lista__chamada {
+    margin: 0 0 0.8rem;
+    font-weight: 600;
+  }
+  .lista__selo {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin: 0 0 0.4rem;
+    padding: 0.15rem 0.6rem 0.15rem 0.45rem;
+    border-radius: 999px;
+    background: var(--marca-texto);
+    font-size: 0.82rem;
+    font-weight: 700;
+  }
+  .lista__itens {
+    list-style: none;
+    margin: 0 0 0.8rem;
+    padding: 0;
+    display: grid;
+    gap: 0.55rem;
+  }
+  .lista__itens li {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+  }
+  .lista__itens :global(svg) {
+    flex: none;
+    color: var(--carteira);
+    background: var(--carteira-claro);
+    border-radius: 8px;
+    padding: 6px;
+    width: 36px;
+    height: 36px;
+  }
+  .lista__abrir,
+  .lista__enviar {
+    width: 100%;
+    border: 0;
+    border-radius: 8px;
+    padding: 0.85rem 1rem;
+    background: var(--carteira);
+    color: #fff;
+    font: 600 1rem var(--texto);
+    cursor: pointer;
+  }
+  .lista [hidden] {
+    display: none !important;
+  }
+  .lista__enviar[disabled] {
+    opacity: 0.6;
+  }
+  .lista__form {
+    display: grid;
+    gap: 0.25rem;
+  }
+  .lista__grupo {
+    border: 0;
+    padding: 0;
+    margin: 0 0 1rem;
+    display: grid;
+    gap: 0.35rem;
+  }
+  .lista__grupo legend {
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+    padding: 0;
+  }
+  .lista__grupo > label {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+  .lista__grupo input[type="radio"] {
+    width: 1.05rem;
+    height: 1.05rem;
+    min-height: 0;
+    accent-color: var(--carteira);
+  }
+  .lista .chip span {
+    min-width: 0;
+    padding: 0 0.7rem;
+    height: 2.3rem;
+    font-size: 0.88rem;
+  }
+  .lista__mel {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+  }
+  .lista__consent {
+    align-items: flex-start;
+    font-size: 0.88rem;
+    margin-bottom: 0.8rem;
+  }
+  .lista__erro {
+    color: var(--negativo);
+    font-weight: 600;
+    margin: 0 0 0.6rem;
+  }
+  .lista__ok {
+    padding: 0.8rem;
+    border-radius: 8px;
+    background: #e5f4e4;
+  }
+  @media print {
+    .lista {
+      display: none !important;
+    }
+  }
+</style>
