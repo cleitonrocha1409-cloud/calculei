@@ -1,6 +1,5 @@
 ---
 // Moldura dos geradores de documentos da folha: cabeçalho, formulário (empresa, pessoa e o slot) e prévia.
-// Ainda não publicados: noindex e fora do sitemap.
 import Base from "../../layouts/Base.astro";
 import ListaEspera from "./ListaEspera.astro";
 import Icone, { type NomeIcone } from "../Icone.astro";
@@ -32,9 +31,9 @@ const socio = pessoa === "socio";
 const equipe = pessoa === "equipe";
 ---
 
-<Base titulo={titulo} descricao={descricao} semIndice>
+<Base titulo={titulo} descricao={descricao}>
   <div class="envelope cabecalho">
-    <p class="trilha"><a href="/">Início</a> / <a href="/trabalhista/">Trabalhista</a> / {h1}</p>
+    <p class="trilha"><a href="/">Início</a> / <a href="/documentos/">Documentos da folha</a> / {h1}</p>
     <h1 class="gerador__titulo"><span class="gerador__icone"><Icone nome={icone} tamanho={30} /></span>{h1}</h1>
     <p class="cabecalho__apoio">{apoio}</p>
   </div>

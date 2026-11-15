@@ -44,6 +44,19 @@ export const CATEGORIAS: Categoria[] = [
     ],
   },
   {
+    slug: "documentos",
+    nome: "Documentos da folha",
+    descricao: "Holerite, recibos, folha de ponto e escala prontos para imprimir, com os cálculos de 2026.",
+    calculadoras: [
+      { titulo: "Gerador de holerite", resumo: "Recibo de salário com INSS, IRRF e FGTS", url: "/trabalhista/gerador-de-holerite/", busca: ["holerite", "contracheque", "recibo de salário", "folha de pagamento", "modelo de holerite"] },
+      { titulo: "Recibo de férias", resumo: "Com 1/3, abono e descontos, em duas vias", url: "/trabalhista/recibo-de-ferias/", busca: ["recibo de férias", "aviso de férias", "modelo recibo ferias"] },
+      { titulo: "Recibo de 13º salário", resumo: "Primeira e segunda parcela", url: "/trabalhista/recibo-de-13-salario/", busca: ["recibo 13", "décimo terceiro", "recibo decimo terceiro"] },
+      { titulo: "Recibo de pró-labore", resumo: "INSS de 11% e IRRF do sócio", url: "/trabalhista/recibo-de-pro-labore/", busca: ["pró-labore", "pro labore", "sócio", "retirada"] },
+      { titulo: "Folha de ponto", resumo: "O mês com folgas e feriados, para anotar", url: "/trabalhista/folha-de-ponto/", busca: ["folha de ponto", "cartão de ponto", "controle de ponto", "modelo folha de ponto"] },
+      { titulo: "Escala da equipe", resumo: "Folgas e plantões do mês em uma folha", url: "/trabalhista/escala-de-trabalho/", busca: ["escala", "escala de trabalho", "folgas", "12x36", "5x2", "6x1"] },
+    ],
+  },
+  {
     slug: "calendarios",
     nome: "Calendários de pagamento",
     descricao: "Quando cai o INSS, o Bolsa Família e o PIS pelo final do seu cartão, NIS ou mês de nascimento, com lembrete na agenda do celular.",
