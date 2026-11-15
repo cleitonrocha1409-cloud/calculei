@@ -97,3 +97,50 @@ a {
     scroll-behavior: auto !important;
   }
 }
+
+/* Pergunta de um toque depois da inscrição na lista de espera */
+.porte[hidden] {
+  display: none !important;
+}
+.porte__pergunta {
+  font-weight: 700;
+  margin: 0.6rem 0 0.5rem;
+}
+.porte__opcoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.porte__opcoes button {
+  border: 1.5px solid var(--carteira);
+  background: #fff;
+  color: var(--carteira);
+  border-radius: 999px;
+  padding: 0.5rem 0.9rem;
+  font: 600 0.92rem var(--texto);
+  cursor: pointer;
+}
+.porte__opcoes button:hover,
+.porte__opcoes button:focus-visible {
+  background: var(--carteira);
+  color: #fff;
+}
+.porte__pular {
+  margin-top: 0.5rem;
+  border: 0;
+  background: none;
+  color: var(--tinta-2);
+  text-decoration: underline;
+  font: 500 0.88rem var(--texto);
+  cursor: pointer;
+  padding: 0.2rem 0;
+}
+.porte__obrigado {
+  font-weight: 700;
+  margin: 0.4rem 0 0;
+}
+.porte__erro {
+  color: var(--negativo);
+  font-weight: 600;
+  margin: 0.4rem 0 0;
+}

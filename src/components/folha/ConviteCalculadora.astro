@@ -16,17 +16,18 @@ import Icone from "../Icone.astro";
       <label class="cc__consent"><input type="checkbox" id="cc-consent" /><span>Autorizo o aviso por e-mail. Posso <a href="/lista-de-espera/sair/">sair da lista</a> quando quiser.</span></label>
       <p class="cc__erro" id="cc-erro" role="alert" hidden></p>
     </form>
-    <p class="cc__ok" id="cc-ok" role="status" hidden><strong>Pronto, você está na lista.</strong></p>
+    <div class="cc__ok" id="cc-ok" role="status" hidden><p><strong>Pronto, você está na lista.</strong></p><div class="porte" id="cc-porte" hidden></div></div>
   </div>
 </div>
 
 <script>
-  import { inscrever, jaInscrito } from "../../lib/ui/lista-espera";
+  import { inscrever, jaInscrito, perguntarPorte } from "../../lib/ui/lista-espera";
   const caixa = document.getElementById("convite-calc")!;
   const acoes = document.getElementById("acoes");
   const form = document.getElementById("cc-form") as HTMLFormElement;
+  let acabouDeInscrever = false;
   const atualizar = () => {
-    caixa.hidden = jaInscrito() || !acoes || acoes.hidden;
+    caixa.hidden = (jaInscrito() && !acabouDeInscrever) || !acoes || acoes.hidden;
   };
   if (acoes) new MutationObserver(atualizar).observe(acoes, { attributes: true, attributeFilter: ["hidden"] });
   atualizar();
@@ -41,8 +42,10 @@ import Icone from "../Icone.astro";
         { email: (document.getElementById("cc-email") as HTMLInputElement).value, consentimento: (document.getElementById("cc-consent") as HTMLInputElement).checked },
         "calculadora",
       );
+      acabouDeInscrever = true;
       form.hidden = true;
       document.getElementById("cc-ok")!.hidden = false;
+      perguntarPorte(document.getElementById("cc-porte")!);
     } catch (err) {
       erro.textContent = (err as Error).message;
       erro.hidden = false;
@@ -127,7 +130,7 @@ import Icone from "../Icone.astro";
     margin: 0;
     font-size: 0.9rem;
   }
-  .cc__ok {
+  .cc__ok p {
     margin: 0;
   }
   .cc__oculto {

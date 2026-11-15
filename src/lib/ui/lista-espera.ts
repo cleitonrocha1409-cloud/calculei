@@ -70,6 +70,15 @@ export function conviteAntesDeImprimir(imprimir: () => void): boolean {
     avisar.disabled = true;
     try {
       await inscrever({ email: email.value, consentimento: consent.checked }, "antes-de-imprimir");
+      // Pergunta de um toque antes de imprimir; "Pular e imprimir" segue direto.
+      const porte = dlg.querySelector<HTMLElement>("#ci-porte");
+      if (porte) {
+        dlg.querySelectorAll<HTMLElement>(".ci-passo1, .convite__consent, #ci-botoes, #ci-erro").forEach((el) => (el.hidden = true));
+        dlg.querySelector<HTMLElement>("#ci-titulo")!.textContent = "Pronto, você está na lista.";
+        const texto = dlg.querySelector<HTMLElement>("#ci-titulo + p");
+        if (texto) texto.hidden = true;
+        if (perguntarPorte(porte, fechar, "Pular e imprimir")) return;
+      }
       fechar();
     } catch (e) {
       erro.textContent = (e as Error).message;
@@ -81,5 +90,69 @@ export function conviteAntesDeImprimir(imprimir: () => void): boolean {
   so.onclick = fechar;
   dlg.showModal();
   email.focus();
+  return true;
+}
+
+const PORTE = "lista-espera-porte";
+const OPCOES_PORTE: [string, string][] = [
+  ["1-3", "1 a 3"],
+  ["4-10", "4 a 10"],
+  ["11-20", "11 a 20"],
+  ["21+", "Mais de 20"],
+  ["contador", "Sou contador"],
+];
+
+export function porteRespondido(): boolean {
+  try {
+    return !!localStorage.getItem(PORTE);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Pergunta de um toque, logo depois da inscrição: quantos funcionários (ou se é contador).
+ * Desenha os botões em `alvo`, salva na mesma inscrição e chama `aoTerminar` ao responder ou pular.
+ */
+export function perguntarPorte(alvo: HTMLElement, aoTerminar?: () => void, textoPular = "Pular") {
+  if (porteRespondido() || !jaInscrito()) {
+    alvo.hidden = true;
+    return false;
+  }
+  alvo.hidden = false;
+  // Se a pergunta for respondida em outro lugar da página, esta some.
+  document.addEventListener("lista-espera:porte", () => {
+    if (!alvo.dataset.respondeu) alvo.hidden = true;
+  });
+  alvo.innerHTML = `<p class="porte__pergunta">Quantos funcionários tem a empresa?</p>
+    <div class="porte__opcoes">${OPCOES_PORTE.map(([v, t]) => `<button type="button" data-porte="${v}">${t}</button>`).join("")}</div>
+    <button type="button" class="porte__pular">${textoPular}</button>
+    <p class="porte__erro" role="alert" hidden></p>`;
+  const erro = alvo.querySelector<HTMLElement>(".porte__erro")!;
+  alvo.querySelector<HTMLButtonElement>(".porte__pular")!.onclick = () => {
+    alvo.hidden = true;
+    aoTerminar?.();
+  };
+  alvo.querySelectorAll<HTMLButtonElement>("[data-porte]").forEach((b) => {
+    b.onclick = async () => {
+      const v = b.dataset.porte!;
+      alvo.querySelectorAll("button").forEach((x) => ((x as HTMLButtonElement).disabled = true));
+      try {
+        await inscrever({ email: emailInscrito(), consentimento: true, ...(v === "contador" ? { perfil: "contador" } : { funcionarios: v }) }, "porte");
+        try {
+          localStorage.setItem(PORTE, v);
+        } catch {}
+        (window as unknown as { gtag?: (...a: unknown[]) => void }).gtag?.("event", "lista_espera_porte", { porte: v });
+        alvo.dataset.respondeu = "1";
+        document.dispatchEvent(new CustomEvent("lista-espera:porte"));
+        alvo.innerHTML = `<p class="porte__obrigado">Obrigado!</p>`;
+        setTimeout(() => aoTerminar?.(), 500);
+      } catch (e) {
+        erro.textContent = (e as Error).message;
+        erro.hidden = false;
+        alvo.querySelectorAll("button").forEach((x) => ((x as HTMLButtonElement).disabled = false));
+      }
+    };
+  });
   return true;
 }

@@ -9,13 +9,14 @@ import Icone from "../Icone.astro";
     <h2 id="ci-titulo">Quer gerar isso todo mês sem digitar tudo de novo?</h2>
     <p>Estamos preparando o Cálculo em Dia Empresas, com funcionários salvos e documentos do mês em um clique. Deixe seu e-mail e avisamos quando abrir.</p>
     <label for="ci-email" class="visualmente-oculto">E-mail</label>
-    <input id="ci-email" type="email" autocomplete="email" maxlength="120" placeholder="seu@email.com" />
+    <input class="ci-passo1" id="ci-email" type="email" autocomplete="email" maxlength="120" placeholder="seu@email.com" />
     <label class="marcar convite__consent">
       <input type="checkbox" id="ci-consent" />
       <span>Autorizo o aviso de lançamento por e-mail. Posso <a href="/lista-de-espera/sair/" target="_blank">sair da lista</a> quando quiser.</span>
     </label>
     <p class="convite__erro" id="ci-erro" role="alert" hidden></p>
-    <div class="convite__botoes">
+    <div class="porte" id="ci-porte" hidden></div>
+    <div class="convite__botoes" id="ci-botoes">
       <button type="button" id="ci-avisar" class="convite__principal">Avisar e imprimir</button>
       <button type="button" id="ci-so" class="convite__secundario">Só imprimir</button>
     </div>
