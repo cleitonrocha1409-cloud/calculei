@@ -2,6 +2,7 @@
 // desenho do recibo em duas vias e impressão.
 import type { DocumentoFolha } from "../trabalhista/recibos";
 import { lerValor } from "../dinheiro";
+import { conviteAntesDeImprimir } from "./lista-espera";
 import { cnpjValido, cpfValido, mascararCNPJ, mascararCPF, numeroControle } from "./documentos";
 
 export const $ = <T extends HTMLElement = HTMLInputElement>(id: string) => document.getElementById(id) as T;
@@ -286,7 +287,7 @@ export function iniciarGerador(tipo: string, atualizar: () => void) {
   }
   $("imprimir").addEventListener("click", () => {
     (window as unknown as { gtag?: (...a: unknown[]) => void }).gtag?.("event", "gerar_documento", { tipo, vias: $("documento").classList.contains("vias-separadas") ? "separadas" : "juntas" });
-    window.print();
+    if (!conviteAntesDeImprimir(() => window.print())) window.print();
   });
   atualizar();
 }

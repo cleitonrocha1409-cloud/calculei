@@ -2,6 +2,7 @@
 // Moldura dos geradores de documentos da folha: cabeçalho, formulário (empresa, pessoa e o slot) e prévia.
 import Base from "../../layouts/Base.astro";
 import ListaEspera from "./ListaEspera.astro";
+import ConviteImpressao from "./ConviteImpressao.astro";
 import Icone, { type NomeIcone } from "../Icone.astro";
 import "../../styles/calculadora.css";
 import "../../styles/documento-folha.css";
@@ -123,6 +124,7 @@ const equipe = pessoa === "equipe";
       <ul class="previa__avisos" id="avisos"></ul>
       <p class="previa__privacidade">Os dados do documento ficam só no seu aparelho: nada é enviado ou guardado pelo site.</p>
       <ListaEspera />
+      <ConviteImpressao />
       <nav class="outros" aria-label="Outros documentos">
         <strong>Outros documentos</strong>
         <ul>

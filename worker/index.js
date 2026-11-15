@@ -58,15 +58,15 @@ export function validarInscricao(d) {
   const nome = String(d.nome ?? "").trim().replace(/\s+/g, " ");
   const email = String(d.email ?? "").trim().toLowerCase();
   const whatsapp = String(d.whatsapp ?? "").replace(/\D/g, "");
-  if (nome.length < 2 || nome.length > 90) return { erro: "Informe seu nome." };
   if (email.length > 120 || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return { erro: "Confira o e-mail." };
+  if (nome.length > 90) return { erro: "Nome muito longo." };
   if (whatsapp && (whatsapp.length < 10 || whatsapp.length > 13)) return { erro: "Confira o WhatsApp, com DDD." };
-  if (!PERFIS.includes(d.perfil)) return { erro: "Diga se você é dono do negócio ou contador." };
+  if (d.perfil && !PERFIS.includes(d.perfil)) return { erro: "Escolha uma das opções de perfil." };
   if (d.funcionarios && !FAIXAS.includes(d.funcionarios)) return { erro: "Escolha o número de funcionários." };
-  if (d.consentimento !== true) return { erro: "Marque a autorização para entrarmos em contato." };
+  if (d.consentimento !== true) return { erro: "Marque a autorização para avisarmos você." };
   const interesses = Array.isArray(d.interesses) ? d.interesses.filter((i) => INTERESSES.includes(i)) : [];
   const origem = typeof d.origem === "string" && d.origem.startsWith("/") ? d.origem.slice(0, 120) : null;
-  return { dados: { nome, email, whatsapp: whatsapp || null, perfil: d.perfil, funcionarios: d.funcionarios || null, interesses: interesses.join(","), origem } };
+  return { dados: { nome, email, whatsapp: whatsapp || null, perfil: d.perfil || "nao-informado", funcionarios: d.funcionarios || null, interesses: interesses.join(","), origem } };
 }
 
 async function listaEspera(request, env) {
@@ -96,8 +96,13 @@ async function listaEspera(request, env) {
   await env.LISTA.prepare(
     `INSERT INTO inscricoes (nome, email, whatsapp, perfil, funcionarios, interesses, origem, consentimento_em, ip_hash)
      VALUES (?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), ?)
-     ON CONFLICT(email) DO UPDATE SET nome = excluded.nome, whatsapp = COALESCE(excluded.whatsapp, whatsapp), perfil = excluded.perfil,
-       funcionarios = COALESCE(excluded.funcionarios, funcionarios), interesses = excluded.interesses, consentimento_em = excluded.consentimento_em`,
+     ON CONFLICT(email) DO UPDATE SET
+       nome = CASE WHEN excluded.nome <> '' THEN excluded.nome ELSE nome END,
+       whatsapp = COALESCE(excluded.whatsapp, whatsapp),
+       perfil = CASE WHEN excluded.perfil <> 'nao-informado' THEN excluded.perfil ELSE perfil END,
+       funcionarios = COALESCE(excluded.funcionarios, funcionarios),
+       interesses = CASE WHEN excluded.interesses <> '' THEN excluded.interesses ELSE interesses END,
+       consentimento_em = excluded.consentimento_em`,
   )
     .bind(d.nome, d.email, d.whatsapp, d.perfil, d.funcionarios, d.interesses, d.origem, ipHash)
     .run();

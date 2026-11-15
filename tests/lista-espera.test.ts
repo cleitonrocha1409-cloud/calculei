@@ -14,6 +14,10 @@ describe("lista de espera", () => {
     expect(validarInscricao({ ...base, perfil: "admin" }).erro).toBeTruthy();
     expect(validarInscricao({ ...base, whatsapp: "123" }).erro).toBeTruthy();
   });
+  it("aceita só o e-mail com a autorização", () => {
+    const v = validarInscricao({ email: "dono@loja.com.br", consentimento: true });
+    expect(v.dados).toMatchObject({ email: "dono@loja.com.br", nome: "", perfil: "nao-informado" });
+  });
   it("descarta robôs pelo campo escondido", () => {
     expect(validarInscricao({ ...base, site: "http://spam" }).robo).toBe(true);
   });

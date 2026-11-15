@@ -15,8 +15,10 @@ interface Props {
   caminho: string; // ex.: /trabalhista/salario-liquido/
   nomeApp: string;
   perguntas: { p: string; r: string }[];
+  /** Mostra o convite da lista de espera para empregadores abaixo do resultado. */
+  convite?: boolean;
 }
-const { selo, titulo, descricao, h1, apoio = "Preencha os dados. O resultado aparece ao lado e se atualiza enquanto você digita.", categoria, caminho, nomeApp, perguntas } = Astro.props;
+const { convite = false, selo, titulo, descricao, h1, apoio = "Preencha os dados. O resultado aparece ao lado e se atualiza enquanto você digita.", categoria, caminho, nomeApp, perguntas } = Astro.props;
 const cat = CATEGORIAS.find((c) => c.slug === categoria)!;
 const relacionadas = cat.calculadoras.filter((c) => c.url && c.url !== caminho);
 
@@ -45,6 +47,7 @@ const jsonld = [
     ],
   },
 ];
+import ConviteCalculadora from "./folha/ConviteCalculadora.astro";
 ---
 
 <Base titulo={titulo} descricao={descricao} jsonld={jsonld}>
@@ -66,6 +69,7 @@ const jsonld = [
         <a id="whats" target="_blank" rel="noopener">Enviar no WhatsApp</a>
         <button type="button" id="copiar">Copiar link</button>
       </div>
+      {convite && <ConviteCalculadora />}
     </section>
   </div>
 

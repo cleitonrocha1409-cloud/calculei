@@ -1,5 +1,6 @@
 ---
-// Convite para a lista de espera do Cálculo em Dia Empresas (grava em /api/lista-espera).
+// Convite para a lista de espera do Cálculo em Dia Empresas, abaixo da prévia dos geradores.
+// Passo 1: só o e-mail. Passo 2 (opcional): conte sobre o negócio.
 import Icone from "../Icone.astro";
 const interesses = [
   ["holerite", "Holerite todo mês"],
@@ -19,25 +20,38 @@ const interesses = [
     <li><Icone nome="holerite" /> Holerites, férias e 13º do mês em um clique</li>
     <li><Icone nome="escala" /> Escalas e ponto da equipe</li>
   </ul>
-  <p class="lista__chamada">Entre na lista e seja avisado primeiro.</p>
-  <button type="button" class="lista__abrir" id="lista-abrir" aria-expanded="false" aria-controls="lista-form">Quero entrar na lista</button>
 
-  <form class="lista__form" id="lista-form" hidden novalidate>
-    <div class="campo"><label for="le-nome">Nome</label><input id="le-nome" autocomplete="name" maxlength="90" /></div>
-    <div class="campo"><label for="le-email">E-mail</label><input id="le-email" type="email" autocomplete="email" maxlength="120" /></div>
-    <div class="campo">
-      <label for="le-whats">WhatsApp <span class="opcional">(opcional)</span></label>
-      <input id="le-whats" type="tel" inputmode="tel" autocomplete="tel" maxlength="16" placeholder="(11) 90000-0000" />
+  <form class="lista__form" id="lista-form" novalidate>
+    <label for="le-email" class="lista__rotulo">Seja avisado primeiro</label>
+    <div class="lista__linha">
+      <input id="le-email" type="email" autocomplete="email" maxlength="120" placeholder="seu@email.com" />
+      <button type="submit" class="lista__enviar" id="le-enviar">Avisar</button>
     </div>
+    <input class="lista__mel" name="site" id="le-site" tabindex="-1" autocomplete="off" aria-hidden="true" />
+    <label class="marcar lista__consent">
+      <input type="checkbox" id="le-consent" />
+      <span>Autorizo o aviso de lançamento por e-mail. Posso <a href="/lista-de-espera/sair/">sair da lista</a> quando quiser.</span>
+    </label>
+    <p class="lista__erro" id="le-erro" role="alert" hidden></p>
+  </form>
+
+  <div class="lista__ok" id="lista-ok" hidden role="status">
+    <p><strong>Pronto, você está na lista.</strong> Avisaremos quando a versão para empresas abrir.</p>
+    <button type="button" class="lista__mais" id="lista-mais" aria-expanded="false" aria-controls="lista-detalhes">Conte sobre o seu negócio (opcional)</button>
+  </div>
+
+  <form class="lista__form" id="lista-detalhes" hidden novalidate>
+    <div class="campo"><label for="ld-nome">Nome</label><input id="ld-nome" autocomplete="name" maxlength="90" /></div>
+    <div class="campo"><label for="ld-whats">WhatsApp</label><input id="ld-whats" type="tel" inputmode="tel" autocomplete="tel" maxlength="16" placeholder="(11) 90000-0000" /></div>
     <fieldset class="lista__grupo">
       <legend>Você é</legend>
-      <label><input type="radio" name="le-perfil" value="dono" /> Dono ou gestor do negócio</label>
-      <label><input type="radio" name="le-perfil" value="contador" /> Contador</label>
-      <label><input type="radio" name="le-perfil" value="outro" /> Outro</label>
+      <label><input type="radio" name="ld-perfil" value="dono" /> Dono ou gestor do negócio</label>
+      <label><input type="radio" name="ld-perfil" value="contador" /> Contador</label>
+      <label><input type="radio" name="ld-perfil" value="outro" /> Outro</label>
     </fieldset>
     <div class="campo">
-      <label for="le-func">Quantos funcionários <span class="opcional">(na sua empresa ou na maior cliente)</span></label>
-      <select id="le-func">
+      <label for="ld-func">Quantos funcionários</label>
+      <select id="ld-func">
         <option value="">Escolha</option>
         <option value="1-3">1 a 3</option>
         <option value="4-10">4 a 10</option>
@@ -48,51 +62,32 @@ const interesses = [
     <fieldset class="lista__grupo">
       <legend>O que mais faria diferença</legend>
       <div class="chips">
-        {interesses.map(([v, t]) => <label class="chip"><input type="checkbox" name="le-int" value={v} /><span>{t}</span></label>)}
+        {interesses.map(([v, t]) => <label class="chip"><input type="checkbox" name="ld-int" value={v} /><span>{t}</span></label>)}
       </div>
     </fieldset>
-    <input class="lista__mel" name="site" id="le-site" tabindex="-1" autocomplete="off" aria-hidden="true" />
-    <label class="marcar lista__consent">
-      <input type="checkbox" id="le-consent" />
-      <span>Autorizo o Cálculo em Dia a me avisar do lançamento por e-mail ou WhatsApp. Posso <a href="/lista-de-espera/sair/">sair da lista</a> quando quiser. <a href="/privacidade/#lista-de-espera">Como usamos os dados</a>.</span>
-    </label>
-    <p class="lista__erro" id="le-erro" role="alert" hidden></p>
-    <button type="submit" class="lista__enviar" id="le-enviar">Entrar na lista</button>
+    <p class="lista__erro" id="ld-erro" role="alert" hidden></p>
+    <button type="submit" class="lista__enviar lista__enviar--largo" id="ld-enviar">Enviar</button>
   </form>
-
-  <div class="lista__ok" id="lista-ok" hidden role="status"></div>
+  <p class="lista__ok" id="lista-obrigado" hidden role="status"><strong>Obrigado!</strong> Isso nos ajuda a priorizar o que fazer primeiro.</p>
 </aside>
 
 <script>
+  import { emailInscrito, inscrever, jaInscrito } from "../../lib/ui/lista-espera";
   const $ = <T extends HTMLElement = HTMLInputElement>(id: string) => document.getElementById(id) as T;
-  const caixa = $("lista-espera");
   const form = $<HTMLFormElement>("lista-form");
-  const abrir = $<HTMLButtonElement>("lista-abrir");
-  const CHAVE = "lista-espera-ok";
+  const detalhes = $<HTMLFormElement>("lista-detalhes");
 
-  function sucesso() {
+  function mostrarInscrito() {
     form.hidden = true;
-    abrir.hidden = true;
-    const ok = $("lista-ok");
-    ok.hidden = false;
-    ok.innerHTML = "<strong>Pronto, você está na lista.</strong> Avisaremos quando a versão para empresas abrir.";
+    $("lista-ok").hidden = false;
   }
-  try {
-    if (localStorage.getItem(CHAVE)) sucesso();
-  } catch {}
+  if (jaInscrito()) mostrarInscrito();
+  document.addEventListener("lista-espera:inscrito", mostrarInscrito);
 
-  abrir.addEventListener("click", () => {
-    form.hidden = false;
-    abrir.setAttribute("aria-expanded", "true");
-    abrir.hidden = true;
-    $("le-nome").focus();
-  });
-
-  // Depois de imprimir, o convite aparece em destaque.
-  window.addEventListener("afterprint", () => {
-    if (!$("lista-ok").hidden) return;
-    caixa.classList.add("lista--destaque");
-    caixa.scrollIntoView({ behavior: "smooth", block: "center" });
+  $("lista-mais").addEventListener("click", () => {
+    detalhes.hidden = false;
+    $("lista-mais").hidden = true;
+    $("ld-nome").focus();
   });
 
   form.addEventListener("submit", async (e) => {
@@ -100,34 +95,44 @@ const interesses = [
     const erro = $("le-erro");
     const botao = $<HTMLButtonElement>("le-enviar");
     erro.hidden = true;
-    const corpo = {
-      nome: $("le-nome").value,
-      email: $("le-email").value,
-      whatsapp: $("le-whats").value,
-      perfil: (document.querySelector('input[name="le-perfil"]:checked') as HTMLInputElement | null)?.value,
-      funcionarios: ($("le-func") as unknown as HTMLSelectElement).value,
-      interesses: [...document.querySelectorAll<HTMLInputElement>('input[name="le-int"]:checked')].map((c) => c.value),
-      consentimento: $("le-consent").checked,
-      site: $("le-site").value,
-      origem: location.pathname,
-    };
     botao.disabled = true;
-    botao.textContent = "Enviando…";
     try {
-      const r = await fetch("/api/lista-espera", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(corpo) });
-      const dados = await r.json().catch(() => ({}));
-      if (!r.ok || !dados.ok) throw new Error(dados.erro || "Não foi possível enviar agora. Tente de novo em instantes.");
-      try {
-        localStorage.setItem(CHAVE, "1");
-      } catch {}
-      (window as unknown as { gtag?: (...a: unknown[]) => void }).gtag?.("event", "lista_espera", { origem: location.pathname, perfil: corpo.perfil, funcionarios: corpo.funcionarios });
-      sucesso();
+      await inscrever({ email: $("le-email").value, consentimento: $("le-consent").checked, site: $("le-site").value }, "convite-gerador");
     } catch (err) {
       erro.textContent = (err as Error).message;
       erro.hidden = false;
     } finally {
       botao.disabled = false;
-      botao.textContent = "Entrar na lista";
+    }
+  });
+
+  detalhes.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const erro = $("ld-erro");
+    const botao = $<HTMLButtonElement>("ld-enviar");
+    erro.hidden = true;
+    botao.disabled = true;
+    try {
+      await inscrever(
+        {
+          email: emailInscrito(),
+          consentimento: true,
+          nome: $("ld-nome").value,
+          whatsapp: $("ld-whats").value,
+          perfil: (document.querySelector('input[name="ld-perfil"]:checked') as HTMLInputElement | null)?.value,
+          funcionarios: ($("ld-func") as unknown as HTMLSelectElement).value,
+          interesses: [...document.querySelectorAll<HTMLInputElement>('input[name="ld-int"]:checked')].map((c) => c.value),
+        },
+        "detalhes",
+      );
+      detalhes.hidden = true;
+      $("lista-ok").hidden = true;
+      $("lista-obrigado").hidden = false;
+    } catch (err) {
+      erro.textContent = (err as Error).message;
+      erro.hidden = false;
+    } finally {
+      botao.disabled = false;
     }
   });
 </script>
@@ -139,18 +144,13 @@ const interesses = [
     border-radius: var(--raio);
     background: #fff;
     border: 1.5px solid var(--carteira);
-    transition: box-shadow 0.3s;
   }
-  .lista--destaque {
-    box-shadow: 0 0 0 4px rgba(31, 61, 122, 0.18);
+  .lista [hidden] {
+    display: none !important;
   }
   .lista h2 {
     font: 700 1.2rem var(--titulo);
-    margin: 0 0 0.5rem;
-  }
-  .lista__chamada {
-    margin: 0 0 0.8rem;
-    font-weight: 600;
+    margin: 0 0 0.6rem;
   }
   .lista__selo {
     display: inline-flex;
@@ -165,7 +165,7 @@ const interesses = [
   }
   .lista__itens {
     list-style: none;
-    margin: 0 0 0.8rem;
+    margin: 0 0 1rem;
     padding: 0;
     display: grid;
     gap: 0.55rem;
@@ -184,19 +184,38 @@ const interesses = [
     width: 36px;
     height: 36px;
   }
-  .lista__abrir,
-  .lista__enviar {
-    width: 100%;
+  .lista__rotulo {
+    display: block;
+    font-weight: 700;
+    margin-bottom: 0.4rem;
+  }
+  .lista__linha {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.5rem;
+  }
+  .lista__linha input {
+    min-width: 0;
+  }
+  .lista__enviar,
+  .lista__mais {
     border: 0;
     border-radius: 8px;
-    padding: 0.85rem 1rem;
+    padding: 0.75rem 1.1rem;
     background: var(--carteira);
     color: #fff;
     font: 600 1rem var(--texto);
     cursor: pointer;
   }
-  .lista [hidden] {
-    display: none !important;
+  .lista__enviar--largo {
+    width: 100%;
+  }
+  .lista__mais {
+    background: none;
+    color: var(--carteira);
+    padding: 0.3rem 0;
+    text-decoration: underline;
+    font-size: 0.95rem;
   }
   .lista__enviar[disabled] {
     opacity: 0.6;
@@ -204,6 +223,9 @@ const interesses = [
   .lista__form {
     display: grid;
     gap: 0.25rem;
+  }
+  #lista-detalhes {
+    margin-top: 1rem;
   }
   .lista__grupo {
     border: 0;
@@ -243,18 +265,21 @@ const interesses = [
   }
   .lista__consent {
     align-items: flex-start;
-    font-size: 0.88rem;
-    margin-bottom: 0.8rem;
+    font-size: 0.86rem;
+    margin: 0.6rem 0 0.2rem;
   }
   .lista__erro {
     color: var(--negativo);
     font-weight: 600;
-    margin: 0 0 0.6rem;
+    margin: 0.4rem 0 0;
   }
   .lista__ok {
     padding: 0.8rem;
     border-radius: 8px;
     background: #e5f4e4;
+  }
+  .lista__ok p {
+    margin: 0 0 0.3rem;
   }
   @media print {
     .lista {

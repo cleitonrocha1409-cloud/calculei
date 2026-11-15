@@ -1,0 +1,112 @@
+---
+// Janela que aparece ao clicar em "Baixar PDF / imprimir" enquanto a pessoa não estiver na lista de espera.
+import Icone from "../Icone.astro";
+---
+
+<dialog class="convite" id="convite-impressao" aria-labelledby="ci-titulo">
+  <form method="dialog" class="convite__form" novalidate>
+    <span class="convite__icone"><Icone nome="pasta" tamanho={28} /></span>
+    <h2 id="ci-titulo">Quer gerar isso todo mês sem digitar tudo de novo?</h2>
+    <p>Estamos preparando o Cálculo em Dia Empresas, com funcionários salvos e documentos do mês em um clique. Deixe seu e-mail e avisamos quando abrir.</p>
+    <label for="ci-email" class="visualmente-oculto">E-mail</label>
+    <input id="ci-email" type="email" autocomplete="email" maxlength="120" placeholder="seu@email.com" />
+    <label class="marcar convite__consent">
+      <input type="checkbox" id="ci-consent" />
+      <span>Autorizo o aviso de lançamento por e-mail. Posso <a href="/lista-de-espera/sair/" target="_blank">sair da lista</a> quando quiser.</span>
+    </label>
+    <p class="convite__erro" id="ci-erro" role="alert" hidden></p>
+    <div class="convite__botoes">
+      <button type="button" id="ci-avisar" class="convite__principal">Avisar e imprimir</button>
+      <button type="button" id="ci-so" class="convite__secundario">Só imprimir</button>
+    </div>
+  </form>
+</dialog>
+
+<style>
+  .convite {
+    border: 0;
+    border-radius: 16px;
+    padding: 0;
+    width: min(440px, calc(100vw - 2rem));
+    box-shadow: 0 20px 60px rgba(22, 32, 42, 0.3);
+  }
+  .convite::backdrop {
+    background: rgba(22, 32, 42, 0.45);
+  }
+  .convite [hidden] {
+    display: none !important;
+  }
+  .convite__form {
+    display: grid;
+    gap: 0.6rem;
+    padding: 1.4rem;
+  }
+  .convite__icone {
+    display: inline-grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: var(--marca-texto);
+    color: var(--carteira);
+  }
+  .convite h2 {
+    font: 700 1.25rem/1.25 var(--titulo);
+    margin: 0;
+  }
+  .convite p {
+    margin: 0;
+    color: var(--tinta-2);
+  }
+  .convite input[type="email"] {
+    font: inherit;
+    padding: 0.75rem 0.8rem;
+    border: 1.5px solid var(--linha);
+    border-radius: 8px;
+  }
+  .convite__consent {
+    align-items: flex-start;
+    font-size: 0.86rem;
+  }
+  .convite__erro {
+    color: var(--negativo) !important;
+    font-weight: 600;
+  }
+  .convite__botoes {
+    display: grid;
+    gap: 0.5rem;
+    margin-top: 0.3rem;
+  }
+  .convite__principal,
+  .convite__secundario {
+    border-radius: 8px;
+    padding: 0.8rem 1rem;
+    font: 600 1rem var(--texto);
+    cursor: pointer;
+  }
+  .convite__principal {
+    border: 0;
+    background: var(--carteira);
+    color: #fff;
+  }
+  .convite__principal[disabled] {
+    opacity: 0.6;
+  }
+  .convite__secundario {
+    border: 1.5px solid var(--linha);
+    background: #fff;
+    color: var(--tinta);
+  }
+  .visualmente-oculto {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+  @media print {
+    .convite {
+      display: none !important;
+    }
+  }
+</style>
