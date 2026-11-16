@@ -2,27 +2,66 @@
   {
     "data": "2026-11-16",
     "tipo": "previa",
-    "periodo": { "inicio": "2026-11-01", "fim": "2026-11-15" },
+    "periodo": {
+      "inicio": "2026-11-01",
+      "fim": "2026-11-15"
+    },
     "observacao": "Período antes do lançamento (16/11/2026); tráfego quase todo de testes do dono. Novembro não tem meta.",
     "ga4": {
       "sessoes": 46,
       "usuarios": 25,
       "visualizacoes": 412,
       "paginas_por_visita": 8.96,
-      "eventos": { "calculo": 16, "compartilhar": 0, "lembrete_agenda": 0, "gerar_documento": 1, "lista_espera": 1 },
-      "origem": { "direto": 31, "google": 14, "nao_definido": 1, "ias": 0, "bing": 0 },
+      "eventos": {
+        "calculo": 16,
+        "compartilhar": 0,
+        "lembrete_agenda": 0,
+        "gerar_documento": 1,
+        "lista_espera": 1
+      },
+      "origem": {
+        "direto": 31,
+        "google": 14,
+        "nao_definido": 1,
+        "ias": 0,
+        "bing": 0
+      },
       "paginas_mais_vistas": [
-        { "pagina": "/", "views": 56 },
-        { "pagina": "/fim-da-escala-6x1/nova-jornada/", "views": 50 },
-        { "pagina": "/aposentadoria/simulador-de-aposentadoria/", "views": 40 },
-        { "pagina": "/trabalhista/calculo-de-rescisao/", "views": 38 },
-        { "pagina": "/aluguel/reajuste-de-aluguel/", "views": 32 }
+        {
+          "pagina": "/",
+          "views": 56
+        },
+        {
+          "pagina": "/fim-da-escala-6x1/nova-jornada/",
+          "views": 50
+        },
+        {
+          "pagina": "/aposentadoria/simulador-de-aposentadoria/",
+          "views": 40
+        },
+        {
+          "pagina": "/trabalhista/calculo-de-rescisao/",
+          "views": 38
+        },
+        {
+          "pagina": "/aluguel/reajuste-de-aluguel/",
+          "views": 32
+        }
       ]
     },
     "search_console": null,
     "adsense": null,
-    "lista_espera": { "total_sem_teste": 0 },
+    "lista_espera": {
+      "total_sem_teste": 0
+    },
     "melhorias": [],
-    "aprovacao_pendente": ["Calendários mensais de janeiro/2027 (INSS e Bolsa Família) quando os órgãos publicarem as datas"]
+    "aprovacao_pendente": [],
+    "aprovado": [
+      {
+        "item": "Calendários mensais de janeiro/2027 (INSS e Bolsa Família) quando os órgãos publicarem as datas oficiais",
+        "em": "2026-11-16",
+        "resposta": "Aprovado 1"
+      }
+    ]
   }
 ]
