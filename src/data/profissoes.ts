@@ -108,7 +108,7 @@ export const PROFISSOES: Profissao[] = [
   {
     slug: "frentista",
     nome: "Frentista",
-    titulo: "Fim da escala 6x1 para frentista: escala no posto e valor da hora",
+    titulo: "Escala 6x1 do frentista: o que muda no posto com o fim da 6x1",
     descricao: "Como fica a escala do frentista com o fim da 6x1: 6x1, 5x2 ou 12x36 no posto de combustível, folgas, adicional de periculosidade e valor da hora a partir de dezembro de 2026.",
     h1: "Fim da escala 6x1 para frentista",
     resposta:
@@ -195,7 +195,7 @@ export const PROFISSOES: Profissao[] = [
   {
     slug: "vigilante-e-porteiro",
     nome: "Vigilante e porteiro",
-    titulo: "Fim da escala 6x1 para vigilante e porteiro: 12x36 e plantões",
+    titulo: "Porteiro e vigilante na escala 6x1: o que muda com o fim da 6x1 e a 12x36",
     descricao: "Como fica a escala de vigilantes, porteiros e controladores de acesso com o fim da 6x1: 12x36 continua, mas com limite de 40 horas em 2027; veja folgas e valor da hora.",
     h1: "Fim da escala 6x1 para vigilante e porteiro",
     resposta:

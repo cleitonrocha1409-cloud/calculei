@@ -8,8 +8,12 @@ const nomes = (ms: number[]) => ms.map((m) => MESES[m - 1]).join(" e ");
 
 const perguntas = [
   {
-    p: "Quem tem direito ao abono salarial?",
-    r: "Quem trabalhou com carteira assinada pelo menos 30 dias no ano-base, ganhou em média até o limite fixado para aquele ano (R$ 2.765,92 no abono de 2026), está inscrito no PIS/Pasep há pelo menos 5 anos e teve os dados enviados pelo empregador no eSocial.",
+    p: "Quando sai o PIS 2027?",
+    r: "O abono de 2027 começa a ser pago em 15/02/2027, para os nascidos em janeiro, e vai até 16/08/2027, para os nascidos em novembro e dezembro. As datas seguem a regra fixa do Codefat: dia 15 do mês, ou o dia útil seguinte. A consulta para saber se você tem direito costuma ser liberada no início de fevereiro, no app Carteira de Trabalho Digital.",
+  },
+  {
+    p: "Quem tem direito ao abono salarial de 2027?",
+    r: "Quem trabalhou com carteira assinada pelo menos 30 dias em 2025 (o ano-base), ganhou em média até R$ 2.873,87 por mês nesse ano, está inscrito no PIS/Pasep há pelo menos 5 anos e teve os dados enviados pelo empregador no eSocial. O limite era de R$ 2.765,93 no abono de 2026 e agora é corrigido pela inflação (INPC), não mais pelo salário mínimo.",
   },
   {
     p: "Qual o valor do abono?",
@@ -20,8 +24,8 @@ const perguntas = [
     r: "Até 30 de dezembro de 2026, para todos os meses de nascimento. Depois disso, o valor só pode ser pedido por convocação ou recurso ao Ministério do Trabalho.",
   },
   {
-    p: "O calendário de 2027 já saiu?",
-    r: "O Codefat passou a usar uma regra fixa: o pagamento sai no dia 15 do mês (ou no dia útil seguinte), de fevereiro a agosto, pelo mês de nascimento. As datas de 2027 desta página seguem essa regra e são confirmadas assim que o calendário oficial for publicado.",
+    p: "O calendário do PIS 2027 já saiu?",
+    r: "O Codefat passou a usar uma regra fixa: o pagamento sai no dia 15 do mês (ou no dia útil seguinte), de fevereiro a agosto, pelo mês de nascimento. As datas de 2027 desta página seguem essa regra. Se o governo publicar alguma mudança, atualizamos a tabela.",
   },
   {
     p: "E o Pasep, de servidores públicos?",
@@ -31,10 +35,10 @@ const perguntas = [
 ---
 
 <CalcPagina
-  titulo="Calendário do PIS 2026 e 2027: abono salarial pelo mês de nascimento"
-  descricao="Veja quando cai o abono salarial PIS pelo mês de nascimento, o prazo para sacar o de 2026 e a previsão de 2027, com lembrete na agenda do celular."
+  titulo="Calendário do PIS 2027: quando sai o abono salarial e quem tem direito"
+  descricao="Quando sai o PIS 2027: datas do abono salarial pelo mês de nascimento, a partir de 15/02/2027, quem tem direito (até R$ 2.873,87 em 2025) e o prazo para sacar o de 2026."
   h1="Calendário do PIS (abono salarial)"
-  apoio="O abono salarial PIS de 2026 já foi todo liberado, e quem não sacou tem até 30/12/2026. Em 2027, o pagamento deve começar em 15/02, para os nascidos em janeiro. Escolha o seu mês de nascimento."
+  apoio="O PIS 2027 começa a ser pago em 15/02/2027, para os nascidos em janeiro. Quem ainda não sacou o abono de 2026 tem até 30/12/2026. Escolha o seu mês de nascimento."
   categoria="calendarios"
   caminho="/calendarios/calendario-pis/"
   nomeApp="Calendário do abono salarial PIS"
@@ -51,10 +55,23 @@ const perguntas = [
   </Fragment>
 
   <Fragment slot="conteudo">
+    <h2>Quando sai o PIS 2027</h2>
+    <p>
+      O abono salarial de 2027 é referente ao trabalho com carteira assinada em <strong>2025</strong> (o ano-base). Os pagamentos começam em <strong>15 de fevereiro de 2027</strong>, para quem
+      nasceu em janeiro, e terminam em <strong>16 de agosto de 2027</strong>, para os nascidos em novembro e dezembro. As datas seguem a regra fixa do Codefat: dia 15 do mês, ou o dia útil seguinte
+      quando o dia 15 cai em fim de semana ou feriado.
+    </p>
+    <ul>
+      <li><strong>Quem tem direito:</strong> trabalhou pelo menos 30 dias com carteira assinada em 2025, ganhou em média até <strong>R$ 2.873,87</strong> por mês, tem PIS/Pasep há pelo menos 5 anos e teve os dados enviados pelo empregador.</li>
+      <li><strong>Valor:</strong> até um salário mínimo de 2027, proporcional aos meses trabalhados em 2025. Quem trabalhou o ano todo recebe o mínimo inteiro; quem trabalhou 6 meses, metade.</li>
+      <li><strong>Consulta:</strong> costuma ser liberada no início de fevereiro, no app Carteira de Trabalho Digital ou pelo telefone 158.</li>
+      <li><strong>O que mudou:</strong> o limite de renda deixou de acompanhar o salário mínimo e passou a ser corrigido pela inflação (INPC), até chegar a 1,5 salário mínimo. Por isso, quem ganhava perto do limite antigo pode ficar de fora.</li>
+    </ul>
+
     <h2>Calendário do PIS por mês de nascimento</h2>
     <div class="tabela-rolagem">
       <table class="calendario-tabela">
-        <thead><tr><th scope="col">Nascidos em</th><th scope="col">Abono 2026</th><th scope="col">Abono 2027 (previsão)</th></tr></thead>
+        <thead><tr><th scope="col">Nascidos em</th><th scope="col">Abono 2026</th><th scope="col">PIS 2027</th></tr></thead>
         <tbody>
           {pares.map((ms) => (
             <tr><th scope="row">{nomes(ms)}</th><td>{dataCurta(CALENDARIOS.pis[2026][ms[0]])}</td><td>{dataCurta(CALENDARIOS.pis[2027][ms[0]])}</td></tr>
@@ -62,7 +79,7 @@ const perguntas = [
         </tbody>
       </table>
     </div>
-    <p>Prazo para sacar o abono de 2026: 30/12/2026. As datas de 2027 seguem a regra fixa do Codefat (dia 15 ou o dia útil seguinte) e serão confirmadas quando o calendário oficial for publicado.</p>
+    <p>Prazo para sacar o abono de 2026: 30/12/2026. As datas de 2027 seguem a regra fixa do Codefat (dia 15 ou o dia útil seguinte); se o governo publicar alguma mudança, atualizamos a tabela.</p>
   </Fragment>
 </CalcPagina>
 
@@ -85,7 +102,7 @@ const perguntas = [
       lista: [
         { rotulo: "Abono 2026 liberado", data: dataPIS(mes, 2026) },
         { rotulo: "Último dia para sacar o abono 2026", data: CALENDARIOS.pis.prazo2026 },
-        { rotulo: "Abono 2027 (previsão)", data: dataPIS(mes, 2027) },
+        { rotulo: "PIS 2027 liberado", data: dataPIS(mes, 2027) },
       ],
       rotuloColuna: "Evento",
       rotuloProximo: "Próxima data",
@@ -94,7 +111,7 @@ const perguntas = [
         "Confira se você tem direito e o valor no app Carteira de Trabalho Digital ou pelo telefone 158.",
         "O PIS é pago pela Caixa. Servidores públicos recebem o Pasep pelo Banco do Brasil, pelo final da inscrição.",
       ],
-      alertas: ["A data de 2027 é uma previsão pela regra fixa do Codefat e será confirmada quando o calendário oficial sair."],
+      alertas: ["A data de 2027 segue a regra fixa do Codefat (dia 15 ou o dia útil seguinte). Para ter direito, a média salarial em 2025 precisa ser de até R$ 2.873,87."],
       rodape: `Fonte: ${CALENDARIOS.pis.fonte}. Atualizado em ${CALENDARIOS.atualizadoEm.split("-").reverse().join("/")}.`,
       arquivo: `pis-mes-${mes}.ics`,
     });

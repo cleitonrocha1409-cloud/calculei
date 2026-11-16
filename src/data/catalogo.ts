@@ -63,7 +63,7 @@ export const CATEGORIAS: Categoria[] = [
     calculadoras: [
       { titulo: "Calendário do INSS", resumo: "Aposentadoria e pensão pelo final do benefício", url: "/calendarios/calendario-inss/", busca: ["inss", "aposentadoria", "pensão", "bpc", "loas", "pagamento", "final do cartão", "benefício"] },
       { titulo: "Calendário do Bolsa Família", resumo: "Datas pelo final do NIS", url: "/calendarios/calendario-bolsa-familia/", busca: ["bolsa familia", "bolsa família", "nis", "caixa tem", "pagamento"] },
-      { titulo: "Calendário do PIS/Pasep", resumo: "Abono salarial pelo mês de nascimento", url: "/calendarios/calendario-pis/", busca: ["pis", "pasep", "abono", "abono salarial"] },
+      { titulo: "Calendário do PIS 2027", resumo: "Abono salarial pelo mês de nascimento", url: "/calendarios/calendario-pis/", busca: ["pis", "pasep", "abono", "abono salarial"] },
     ],
   },
   {
